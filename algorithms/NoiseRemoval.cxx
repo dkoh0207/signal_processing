@@ -31,15 +31,4 @@ std::vector<std::vector<double>> algorithms::NoiseRemoval::removeCoherentNoise(s
   return waveLessCoherent;
 }
 
-std::vector<std::vector<double>> algorithms::NoiseRemoval::removeCNMorphCollection(
-                         std::vector<std::vector<double>> &waveforms, 
-                         const int grouping,
-                         const int nTicks)
-{
-  std::vector<std::vector<double>> waveLessCoherent(
-    waveforms.size(), std::vector<double>(waveforms.at(0).size(), 0.0));
-  
-  auto numChannels = (int) waveforms.size();
-}
-
 #endif

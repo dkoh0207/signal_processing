@@ -35,11 +35,6 @@ namespace algorithms {
                           std::vector<std::vector<double>> &waveforms, 
                           const int grouping, 
                           const int nTicks);
-
-    std::vector<std::vector<double>> algorithms::NoiseRemoval::removeCNMorphCollection(
-                         std::vector<std::vector<double>> &waveforms, 
-                         const int grouping,
-                         const int nTicks);
     
     /// Default destructor
     ~NoiseRemoval(){}
