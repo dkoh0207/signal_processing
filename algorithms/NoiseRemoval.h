@@ -16,6 +16,9 @@
 
 #include <vector>
 #include <algorithm>
+#include <cmath>
+#include <functional>
+#include <numeric>
 
 namespace algorithms {
 
@@ -31,10 +34,25 @@ namespace algorithms {
     /// Default constructor
     NoiseRemoval(){}
 
-    std::vector<std::vector<double>> removeCoherentNoise(
-                          std::vector<std::vector<double>> &waveforms, 
-                          const int grouping, 
-                          const int nTicks);
+    std::vector<std::vector<short>> removeCoherentNoise(
+                          std::vector<std::vector<short>> &waveforms, 
+                          const unsigned int grouping, 
+                          const unsigned int nTicks);
+
+    void getWaveformParams(const std::vector<short>& waveform,
+                                                 short& mean,
+                                                 short& median,
+                                                 short& mode,
+                                                 float& skewness,
+                                                 float& rms);
+
+    void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
+                                                  const unsigned int grouping,
+                                                  const unsigned int nTicks,
+                                                  std::vector<std::vector<short>>& noiseRemovedWfs,
+                                                  std::vector<short>& means,
+                                                  std::vector<short>& medians,
+                                                  std::vector<float>& rmss);
     
     /// Default destructor
     ~NoiseRemoval(){}
