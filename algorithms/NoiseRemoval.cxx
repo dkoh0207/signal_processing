@@ -3,84 +3,74 @@
 
 #include "NoiseRemoval.h"
 
-std::vector<std::vector<short>> algorithms::NoiseRemoval::removeCoherentNoise(
-                         std::vector<std::vector<short>>& waveforms, 
+std::vector<std::vector<float>> algorithms::NoiseRemoval::removeCoherentNoise(
+                         std::vector<std::vector<float>>& filteredWaveforms, 
                          const unsigned int grouping, 
                          const unsigned int nTicks) 
 {
-  std::vector<std::vector<short>> waveLessCoherent(
-    waveforms.size(), std::vector<short>(waveforms.at(0).size(), 0.0));
+  std::vector<std::vector<float>> waveLessCoherent(
+    filteredWaveforms.size(), std::vector<float>(filteredWaveforms.at(0).size(), 0.0));
 
-  auto numChannels = (int) waveforms.size();
+  auto numChannels = (int) filteredWaveforms.size();
 
   for (unsigned int i=0; i<nTicks; ++i) {
     for (unsigned int j=0; j<numChannels/grouping; ++j) {
       int group_start = j * grouping;
       int group_end = (j+1) * grouping;
       // Compute median.
-      std::vector<short> v(grouping, 0.0);
+      std::vector<float> v;
+      v.resize(grouping);
+      short counter = 0;
       for (auto c=group_start; c<group_end; ++c) {
-        v.push_back(waveforms[c][i]);
+        v[counter] = filteredWaveforms[c][i];
+        ++counter;
       }
-      std::nth_element(v.begin(), v.begin() + v.size()/2, v.end());
-      short median = v[v.size() / 2];
+      float median = 0.0;
+      if (v.size() % 2 == 0) {
+        const auto m1 = v.begin() + v.size() / 2 - 1;
+        const auto m2 = v.begin() + v.size() / 2;
+        std::nth_element(v.begin(), m1, v.end());
+        const auto e1 = *m1;
+        std::nth_element(v.begin(), m2, v.end());
+        const auto e2 = *m2;
+        median = (e1 + e2) / 2.0;
+      } else {
+        const auto m = v.begin() + v.size() / 2;
+        std::nth_element(v.begin(), m, v.end());
+        median = *m;
+      }
       for (auto c=group_start; c<group_end; ++c) {
-        waveLessCoherent[c][i] = waveforms[c][i] - median;
+        waveLessCoherent[c][i] = filteredWaveforms[c][i] - median;
       }
     }
   }
   return waveLessCoherent;
 }
 
-void algorithms::NoiseRemoval::getWaveformParams(const std::vector<short>& waveform,
-                                                 short& mean,
-                                                 short& median,
-                                                 short& mode,
-                                                 float& skewness,
-                                                 float& rms)
-{
-  /*
-  Calculate waveform parameters for a given 1D waveform.
-
-  INPUTS:
-    - waveform: 1D RawDigit Waveform.
-  */
-  std::vector<short> localWaveform = waveform;
-  std::sort(localWaveform.begin(),localWaveform.end(),[](const short& left, const short& right){return std::fabs(left) < std::fabs(right);});
-  float realMean(float(std::accumulate(localWaveform.begin(),localWaveform.end(),0))/float(localWaveform.size()));
-  median = localWaveform[localWaveform.size()/2];
-  mean   = std::round(realMean);
-  std::vector<float> adcLessPedVec;
-  adcLessPedVec.resize(localWaveform.size());
-  std::transform(localWaveform.begin(),localWaveform.end(),adcLessPedVec.begin(),std::bind(std::minus<float>(),std::placeholders::_1,median));
-  rms      = std::sqrt(std::inner_product(adcLessPedVec.begin(), adcLessPedVec.end(), adcLessPedVec.begin(), 0.) / float(adcLessPedVec.size()));
-  skewness = 3. * float(realMean - median) / rms;
-  return;
-}
-
 void algorithms::NoiseRemoval::filterWaveforms(const std::vector<std::vector<short>>& waveforms,
                                                const unsigned int grouping,
                                                const unsigned int nTicks,
-                                               std::vector<std::vector<short>>& noiseRemovedWfs,
-                                               std::vector<short>& means,
-                                               std::vector<short>& medians,
+                                               std::vector<std::vector<float>>& noiseRemovedWfs,
+                                               std::vector<float>& means,
+                                               std::vector<float>& medians,
                                                std::vector<float>& rmss)
 {
   auto numChannels = waveforms.size();
-  std::vector<std::vector<short>> filteredWaveforms;
+  std::vector<std::vector<float>> filteredWaveforms;
   filteredWaveforms.resize(numChannels);
   means.resize(numChannels);
   medians.resize(numChannels);
   rmss.resize(numChannels);
 
   for (unsigned int i=0; i<numChannels; ++i) {
-    short mean = 0;
-    short median = 0;
-    short mode = 0;
+    float mean = 0;
+    float median = 0;
+    float mode = 0;
     float rms = 0.0;
     float skewness = 0.0;
     filteredWaveforms[i].resize(waveforms.at(0).size());
-    getWaveformParams(waveforms[i], mean, median, mode, skewness, rms);
+    WaveformUtils wUtils;
+    wUtils.getWaveformParams(waveforms[i], mean, median, mode, skewness, rms);
     // Subtract Pedestals (Median of given waveform, one channel)
     std::transform(waveforms[i].begin(),waveforms[i].end(),filteredWaveforms[i].begin(),std::bind(std::minus<float>(),std::placeholders::_1,median));
     means[i] = mean;
