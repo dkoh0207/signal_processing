@@ -2,3 +2,5 @@ lib
 *.o
 *Dict.cxx
 build
+*/.depend
+python/sproc/__pycache__
