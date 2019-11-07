@@ -45,48 +45,58 @@ namespace algorithms {
                                                  float& skewness,
                                                  float& rms);
     
+    void getDilation(const Waveform<short>&,
+                     const unsigned int,
+                     Waveform<short>&) const;
+
+    void getDilation(const Waveform<float>&,
+                     const unsigned int,
+                     Waveform<float>&) const;
+
+    void getDilation(const Waveform<double>&,
+                     const unsigned int,
+                     Waveform<double>&) const;
+    
     void getErosionDilationAverageDifference(const Waveform<short>&,
-                                             int,
+                                             const unsigned int,
                                              Waveform<short>&,
                                              Waveform<short>&,
                                              Waveform<short>&,
                                              Waveform<short>&)         const;
 
     void getErosionDilationAverageDifference(const Waveform<float>&,
-                                             int,
+                                             const unsigned int,
                                              Waveform<float>&,
                                              Waveform<float>&,
                                              Waveform<float>&,
                                              Waveform<float>&)         const;
 
     void getErosionDilationAverageDifference(const Waveform<double>&,
-                                             int,
+                                             const unsigned int,
                                              Waveform<double>&,
                                              Waveform<double>&,
                                              Waveform<double>&,
                                              Waveform<double>&)         const;
 
-    void getOpeningAndClosing(const Waveform<short>&,  const Waveform<short>&,  int, Waveform<short>&,  Waveform<short>&)  const;
-    void getOpeningAndClosing(const Waveform<float>&,  const Waveform<float>&,  int, Waveform<float>&,  Waveform<float>&)  const;
-    void getOpeningAndClosing(const Waveform<double>&, const Waveform<double>&, int, Waveform<double>&, Waveform<double>&) const;
+    void getOpeningAndClosing(const Waveform<short>&,  const Waveform<short>&,  const unsigned int, Waveform<short>&,  Waveform<short>&)  const;
+    void getOpeningAndClosing(const Waveform<float>&,  const Waveform<float>&,  const unsigned int, Waveform<float>&,  Waveform<float>&)  const;
+    void getOpeningAndClosing(const Waveform<double>&, const Waveform<double>&, const unsigned int, Waveform<double>&, Waveform<double>&) const;
 
     /// Default destructor
     ~WaveformUtils(){}
     
   private:
-    template <typename T> void triangleSmooth(const std::vector<T>&, std::vector<T>&, size_t = 0)                                        const;
-    template <typename T> void medianSmooth(  const std::vector<T>&, std::vector<T>&, size_t = 3)                                        const;
-    template <typename T> void getTruncatedMean(const std::vector<T>&, T&, int&)                                                         const;
-    template <typename T> void getTruncatedMeanRMS(const std::vector<T>&, T, T&, T&, T&, int&)                                           const;
-    template <typename T> void firstDerivative(const std::vector<T>&,  std::vector<T>&)                                                  const;
+    template <typename T> void getDilation(const Waveform<T>& inputWaveform,
+                                           const unsigned int structuringElement,
+                                           Waveform<T>& dilationVec) const;
     template <typename T> void getErosionDilationAverageDifference(const Waveform<T>&,
-                                                                   int,
+                                                                   const unsigned int,
                                                                    Waveform<T>&,
                                                                    Waveform<T>&,
                                                                    Waveform<T>&,
                                                                    Waveform<T>&) const;
 
-    template <typename T> void getOpeningAndClosing(const Waveform<T>&,  const Waveform<T>&,  int, Waveform<T>&,  Waveform<T>&)  const;
+    template <typename T> void getOpeningAndClosing(const Waveform<T>&,  const Waveform<T>&,  const unsigned int, Waveform<T>&,  Waveform<T>&)  const;
   };
 }
 

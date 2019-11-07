@@ -36,8 +36,77 @@ void algorithms::WaveformUtils::getWaveformParams(const std::vector<short>& wave
   return;
 }
 
+void algorithms::WaveformUtils::getDilation(const Waveform<short>& waveform,
+                                            const unsigned int     structuringElement,
+                                            Waveform<short>& dilationVec) const
+{
+  getDilation<short>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+void algorithms::WaveformUtils::getDilation(const Waveform<float>& waveform,
+                                            const unsigned int     structuringElement,
+                                            Waveform<float>& dilationVec) const
+{
+  getDilation<float>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+
+void algorithms::WaveformUtils::getDilation(const Waveform<double>& waveform,
+                                            const unsigned int     structuringElement,
+                                            Waveform<double>& dilationVec) const
+{
+  getDilation<double>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+template <typename T> void algorithms::WaveformUtils::getDilation(const Waveform<T>& inputWaveform,
+                                                                  const unsigned int     structuringElement,
+                                                                  Waveform<T>&       dilationVec) const
+{
+    // Set the window size
+    int halfWindowSize(structuringElement/2);
+    // Initialize min and max elements
+
+    std::pair<typename Waveform<T>::const_iterator,typename Waveform<T>::const_iterator> minMaxItr =
+            std::minmax_element(inputWaveform.begin(),inputWaveform.begin()+halfWindowSize);
+
+    typename Waveform<T>::const_iterator minElementItr = minMaxItr.first;
+    typename Waveform<T>::const_iterator maxElementItr = minMaxItr.second;
+
+    // Initialize the erosion and dilation vectors
+    dilationVec.resize(inputWaveform.size());
+
+    // Now loop through remaining elements and complete the vectors
+    typename Waveform<T>::iterator maxItr = dilationVec.begin();
+
+    for (typename Waveform<T>::const_iterator inputItr = inputWaveform.begin(); inputItr != inputWaveform.end(); inputItr++)
+    {
+        // There are two conditions to check:
+        // 1) is the current min/max element outside the current window?
+        // 2) is the new element smaller/larger than the current min/max?
+        // Make sure we are not running off the end of the vector
+        if (std::distance(inputItr,inputWaveform.end()) > halfWindowSize)
+        {
+            if (std::distance(minElementItr,inputItr) >= halfWindowSize)
+                minElementItr = std::min_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
+            else if (*(inputItr + halfWindowSize) < *minElementItr)
+                minElementItr = inputItr + halfWindowSize;
+            if (std::distance(maxElementItr,inputItr) >= halfWindowSize)
+                maxElementItr = std::max_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
+            else if (*(inputItr + halfWindowSize) > *maxElementItr)
+                maxElementItr = inputItr + halfWindowSize;
+        }
+        // Update the vectors
+        *maxItr++ = *maxElementItr;
+    }
+    return;
+}
+
+
 void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Waveform<short>& waveform,
-                                                        int                    structuringElement,
+                                                        const unsigned int     structuringElement,
                                                         Waveform<short>&       erosionVec,
                                                         Waveform<short>&       dilationVec,
                                                         Waveform<short>&       averageVec,
@@ -48,7 +117,7 @@ void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Wavefo
 }
 
 void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Waveform<float>& waveform,
-                                                        int                    structuringElement,
+                                                        const unsigned int     structuringElement,
                                                         Waveform<float>&       erosionVec,
                                                         Waveform<float>&       dilationVec,
                                                         Waveform<float>&       averageVec,
@@ -59,7 +128,7 @@ void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Wavefo
 }
 
 void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Waveform<double>& waveform,
-                                                        int                     structuringElement,
+                                                        const unsigned int     structuringElement,
                                                         Waveform<double>&       erosionVec,
                                                         Waveform<double>&       dilationVec,
                                                         Waveform<double>&       averageVec,
@@ -70,7 +139,7 @@ void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Wavefo
 }
 
 template <typename T> void algorithms::WaveformUtils::getErosionDilationAverageDifference(const Waveform<T>& inputWaveform,
-                                                                              int                structuringElement,
+                                                                              const unsigned int     structuringElement,
                                                                               Waveform<T>&       erosionVec,
                                                                               Waveform<T>&       dilationVec,
                                                                               Waveform<T>&       averageVec,
@@ -107,11 +176,11 @@ template <typename T> void algorithms::WaveformUtils::getErosionDilationAverageD
         if (std::distance(inputItr,inputWaveform.end()) > halfWindowSize)
         {
             if (std::distance(minElementItr,inputItr) >= halfWindowSize)
-                minElementItr = std::min_element(inputItr - halfWindowSize + 1, inputItr + halfWindowSize + 1);
+                minElementItr = std::min_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
             else if (*(inputItr + halfWindowSize) < *minElementItr)
                 minElementItr = inputItr + halfWindowSize;
             if (std::distance(maxElementItr,inputItr) >= halfWindowSize)
-                maxElementItr = std::max_element(inputItr - halfWindowSize + 1, inputItr + halfWindowSize + 1);
+                maxElementItr = std::max_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
             else if (*(inputItr + halfWindowSize) > *maxElementItr)
                 maxElementItr = inputItr + halfWindowSize;
         }
@@ -127,7 +196,7 @@ template <typename T> void algorithms::WaveformUtils::getErosionDilationAverageD
 
 void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<short>& erosionVec,
                                          const Waveform<short>& dilationVec,
-                                         int                    structuringElement,
+                                         const unsigned int     structuringElement,
                                          Waveform<short>&       openingVec,
                                          Waveform<short>&       closingVec) const
 {
@@ -137,7 +206,7 @@ void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<short>& eros
 
 void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<float>& erosionVec,
                                          const Waveform<float>& dilationVec,
-                                         int                    structuringElement,
+                                         const unsigned int     structuringElement,
                                          Waveform<float>&       openingVec,
                                          Waveform<float>&       closingVec) const
 {
@@ -147,7 +216,7 @@ void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<float>& eros
 
 void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<double>& erosionVec,
                                          const Waveform<double>& dilationVec,
-                                         int                     structuringElement,
+                                         const unsigned int     structuringElement,
                                          Waveform<double>&       openingVec,
                                          Waveform<double>&       closingVec) const
 {
@@ -157,7 +226,7 @@ void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<double>& ero
 
 template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const Waveform<T>& erosionVec,
                                                                const Waveform<T>& dilationVec,
-                                                               int                structuringElement,
+                                                               const unsigned int     structuringElement,
                                                                Waveform<T>&       openingVec,
                                                                Waveform<T>&       closingVec)  const
 {
@@ -178,7 +247,7 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
         if (std::distance(inputItr,erosionVec.end()) > halfWindowSize)
         {
             if (std::distance(maxElementItr,inputItr) >= halfWindowSize)
-                maxElementItr = std::max_element(inputItr - halfWindowSize + 1, inputItr + halfWindowSize + 1);
+                maxElementItr = std::max_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
             else if (*(inputItr + halfWindowSize) > *maxElementItr)
                 maxElementItr = inputItr + halfWindowSize;
         }
@@ -200,7 +269,7 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
         if (std::distance(inputItr,dilationVec.end()) > halfWindowSize)
         {
             if (std::distance(minElementItr,inputItr) >= halfWindowSize)
-                minElementItr = std::min_element(inputItr - halfWindowSize + 1, inputItr + halfWindowSize + 1);
+                minElementItr = std::min_element(inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
             else if (*(inputItr + halfWindowSize) < *minElementItr)
                 minElementItr = inputItr + halfWindowSize;
         }
@@ -212,4 +281,4 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
 
 
 
-#endif
+#endif   
