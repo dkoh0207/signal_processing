@@ -9,7 +9,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class algorithms::sample+;
 #pragma link C++ class algorithms::NoiseRemoval+;
 #pragma link C++ class std::vector<std::vector<double> >+;
 #pragma link C++ class MorphCollection::algorithms+;
