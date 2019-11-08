@@ -7,15 +7,16 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
                          std::vector<std::vector<float>>& filteredWaveforms,
                          const unsigned int grouping, 
                          const unsigned int nTicks,
-                         const unsigned int structuringElement)
+                         const unsigned int structuringElement,
+                         const unsigned int window)
 {
   std::vector<std::vector<float>> waveLessCoherent(
     filteredWaveforms.size(), std::vector<float>(filteredWaveforms.at(0).size(), 0.0));
 
   std::vector<std::vector<bool>> selectVals(
-    filteredWaveforms.size(), std::vector<bool>(filteredWaveforms.at(0).size(), 0.0));
+    filteredWaveforms.size(), std::vector<bool>(filteredWaveforms.at(0).size(), true));
 
-  getSelectVals(filteredWaveforms, grouping, nTicks, structuringElement, selectVals);
+  getSelectVals(filteredWaveforms, grouping, nTicks, structuringElement, selectVals, window);
 
   auto numChannels = (int) filteredWaveforms.size();
 
@@ -62,11 +63,11 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
                                                 const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
-                                                std::vector<std::vector<bool>>& selectVals)
+                                                std::vector<std::vector<bool>>& selectVals,
+                                                const unsigned int window)
 {
   WaveformUtils wUtils;
   auto numChannels = waveforms.size();
-  selectVals.resize(numChannels);
 
   for (auto i=0; i<numChannels; ++i) {
     std::vector<float> dilation;
@@ -98,12 +99,23 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
       gradientBase.end(), gradientBase.begin(), 0.) / float(gradientBase.size()));
     float threshold;
     threshold = gradientMed + gradientRMS * 2.5;
+    // Should be better ways to do this.
     for (auto j=0; j<nTicks; ++j) {
-      bool sVal = true;
       if (waveforms[i][j] >= threshold) {
-        sVal = false;
+        selectVals[i][j] = false;
+        if (j > window-1) {
+          for (auto k=0; k<window; ++k) {
+            if (!selectVals[i][j-k]) continue;
+            selectVals[i][j-k] = false;
+          }
+        }
+        if (j < nTicks-window) {
+          for (auto k=0; k<window; ++k) {
+            if (!selectVals[i][j+k]) continue;
+            selectVals[i][j+k] = false;
+          }
+        }
       }
-      selectVals[i][j] = sVal;
     }
   }
   return;
@@ -114,6 +126,7 @@ void algorithms::MorphInduction::filterWaveforms(const std::vector<std::vector<s
                                                const unsigned int grouping,
                                                const unsigned int nTicks,
                                                const unsigned int structuringElement,
+                                               const unsigned int window,
                                                std::vector<std::vector<float>>& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
@@ -141,8 +154,10 @@ void algorithms::MorphInduction::filterWaveforms(const std::vector<std::vector<s
     medians[i] = median;
     rmss[i] = rms;
   }
-  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement);
+  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement, window);
   return;
 }
+
+
 
 #endif

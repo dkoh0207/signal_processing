@@ -49,7 +49,9 @@ namespace algorithms {
                                                std::vector<std::vector<float>>& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
-                                               std::vector<float>& rmss);
+                                               std::vector<float>& totalRMS,
+                                               std::vector<std::vector<float>>& intrinsicRMS,
+                                               std::vector<float>& cleanRMS);
 
     void getSelectVals(const std::vector<std::vector<float>>& waveforms,
                                                 const unsigned int grouping,

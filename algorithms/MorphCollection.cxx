@@ -115,31 +115,61 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
                                                std::vector<std::vector<float>>& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
-                                               std::vector<float>& rmss)
+                                               std::vector<float>& totalRMS,
+                                               std::vector<std::vector<float>>& intrinsicRMS,
+                                               std::vector<float>& cleanRMS)
 {
   auto numChannels = waveforms.size();
+  auto nGroups = (int) numChannels / grouping;
   std::vector<std::vector<float>> filteredWaveforms;
   filteredWaveforms.resize(numChannels);
   means.resize(numChannels);
   medians.resize(numChannels);
-  rmss.resize(numChannels);
+  totalRMS.resize(numChannels);
+  cleanRMS.resize(numChannels);
+  intrinsicRMS.resize(nGroups);
+
+  for (auto i=0; i<nGroups; ++i) {
+    intrinsicRMS[i].resize(nTicks);
+  }
+
+  float mean = 0;
+  float median = 0;
+  float mode = 0;
+  float rms = 0.0;
+  float skewness = 0.0;
 
   for (auto i=0; i<numChannels; ++i) {
-    float mean = 0;
-    float median = 0;
-    float mode = 0;
-    float rms = 0.0;
-    float skewness = 0.0;
     filteredWaveforms[i].resize(waveforms.at(0).size());
     WaveformUtils wUtils;
     wUtils.getWaveformParams(waveforms[i], mean, median, mode, skewness, rms);
     // Subtract Pedestals (Median of given waveform, one channel)
     std::transform(waveforms[i].begin(),waveforms[i].end(),filteredWaveforms[i].begin(),std::bind(std::minus<float>(),std::placeholders::_1,median));
+    wUtils.getWaveformParams(filteredWaveforms[i], mean, median, mode, skewness, rms);
     means[i] = mean;
     medians[i] = median;
-    rmss[i] = rms;
+    totalRMS[i] = rms;
   }
+
   noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement);
+
+  for (auto i=0; i<numChannels; ++i) {
+    WaveformUtils wUtils;
+    wUtils.getWaveformParams(noiseRemovedWfs[i], mean, median, mode, skewness, rms);
+    cleanRMS[i] = rms;
+  }
+
+  for (auto i=0; i<nGroups; ++i) {
+    for (auto j=0; j<nTicks; ++j) {
+      std::vector<float> v(nTicks, 0.0);
+      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+        v[k] = noiseRemovedWfs[k][j];
+      }
+      rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
+      intrinsicRMS[i][j] = rms;
+    }
+  }
+
   return;
 }
 

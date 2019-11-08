@@ -38,12 +38,26 @@ namespace algorithms {
     /// Default constructor
     WaveformUtils(){}
 
-    void getWaveformParams(const std::vector<short>& waveform,
-                                                 float& mean,
-                                                 float& median,
-                                                 float& mode,
-                                                 float& skewness,
-                                                 float& rms);
+    void getWaveformParams(const std::vector<short>&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&);
+
+    void getWaveformParams(const std::vector<float>&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&);
+
+    void getWaveformParams(const std::vector<double>&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&,
+                                                 float&);
     
     void getDilation(const Waveform<short>&,
                      const unsigned int,
@@ -86,6 +100,14 @@ namespace algorithms {
     ~WaveformUtils(){}
     
   private:
+
+    template <typename T> void getWaveformParams(const std::vector<T>& waveform,
+                                                 float& mean,
+                                                 float& median,
+                                                 float& mode,
+                                                 float& skewness,
+                                                 float& rms);
+
     template <typename T> void getDilation(const Waveform<T>& inputWaveform,
                                            const unsigned int structuringElement,
                                            Waveform<T>& dilationVec) const;

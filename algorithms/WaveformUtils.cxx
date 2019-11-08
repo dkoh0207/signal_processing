@@ -10,13 +10,47 @@ void algorithms::WaveformUtils::getWaveformParams(const std::vector<short>& wave
                                                  float& skewness,
                                                  float& rms)
 {
+  getWaveformParams<short>(waveform, mean, median, mode, skewness, rms);
+  return;
+}
+
+void algorithms::WaveformUtils::getWaveformParams(const std::vector<float>& waveform,
+                                                 float& mean,
+                                                 float& median,
+                                                 float& mode,
+                                                 float& skewness,
+                                                 float& rms)
+{
+  getWaveformParams<float>(waveform, mean, median, mode, skewness, rms);
+  return;
+}
+
+void algorithms::WaveformUtils::getWaveformParams(const std::vector<double>& waveform,
+                                                 float& mean,
+                                                 float& median,
+                                                 float& mode,
+                                                 float& skewness,
+                                                 float& rms)
+{
+  getWaveformParams<double>(waveform, mean, median, mode, skewness, rms);
+  return;
+}
+
+
+template <typename T> void algorithms::WaveformUtils::getWaveformParams(const std::vector<T>& waveform,
+                                                 float& mean,
+                                                 float& median,
+                                                 float& mode,
+                                                 float& skewness,
+                                                 float& rms)
+{
   /*
   Calculate waveform parameters for a given 1D waveform.
 
   INPUTS:
     - waveform: 1D RawDigit Waveform.
   */
-  std::vector<short> localWaveform = waveform;
+  typename std::vector<T> localWaveform = waveform;
   float realMean(float(std::accumulate(localWaveform.begin(),localWaveform.end(),0))/float(localWaveform.size()));
   if (localWaveform.size() % 2 == 0) {
     const auto m1 = localWaveform.begin() + localWaveform.size() / 2 - 1;
@@ -35,6 +69,8 @@ void algorithms::WaveformUtils::getWaveformParams(const std::vector<short>& wave
   skewness = 3. * float(realMean - median) / rms;
   return;
 }
+
+
 
 void algorithms::WaveformUtils::getDilation(const Waveform<short>& waveform,
                                             const unsigned int     structuringElement,
