@@ -14,6 +14,14 @@
 #ifndef __ALGORITHMS_MORPHINDUCTION_H__
 #define __ALGORITHMS_MORPHINDUCTION_H__
 
+#include <vector>
+#include <algorithm>
+#include <iterator>
+#include <numeric>
+#include <cmath>
+#include <functional>
+#include "WaveformUtils.h"
+
 namespace algorithms {
 
   /**
@@ -27,6 +35,27 @@ namespace algorithms {
     
     /// Default constructor
     MorphInduction(){}
+
+    std::vector<std::vector<float>> removeCoherentNoise(
+                         std::vector<std::vector<float>>& filteredWaveforms, 
+                         const unsigned int grouping, 
+                         const unsigned int nTicks,
+                         const unsigned int structuringElement);
+
+    void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
+                                               const unsigned int grouping,
+                                               const unsigned int nTicks,
+                                               const unsigned int structuringElement,
+                                               std::vector<std::vector<float>>& noiseRemovedWfs,
+                                               std::vector<float>& means,
+                                               std::vector<float>& medians,
+                                               std::vector<float>& rmss);
+
+    void getSelectVals(const std::vector<std::vector<float>>& waveforms,
+                                                const unsigned int grouping,
+                                                const unsigned int nTicks,
+                                                const unsigned int structuringElement,
+                                                std::vector<std::vector<bool>>& selectVals);
     
     /// Default destructor
     ~MorphInduction(){}
