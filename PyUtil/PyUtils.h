@@ -19,6 +19,10 @@ namespace sproc {
     /// Utility function: call one-time-only numpy module initialization (you don't
     /// have to call)
     void SetPyUtil();
+    /// A function to convert 1D std::vector<float> to numpy array
+    PyObject* as_ndarray(const std::vector<float>& data);
+    /// A function to convert 2D std::vector<std::vector<float>> to numpy array
+    PyObject* as_ndarray(const std::vector<std::vector<float> >& data);
     /// A function to convert 1D float pyarray to std::vector
     std::vector<float> as_float32_vector(PyObject* pyarray);
     /// A function to convert 2D float pyarray to std::vector
