@@ -40,7 +40,9 @@ namespace algorithms {
                          std::vector<std::vector<float>>& filteredWaveforms, 
                          const unsigned int grouping, 
                          const unsigned int nTicks,
-                         const unsigned int structuringElement);
+                         const unsigned int structuringElement,
+                         std::vector<std::vector<float>>& intrinsicRMS,
+                         std::vector<std::vector<bool>>& selectVals);
 
     void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
                                                const unsigned int grouping,

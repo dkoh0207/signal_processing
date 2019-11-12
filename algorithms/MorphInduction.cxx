@@ -8,13 +8,22 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
                          const unsigned int grouping, 
                          const unsigned int nTicks,
                          const unsigned int structuringElement,
-                         const unsigned int window)
+                         const unsigned int window,
+                         std::vector<std::vector<float>>& intrinsicRMS,
+                         std::vector<std::vector<bool>>& selectVals)
 {
   std::vector<std::vector<float>> waveLessCoherent(
     filteredWaveforms.size(), std::vector<float>(filteredWaveforms.at(0).size(), 0.0));
 
-  std::vector<std::vector<bool>> selectVals(
-    filteredWaveforms.size(), std::vector<bool>(filteredWaveforms.at(0).size(), true));
+  selectVals.resize(filteredWaveforms.size());
+  for (auto& v : selectVals) {
+    v.resize(filteredWaveforms.at(0).size());
+  }
+  for (auto i=0; i<selectVals.size(); ++i) {
+    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+      selectVals[i][j] = true;
+    }
+  }
 
   getSelectVals(filteredWaveforms, grouping, nTicks, structuringElement, selectVals, window);
 
@@ -54,6 +63,22 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
           waveLessCoherent[c][i] = filteredWaveforms[c][i];
         }
       }
+    }
+  }
+  auto nGroups = numChannels / grouping;
+  intrinsicRMS.resize(nGroups);
+  for (auto& v : intrinsicRMS) {
+    v.resize(nTicks);
+  }
+  float rms = 0.0;
+  for (auto i=0; i<nGroups; ++i) {
+    for (auto j=0; j<nTicks; ++j) {
+      std::vector<float> v(nTicks, 0.0);
+      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+        v[k] = waveLessCoherent[k][j];
+      }
+      rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
+      intrinsicRMS[i][j] = rms;
     }
   }
   return waveLessCoherent;
@@ -130,9 +155,12 @@ void algorithms::MorphInduction::filterWaveforms(const std::vector<std::vector<s
                                                std::vector<std::vector<float>>& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
-                                               std::vector<float>& rmss)
+                                               std::vector<float>& rmss,
+                                               std::vector<std::vector<float>>& intrinsicRMS)
 {
   auto numChannels = waveforms.size();
+  auto nGroups = numChannels / grouping;
+  std::vector<std::vector<bool>> selectVals;
   std::vector<std::vector<float>> filteredWaveforms;
   filteredWaveforms.resize(numChannels);
   means.resize(numChannels);
@@ -154,7 +182,7 @@ void algorithms::MorphInduction::filterWaveforms(const std::vector<std::vector<s
     medians[i] = median;
     rmss[i] = rms;
   }
-  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement, window);
+  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement, window, intrinsicRMS, selectVals);
   return;
 }
 

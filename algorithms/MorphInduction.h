@@ -41,7 +41,9 @@ namespace algorithms {
                          const unsigned int grouping, 
                          const unsigned int nTicks,
                          const unsigned int structuringElement,
-                         const unsigned int window);
+                         const unsigned int window,
+                         std::vector<std::vector<float>>& intrinsicRMS,
+                         std::vector<std::vector<bool>>& selectVals);
 
     void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
                                                const unsigned int grouping,
@@ -51,7 +53,8 @@ namespace algorithms {
                                                std::vector<std::vector<float>>& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
-                                               std::vector<float>& rmss);
+                                               std::vector<float>& rmss,
+                                               std::vector<std::vector<float>>& intrinsicRMS);
 
     void getSelectVals(const std::vector<std::vector<float>>& waveforms,
                                                 const unsigned int grouping,

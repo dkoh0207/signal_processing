@@ -8,17 +8,27 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
                          std::vector<std::vector<float>>& filteredWaveforms,
                          const unsigned int grouping, 
                          const unsigned int nTicks,
-                         const unsigned int structuringElement)
+                         const unsigned int structuringElement,
+                         std::vector<std::vector<float>>& intrinsicRMS,
+                         std::vector<std::vector<bool>>& selectVals)
 {
   std::vector<std::vector<float>> waveLessCoherent(
     filteredWaveforms.size(), std::vector<float>(filteredWaveforms.at(0).size(), 0.0));
 
-  std::vector<std::vector<bool>> selectVals(
-    filteredWaveforms.size(), std::vector<bool>(filteredWaveforms.at(0).size(), 0.0));
+  selectVals.resize(filteredWaveforms.size());
+  for (auto& v : selectVals) {
+    v.resize(filteredWaveforms.at(0).size());
+  }
+  for (auto i=0; i<selectVals.size(); ++i) {
+    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+      selectVals[i][j] = true;
+    }
+  }
 
   getSelectVals(filteredWaveforms, grouping, nTicks, structuringElement, selectVals);
 
   auto numChannels = (int) filteredWaveforms.size();
+  auto nGroups = numChannels / grouping;
 
   for (auto i=0; i<nTicks; ++i) {
     for (auto j=0; j<numChannels/grouping; ++j) {
@@ -54,6 +64,21 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
           waveLessCoherent[c][i] = filteredWaveforms[c][i];
         }
       }
+    }
+  }
+  intrinsicRMS.resize(nGroups);
+  for (auto& v : intrinsicRMS) {
+    v.resize(nTicks);
+  }
+  float rms = 0.0;
+  for (auto i=0; i<nGroups; ++i) {
+    for (auto j=0; j<nTicks; ++j) {
+      std::vector<float> v(nTicks, 0.0);
+      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+        v[k] = waveLessCoherent[k][j];
+      }
+      rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
+      intrinsicRMS[i][j] = rms;
     }
   }
   return waveLessCoherent;
@@ -122,6 +147,7 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
   auto numChannels = waveforms.size();
   auto nGroups = (int) numChannels / grouping;
   std::vector<std::vector<float>> filteredWaveforms;
+  std::vector<std::vector<bool>> selectVals;
   filteredWaveforms.resize(numChannels);
   means.resize(numChannels);
   medians.resize(numChannels);
@@ -151,23 +177,12 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
     totalRMS[i] = rms;
   }
 
-  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement);
+  noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, structuringElement, intrinsicRMS, selectVals);
 
   for (auto i=0; i<numChannels; ++i) {
     WaveformUtils wUtils;
     wUtils.getWaveformParams(noiseRemovedWfs[i], mean, median, mode, skewness, rms);
     cleanRMS[i] = rms;
-  }
-
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
-      std::vector<float> v(nTicks, 0.0);
-      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
-        v[k] = noiseRemovedWfs[k][j];
-      }
-      rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
-      intrinsicRMS[i][j] = rms;
-    }
   }
 
   return;
