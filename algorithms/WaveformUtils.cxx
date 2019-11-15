@@ -317,4 +317,60 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
 
 
 
+void algorithms::WaveformUtils::getMorph2D(const std::vector<std::vector<float>>& waveforms,
+                                            const unsigned int grouping,
+                                            const unsigned int nTicks,
+                                            const unsigned int structuringElementx,
+                                            const unsigned int structuringElementy,
+                                            std::vector<std::vector<float>>& dilation2D,
+                                            std::vector<std::vector<float>>& erosion2D,
+                                            std::vector<std::vector<float>>& gradient2D,
+                                            const unsigned int window)
+{
+  WaveformUtils wUtils;
+  auto numChannels = waveforms.size();
+  int xHalfWindowSize(structuringElementx / 2);
+  int yHalfWindowSize(structuringElementy / 2);
+
+  dilation2D.resize(waveforms.size());
+  erosion2D.resize(waveforms.size());
+  gradient2D.resize(waveforms.size());
+
+  for (auto i=0; i<waveforms.size(); ++i) {
+    dilation2D[i].resize(waveforms.at(0).size());
+    erosion2D[i].resize(waveforms.at(0).size());
+    gradient2D[i].resize(waveforms.at(0).size());
+  }
+
+  for (auto i=0; i<numChannels; ++i) {
+    for (auto j=0; j<nTicks; ++j) {
+      // For each center pixel, do 2D morphological filtering.
+      int lbx = i - (int) xHalfWindowSize;
+      int ubx = i + (int) xHalfWindowSize;
+      int lby = j - (int) yHalfWindowSize;
+      int uby = j + (int) yHalfWindowSize;
+      int lowerBoundx = std::max(lbx, 0);
+      int upperBoundx = std::min(ubx, (int) numChannels);
+      int lowerBoundy = std::max(lby, 0);
+      int upperBoundy = std::min(uby, (int) nTicks);
+      std::vector<float> v;
+      for (auto ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (auto iy=lowerBoundy; iy<upperBoundy; ++iy) {
+          v.push_back(waveforms[ix][iy]);
+        }
+      }
+      float erosion = *std::min_element(v.begin(), v.end());
+      float dilation = *std::max_element(v.begin(), v.end());
+      float gradient = dilation - erosion;
+      dilation2D[i][j] = dilation;
+      erosion2D[i][j] = erosion;
+      gradient2D[i][j] = gradient;
+    }
+  }
+  return;
+}
+
+
+
+
 #endif   

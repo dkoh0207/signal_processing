@@ -14,6 +14,7 @@
 #ifndef __ALGORITHMS_WAVEFORMUTILS_H__
 #define __ALGORITHMS_WAVEFORMUTILS_H__
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <iterator>
@@ -96,6 +97,16 @@ namespace algorithms {
     void getOpeningAndClosing(const Waveform<float>&,  const Waveform<float>&,  const unsigned int, Waveform<float>&,  Waveform<float>&)  const;
     void getOpeningAndClosing(const Waveform<double>&, const Waveform<double>&, const unsigned int, Waveform<double>&, Waveform<double>&) const;
 
+
+    void getMorph2D(const std::vector<std::vector<float>>&,
+                    const unsigned int,
+                    const unsigned int,
+                    const unsigned int,
+                    const unsigned int,
+                    std::vector<std::vector<float>>&,
+                    std::vector<std::vector<float>>&,
+                    std::vector<std::vector<float>>&,
+                    const unsigned int);
     /// Default destructor
     ~WaveformUtils(){}
     

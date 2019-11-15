@@ -73,9 +73,9 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
   float rms = 0.0;
   for (auto i=0; i<nGroups; ++i) {
     for (auto j=0; j<nTicks; ++j) {
-      std::vector<float> v(nTicks, 0.0);
+      std::vector<float> v;
       for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
-        v[k] = waveLessCoherent[k][j];
+        v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
       intrinsicRMS[i][j] = rms;
@@ -83,6 +83,89 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
   }
   return waveLessCoherent;
 }
+
+std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2D(
+                         std::vector<std::vector<float>>& filteredWaveforms,
+                         const unsigned int grouping, 
+                         const unsigned int nTicks,
+                         const unsigned int structuringElementx,
+                         const unsigned int structuringElementy,
+                         const unsigned int window,
+                         std::vector<std::vector<float>>& intrinsicRMS,
+                         std::vector<std::vector<bool>>& selectVals)
+{
+  std::vector<std::vector<float>> waveLessCoherent(
+    filteredWaveforms.size(), std::vector<float>(filteredWaveforms.at(0).size(), 0.0));
+
+  selectVals.resize(filteredWaveforms.size());
+  for (auto& v : selectVals) {
+    v.resize(filteredWaveforms.at(0).size());
+  }
+  for (auto i=0; i<selectVals.size(); ++i) {
+    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+      selectVals[i][j] = true;
+    }
+  }
+
+  getSelectVals2D(filteredWaveforms, grouping, nTicks, structuringElementx, structuringElementy, selectVals, window);
+  std::cout << "Pass" << std::endl;
+  auto numChannels = (int) filteredWaveforms.size();
+
+  for (auto i=0; i<nTicks; ++i) {
+    for (auto j=0; j<numChannels/grouping; ++j) {
+      int group_start = j * grouping;
+      int group_end = (j+1) * grouping;
+      // Compute median.
+      std::vector<float> v;
+      for (auto c=group_start; c<group_end; ++c) {
+        if (selectVals[c][i]) {
+          v.push_back(filteredWaveforms[c][i]);
+        }
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        if (v.size() % 2 == 0) {
+          const auto m1 = v.begin() + v.size() / 2 - 1;
+          const auto m2 = v.begin() + v.size() / 2;
+          std::nth_element(v.begin(), m1, v.end());
+          const auto e1 = *m1;
+          std::nth_element(v.begin(), m2, v.end());
+          const auto e2 = *m2;
+          median = (e1 + e2) / 2.0;
+        } else {
+          const auto m = v.begin() + v.size() / 2;
+          std::nth_element(v.begin(), m, v.end());
+          median = *m;
+        }
+      }
+      for (auto c=group_start; c<group_end; ++c) {
+        if (selectVals[c][i]) {
+          waveLessCoherent[c][i] = filteredWaveforms[c][i] - median;
+        } else {
+          waveLessCoherent[c][i] = filteredWaveforms[c][i];
+        }
+      }
+    }
+  }
+  auto nGroups = numChannels / grouping;
+  intrinsicRMS.resize(nGroups);
+  for (auto& v : intrinsicRMS) {
+    v.resize(nTicks);
+  }
+  float rms = 0.0;
+  for (auto i=0; i<nGroups; ++i) {
+    for (auto j=0; j<nTicks; ++j) {
+      std::vector<float> v;
+      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+        v.push_back(waveLessCoherent[k][j]);
+      }
+      rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
+      intrinsicRMS[i][j] = rms;
+    }
+  }
+  return waveLessCoherent;
+}
+
 
 void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<float>>& waveforms,
                                                 const unsigned int grouping,
@@ -123,23 +206,76 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
     gradientRMS = std::sqrt(std::inner_product(gradientBase.begin(), 
       gradientBase.end(), gradientBase.begin(), 0.) / float(gradientBase.size()));
     float threshold;
-    threshold = gradientMed + gradientRMS * 2.5;
-    // Should be better ways to do this.
-    for (auto j=0; j<nTicks; ++j) {
-      if (waveforms[i][j] >= threshold) {
+    threshold = gradientRMS * 2.5;
+
+    for (int j=0; j<nTicks; ++j) {
+      if (waveforms[i][j] > threshold) {
+        // Check Bounds
+        int lb = j - (int) window;
+        int ub = j + (int) window;
+        int lowerBound = std::max(lb, 0);
+        int upperBound = std::min(ub, (int) nTicks);
+        for (auto k=lowerBound; k<upperBound; ++k) {
+          selectVals[i][k] = false;
+        }
+      } else {
+        selectVals[i][j] = true;
+      }
+    }
+  }
+  return;
+}
+
+
+void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<float>>& waveforms,
+                                                const unsigned int grouping,
+                                                const unsigned int nTicks,
+                                                const unsigned int structuringElementx,
+                                                const unsigned int structuringElementy,
+                                                std::vector<std::vector<bool>>& selectVals,
+                                                const unsigned int window)
+{
+  WaveformUtils wUtils;
+  auto numChannels = waveforms.size();
+
+  std::vector<std::vector<float>> dilation2D;
+  std::vector<std::vector<float>> erosion2D;
+  std::vector<std::vector<float>> gradient2D;
+
+  wUtils.getMorph2D(waveforms, grouping, nTicks, structuringElementx, 
+    structuringElementy, dilation2D, erosion2D, gradient2D, window);
+
+  for (auto i=0; i<numChannels; ++i) {
+    float gradientMed = 0.0;
+    if (gradient2D[i].size() % 2 == 0) {
+      const auto m1 = gradient2D[i].begin() + gradient2D[i].size() / 2 - 1;
+      const auto m2 = gradient2D[i].begin() + gradient2D[i].size() / 2;
+      std::nth_element(gradient2D[i].begin(), m1, gradient2D[i].end());
+      const auto e1 = *m1;
+      std::nth_element(gradient2D[i].begin(), m2, gradient2D[i].end());
+      const auto e2 = *m2;
+      gradientMed = (e1 + e2) / 2.0;
+    } else {
+      const auto m = gradient2D[i].begin() + gradient2D[i].size() / 2;
+      std::nth_element(gradient2D[i].begin(), m, gradient2D[i].end());
+      gradientMed = *m;
+    }
+    std::vector<float> gradientBase;
+    gradientBase.resize(gradient2D[i].size());
+    for (auto j=0; j<gradientBase.size(); ++j) {
+      gradientBase[j] = gradient2D[i][j] - gradientMed;
+    }
+    float gradientRMS;
+    gradientRMS = std::sqrt(std::inner_product(gradientBase.begin(), 
+      gradientBase.end(), gradientBase.begin(), 0.) / float(gradientBase.size()));
+    float threshold;
+    threshold = gradientRMS * 2.0;
+
+    for (int j=0; j<nTicks; ++j) {
+      if (gradientBase[j] > threshold) {
         selectVals[i][j] = false;
-        if (j > window-1) {
-          for (auto k=0; k<window; ++k) {
-            if (!selectVals[i][j-k]) continue;
-            selectVals[i][j-k] = false;
-          }
-        }
-        if (j < nTicks-window) {
-          for (auto k=0; k<window; ++k) {
-            if (!selectVals[i][j+k]) continue;
-            selectVals[i][j+k] = false;
-          }
-        }
+      } else {
+        selectVals[i][j] = true;
       }
     }
   }

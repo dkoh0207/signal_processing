@@ -73,9 +73,9 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
   float rms = 0.0;
   for (auto i=0; i<nGroups; ++i) {
     for (auto j=0; j<nTicks; ++j) {
-      std::vector<float> v(nTicks, 0.0);
+      std::vector<float> v;
       for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
-        v[k] = waveLessCoherent[k][j];
+        v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
       intrinsicRMS[i][j] = rms;
