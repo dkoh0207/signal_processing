@@ -5,3 +5,4 @@ build
 */.depend
 python/sproc/__pycache__
 *.pyc
+.vscode

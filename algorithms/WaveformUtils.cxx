@@ -317,14 +317,14 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
 
 
 
-void algorithms::WaveformUtils::getMorph2D(const std::vector<std::vector<float>>& waveforms,
+void algorithms::WaveformUtils::getMorph2D(const std::vector<std::vector<float> >& waveforms,
                                             const unsigned int grouping,
                                             const unsigned int nTicks,
                                             const unsigned int structuringElementx,
                                             const unsigned int structuringElementy,
-                                            std::vector<std::vector<float>>& dilation2D,
-                                            std::vector<std::vector<float>>& erosion2D,
-                                            std::vector<std::vector<float>>& gradient2D,
+                                            std::vector<std::vector<float> >& dilation2D,
+                                            std::vector<std::vector<float> >& erosion2D,
+                                            std::vector<std::vector<float> >& gradient2D,
                                             const unsigned int window)
 {
   WaveformUtils wUtils;

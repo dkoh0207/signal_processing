@@ -227,52 +227,58 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
 }
 
 
-void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<float>>& waveforms,
+void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
                                                 const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElementx,
                                                 const unsigned int structuringElementy,
-                                                std::vector<std::vector<bool>>& selectVals,
+                                                std::vector< std::vector<bool> >& selectVals,
                                                 const unsigned int window)
 {
   WaveformUtils wUtils;
   auto numChannels = waveforms.size();
 
-  std::vector<std::vector<float>> dilation2D;
-  std::vector<std::vector<float>> erosion2D;
-  std::vector<std::vector<float>> gradient2D;
+  std::vector<std::vector<float> > dilation2D;
+  std::vector<std::vector<float> > erosion2D;
+  std::vector<std::vector<float> > gradient2D;
 
   wUtils.getMorph2D(waveforms, grouping, nTicks, structuringElementx, 
     structuringElementy, dilation2D, erosion2D, gradient2D, window);
 
   for (auto i=0; i<numChannels; ++i) {
     float gradientMed = 0.0;
-    if (gradient2D[i].size() % 2 == 0) {
-      const auto m1 = gradient2D[i].begin() + gradient2D[i].size() / 2 - 1;
-      const auto m2 = gradient2D[i].begin() + gradient2D[i].size() / 2;
-      std::nth_element(gradient2D[i].begin(), m1, gradient2D[i].end());
+    std::vector<float> localGrad;
+    localGrad.resize(nTicks);
+    for (auto j=0; j<nTicks; ++j) {
+      localGrad[j] = gradient2D[i][j];
+    }
+    if (localGrad.size() % 2 == 0) {
+      const auto m1 = localGrad.begin() + localGrad.size() / 2 - 1;
+      const auto m2 = localGrad.begin() + localGrad.size() / 2;
+      std::nth_element(localGrad.begin(), m1, localGrad.end());
       const auto e1 = *m1;
-      std::nth_element(gradient2D[i].begin(), m2, gradient2D[i].end());
+      std::nth_element(localGrad.begin(), m2, localGrad.end());
       const auto e2 = *m2;
       gradientMed = (e1 + e2) / 2.0;
     } else {
-      const auto m = gradient2D[i].begin() + gradient2D[i].size() / 2;
-      std::nth_element(gradient2D[i].begin(), m, gradient2D[i].end());
+      const auto m = localGrad.begin() + localGrad.size() / 2;
+      std::nth_element(localGrad.begin(), m, localGrad.end());
       gradientMed = *m;
     }
-    std::vector<float> gradientBase;
-    gradientBase.resize(gradient2D[i].size());
-    for (auto j=0; j<gradientBase.size(); ++j) {
-      gradientBase[j] = gradient2D[i][j] - gradientMed;
+    std::vector<float> gradientBase(nTicks);
+    for (auto k=0; k<nTicks; ++k) {
+      float gradient = 0.0;
+      gradient = gradient2D[i][k];
+      gradientBase[k] = gradient - gradientMed;
     }
     float gradientRMS;
     gradientRMS = std::sqrt(std::inner_product(gradientBase.begin(), 
       gradientBase.end(), gradientBase.begin(), 0.) / float(gradientBase.size()));
     float threshold;
-    threshold = gradientRMS * 2.0;
+    threshold = gradientRMS * 3.0;
 
-    for (int j=0; j<nTicks; ++j) {
-      if (gradientBase[j] > threshold) {
+    for (auto j=0; j<nTicks; ++j) {
+      if (std::abs(gradientBase[j]) > threshold) {
         selectVals[i][j] = false;
       } else {
         selectVals[i][j] = true;

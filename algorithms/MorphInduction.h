@@ -15,6 +15,8 @@
 #define __ALGORITHMS_MORPHINDUCTION_H__
 
 #include <vector>
+#include <iostream>
+#include <string>
 #include <algorithm>
 #include <iterator>
 #include <numeric>
@@ -37,13 +39,13 @@ namespace algorithms {
     MorphInduction(){}
 
     std::vector<std::vector<float>> removeCoherentNoise(
-                         std::vector<std::vector<float>>& filteredWaveforms, 
+                         std::vector<std::vector<float> >& filteredWaveforms, 
                          const unsigned int grouping, 
                          const unsigned int nTicks,
                          const unsigned int structuringElement,
                          const unsigned int window,
-                         std::vector<std::vector<float>>& intrinsicRMS,
-                         std::vector<std::vector<bool>>& selectVals);
+                         std::vector<std::vector<float> >& intrinsicRMS,
+                         std::vector<std::vector<bool> >& selectVals);
 
     std::vector<std::vector<float>> removeCoherentNoise2D(
                          std::vector<std::vector<float>>& filteredWaveforms, 
@@ -52,33 +54,33 @@ namespace algorithms {
                          const unsigned int structuringElementx,
                          const unsigned int structuringElementy,
                          const unsigned int window,
-                         std::vector<std::vector<float>>& intrinsicRMS,
-                         std::vector<std::vector<bool>>& selectVals);
+                         std::vector<std::vector<float> >& intrinsicRMS,
+                         std::vector<std::vector<bool> >& selectVals);
 
-    void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
+    void filterWaveforms(const std::vector<std::vector<short> >& waveforms,
                                                const unsigned int grouping,
                                                const unsigned int nTicks,
                                                const unsigned int structuringElement,
                                                const unsigned int window,
-                                               std::vector<std::vector<float>>& noiseRemovedWfs,
+                                               std::vector<std::vector<float> >& noiseRemovedWfs,
                                                std::vector<float>& means,
                                                std::vector<float>& medians,
                                                std::vector<float>& rmss,
-                                               std::vector<std::vector<float>>& intrinsicRMS);
+                                               std::vector<std::vector<float> >& intrinsicRMS);
 
-    void getSelectVals(const std::vector<std::vector<float>>& waveforms,
+    void getSelectVals(const std::vector<std::vector<float> >& waveforms,
                                                 const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
-                                                std::vector<std::vector<bool>>& selectVals,
+                                                std::vector<std::vector<bool> >& selectVals,
                                                 const unsigned int window);
 
-    void getSelectVals2D(const std::vector<std::vector<float>>& waveforms,
+    void getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
                                                 const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElementx,
                                                 const unsigned int structuringElementy,
-                                                std::vector<std::vector<bool>>& selectVals,
+                                                std::vector<std::vector<bool> >& selectVals,
                                                 const unsigned int window);
     
     /// Default destructor
