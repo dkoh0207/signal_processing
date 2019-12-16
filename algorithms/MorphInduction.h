@@ -45,7 +45,9 @@ namespace algorithms {
                          const unsigned int structuringElement,
                          const unsigned int window,
                          std::vector<std::vector<float> >& intrinsicRMS,
-                         std::vector<std::vector<bool> >& selectVals);
+                         std::vector<std::vector<bool> >& selectVals,
+                         std::vector<std::vector<float> >& correctedMedians,
+                         const float thresholdFactor=2.5);
 
     std::vector<std::vector<float>> removeCoherentNoise2D(
                          std::vector<std::vector<float>>& filteredWaveforms, 
@@ -55,7 +57,9 @@ namespace algorithms {
                          const unsigned int structuringElementy,
                          const unsigned int window,
                          std::vector<std::vector<float> >& intrinsicRMS,
-                         std::vector<std::vector<bool> >& selectVals);
+                         std::vector<std::vector<bool> >& selectVals,
+                         std::vector<std::vector<float> >& correctedMedians,
+                         const float thresholdFactor=2.5);
 
     void filterWaveforms(const std::vector<std::vector<short> >& waveforms,
                                                const unsigned int grouping,
@@ -73,7 +77,8 @@ namespace algorithms {
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
                                                 std::vector<std::vector<bool> >& selectVals,
-                                                const unsigned int window);
+                                                const unsigned int window,
+                                                const float thresholdFactor=2.5);
 
     void getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
                                                 const unsigned int grouping,
@@ -81,7 +86,8 @@ namespace algorithms {
                                                 const unsigned int structuringElementx,
                                                 const unsigned int structuringElementy,
                                                 std::vector<std::vector<bool> >& selectVals,
-                                                const unsigned int window);
+                                                const unsigned int window,
+                                                const float thresholdFactor=2.5);
     
     /// Default destructor
     ~MorphInduction(){}

@@ -20,6 +20,7 @@
 #include <numeric>
 #include <cmath>
 #include <functional>
+#include <string>
 #include "WaveformUtils.h"
 
 namespace algorithms {
@@ -42,7 +43,9 @@ namespace algorithms {
                          const unsigned int nTicks,
                          const unsigned int structuringElement,
                          std::vector<std::vector<float>>& intrinsicRMS,
-                         std::vector<std::vector<bool>>& selectVals);
+                         std::vector<std::vector<bool>>& selectVals,
+                         std::vector<std::vector<float>>& correctedMedians,
+                         const float thresholdFactor=2.5);
 
     void filterWaveforms(const std::vector<std::vector<short>>& waveforms,
                                                const unsigned int grouping,
@@ -59,7 +62,17 @@ namespace algorithms {
                                                 const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
-                                                std::vector<std::vector<bool>>& selectVals);
+                                                std::vector<std::vector<bool>>& selectVals,
+                                                const float thresholdFactor=2.5);
+
+    void getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
+                                                const unsigned int grouping,
+                                                const unsigned int nTicks,
+                                                const unsigned int structuringElementx,
+                                                const unsigned int structuringElementy,
+                                                std::vector<std::vector<bool> >& selectVals,
+                                                const unsigned int window,
+                                                const float thresholdFactor=2.5);
   
     /// Default destructor
     ~MorphCollection(){}
