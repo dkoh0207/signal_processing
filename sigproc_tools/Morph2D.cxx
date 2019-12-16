@@ -66,7 +66,7 @@ void sigproc_tools::Morph2D::getFilter2D(
   average2D.resize(waveform2D.size());
   gradient2D.resize(waveform2D.size());
 
-  for (auto i=0; i<waveform2D.size(); ++i) {
+  for (size_t i=0; i<waveform2D.size(); ++i) {
     dilation2D[i].resize(waveform2D.at(0).size());
     erosion2D[i].resize(waveform2D.at(0).size());
     average2D[i].resize(waveform2D.at(0).size());
@@ -76,20 +76,20 @@ void sigproc_tools::Morph2D::getFilter2D(
   float erosion;
   float gradient;
   float average;
-  for (auto i=0; i<numChannels; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       // For each center pixel, do 2D morphological filtering.
       int lbx = i - (int) xHalfWindowSize;
       int ubx = i + (int) xHalfWindowSize;
       int lby = j - (int) yHalfWindowSize;
       int uby = j + (int) yHalfWindowSize;
-      int lowerBoundx = std::max(lbx, 0);
-      int upperBoundx = std::min(ubx, (int) numChannels);
-      int lowerBoundy = std::max(lby, 0);
-      int upperBoundy = std::min(uby, (int) nTicks);
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
-      for (auto ix=lowerBoundx; ix<upperBoundx; ++ix) {
-        for (auto iy=lowerBoundy; iy<upperBoundy; ++iy) {
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
         }
       }
@@ -154,26 +154,26 @@ void sigproc_tools::Morph2D::getGradient(
 
   gradient2D.resize(waveform2D.size());
 
-  for (auto i=0; i<waveform2D.size(); ++i) {
+  for (size_t i=0; i<waveform2D.size(); ++i) {
     gradient2D[i].resize(waveform2D.at(0).size());
   }
   float dilation;
   float erosion;
   float gradient;
-  for (auto i=0; i<numChannels; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       // For each center pixel, do 2D morphological filtering.
       int lbx = i - (int) xHalfWindowSize;
       int ubx = i + (int) xHalfWindowSize;
       int lby = j - (int) yHalfWindowSize;
       int uby = j + (int) yHalfWindowSize;
-      int lowerBoundx = std::max(lbx, 0);
-      int upperBoundx = std::min(ubx, (int) numChannels);
-      int lowerBoundy = std::max(lby, 0);
-      int upperBoundy = std::min(uby, (int) nTicks);
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
-      for (auto ix=lowerBoundx; ix<upperBoundx; ++ix) {
-        for (auto iy=lowerBoundy; iy<upperBoundy; ++iy) {
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
         }
       }
@@ -260,27 +260,27 @@ void sigproc_tools::Morph2D::getOpeningAndClosing(
   getFilter2D(waveform2D, structuringElementx, structuringElementy,
               dilation2D, erosion2D, average2D, gradient2D);
 
-  for (auto i=0; i<waveform2D.size(); ++i) {
+  for (size_t i=0; i<waveform2D.size(); ++i) {
     opening2D[i].resize(waveform2D.at(0).size());
     closing2D[i].resize(waveform2D.at(0).size());
   }
   float opening;
   float closing;
-  for (auto i=0; i<numChannels; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       // For each center pixel, do 2D morphological filtering.
       int lbx = i - (int) xHalfWindowSize;
       int ubx = i + (int) xHalfWindowSize;
       int lby = j - (int) yHalfWindowSize;
       int uby = j + (int) yHalfWindowSize;
-      int lowerBoundx = std::max(lbx, 0);
-      int upperBoundx = std::min(ubx, (int) numChannels);
-      int lowerBoundy = std::max(lby, 0);
-      int upperBoundy = std::min(uby, (int) nTicks);
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v1;
       std::vector<T> v2;
-      for (auto ix=lowerBoundx; ix<upperBoundx; ++ix) {
-        for (auto iy=lowerBoundy; iy<upperBoundy; ++iy) {
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v1.push_back(dilation2D[ix][iy]);
           v2.push_back(erosion2D[ix][iy]);
         }

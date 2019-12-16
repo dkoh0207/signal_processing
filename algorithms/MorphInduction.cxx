@@ -21,26 +21,26 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
   for (auto& v : selectVals) {
     v.resize(filteredWaveforms.at(0).size());
   }
-  for (auto i=0; i<selectVals.size(); ++i) {
-    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+  for (size_t i=0; i<selectVals.size(); ++i) {
+    for (size_t j=0; j<selectVals.at(0).size(); ++j) {
       selectVals[i][j] = true;
     }
   }
 
-  auto numChannels = (int) filteredWaveforms.size();
+  auto numChannels = filteredWaveforms.size();
   auto nGroups = numChannels / grouping;
   correctedMedians.resize(nGroups);
   for (auto& v : correctedMedians) {
     v.resize(nTicks);
   }
 
-  getSelectVals(filteredWaveforms, grouping, nTicks, 
+  getSelectVals(filteredWaveforms, nTicks, 
                 structuringElement, selectVals, window, thresholdFactor);
 
-  for (auto i=0; i<nTicks; ++i) {
-    for (auto j=0; j<numChannels/grouping; ++j) {
-      int group_start = j * grouping;
-      int group_end = (j+1) * grouping;
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<numChannels/grouping; ++j) {
+      size_t group_start = j * grouping;
+      size_t group_end = (j+1) * grouping;
       // Compute median.
       std::vector<float> v;
       for (auto c=group_start; c<group_end; ++c) {
@@ -65,7 +65,7 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
         }
       }
       correctedMedians[j][i] = median;
-      for (auto c=group_start; c<group_end; ++c) {
+      for (size_t c=group_start; c<group_end; ++c) {
         if (selectVals[c][i]) {
           waveLessCoherent[c][i] = filteredWaveforms[c][i] - median;
         } else {
@@ -79,10 +79,10 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise(
     v.resize(nTicks);
   }
   float rms = 0.0;
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<nGroups; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       std::vector<float> v;
-      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+      for (size_t k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
@@ -98,7 +98,6 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2
                          const unsigned int nTicks,
                          const unsigned int structuringElementx,
                          const unsigned int structuringElementy,
-                         const unsigned int window,
                          std::vector<std::vector<float>>& intrinsicRMS,
                          std::vector<std::vector<bool>>& selectVals,
                          std::vector<std::vector<float> >& correctedMedians,
@@ -111,29 +110,29 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2
   for (auto& v : selectVals) {
     v.resize(filteredWaveforms.at(0).size());
   }
-  for (auto i=0; i<selectVals.size(); ++i) {
-    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+  for (size_t i=0; i<selectVals.size(); ++i) {
+    for (size_t j=0; j<selectVals.at(0).size(); ++j) {
       selectVals[i][j] = true;
     }
   }
 
-  auto numChannels = (int) filteredWaveforms.size();
+  auto numChannels = filteredWaveforms.size();
   auto nGroups = numChannels / grouping;
   correctedMedians.resize(nGroups);
   for (auto& v : correctedMedians) {
     v.resize(nTicks);
   }
 
-  getSelectVals2D(filteredWaveforms, grouping, nTicks, structuringElementx, structuringElementy, selectVals, window, thresholdFactor);
+  getSelectVals2D(filteredWaveforms, nTicks, structuringElementx, structuringElementy, selectVals, thresholdFactor);
   std::cout << "Pass" << std::endl;
 
-  for (auto i=0; i<nTicks; ++i) {
-    for (auto j=0; j<numChannels/grouping; ++j) {
-      int group_start = j * grouping;
-      int group_end = (j+1) * grouping;
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<numChannels/grouping; ++j) {
+      size_t group_start = j * grouping;
+      size_t group_end = (j+1) * grouping;
       // Compute median.
       std::vector<float> v;
-      for (auto c=group_start; c<group_end; ++c) {
+      for (size_t c=group_start; c<group_end; ++c) {
         if (selectVals[c][i]) {
           v.push_back(filteredWaveforms[c][i]);
         }
@@ -155,7 +154,7 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2
         }
       }
       correctedMedians[j][i] = median;
-      for (auto c=group_start; c<group_end; ++c) {
+      for (size_t c=group_start; c<group_end; ++c) {
         if (selectVals[c][i]) {
           waveLessCoherent[c][i] = filteredWaveforms[c][i] - median;
         } else {
@@ -169,10 +168,10 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2
     v.resize(nTicks);
   }
   float rms = 0.0;
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<nGroups; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       std::vector<float> v;
-      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+      for (size_t k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(std::inner_product(v.begin(), v.end(), v.begin(), 0.) / float(v.size()));
@@ -184,7 +183,6 @@ std::vector<std::vector<float>> algorithms::MorphInduction::removeCoherentNoise2
 
 
 void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<float>>& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
                                                 std::vector<std::vector<bool>>& selectVals,
@@ -194,7 +192,7 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
   WaveformUtils wUtils;
   auto numChannels = waveforms.size();
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     std::vector<float> dilation;
     std::vector<float> erosion;
     std::vector<float> average;
@@ -203,7 +201,7 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
     float gradientMed = 0.0;
     std::vector<float> localGrad;
     localGrad.resize(nTicks);
-    for (auto j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       localGrad[j] = gradient[j];
     }
     if (localGrad.size() % 2 == 0) {
@@ -221,7 +219,7 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
     }
     std::vector<float> gradientBase;
     gradientBase.resize(gradient.size());
-    for (auto i=0; i<gradientBase.size(); ++i) {
+    for (size_t i=0; i<gradientBase.size(); ++i) {
       gradientBase[i] = gradient[i] - gradientMed;
     }
     float gradientRMS;
@@ -230,14 +228,14 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
     float threshold;
     threshold = gradientRMS * thresholdFactor;
 
-    for (int j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       if (waveforms[i][j] > threshold) {
         // Check Bounds
         int lb = j - (int) window;
         int ub = j + (int) window;
-        int lowerBound = std::max(lb, 0);
-        int upperBound = std::min(ub, (int) nTicks);
-        for (auto k=lowerBound; k<upperBound; ++k) {
+        size_t lowerBound = std::max(lb, 0);
+        size_t upperBound = std::min(ub, (int) nTicks);
+        for (size_t k=lowerBound; k<upperBound; ++k) {
           selectVals[i][k] = false;
         }
       } else {
@@ -250,12 +248,10 @@ void algorithms::MorphInduction::getSelectVals(const std::vector<std::vector<flo
 
 
 void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElementx,
                                                 const unsigned int structuringElementy,
                                                 std::vector< std::vector<bool> >& selectVals,
-                                                const unsigned int window,
                                                 const float thresholdFactor)
 {
   WaveformUtils wUtils;
@@ -265,14 +261,14 @@ void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<f
   std::vector<std::vector<float> > erosion2D;
   std::vector<std::vector<float> > gradient2D;
 
-  wUtils.getMorph2D(waveforms, grouping, nTicks, structuringElementx, 
-    structuringElementy, dilation2D, erosion2D, gradient2D, window);
+  wUtils.getMorph2D(waveforms, nTicks, structuringElementx, 
+    structuringElementy, dilation2D, erosion2D, gradient2D);
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     float gradientMed = 0.0;
     std::vector<float> localGrad;
     localGrad.resize(nTicks);
-    for (auto j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       localGrad[j] = gradient2D[i][j];
     }
     if (localGrad.size() % 2 == 0) {
@@ -289,7 +285,7 @@ void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<f
       gradientMed = *m;
     }
     std::vector<float> gradientBase(nTicks);
-    for (auto k=0; k<nTicks; ++k) {
+    for (size_t k=0; k<nTicks; ++k) {
       float gradient = 0.0;
       gradient = gradient2D[i][k];
       gradientBase[k] = gradient - gradientMed;
@@ -300,7 +296,7 @@ void algorithms::MorphInduction::getSelectVals2D(const std::vector<std::vector<f
     float threshold;
     threshold = gradientRMS * thresholdFactor;
 
-    for (auto j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       if (std::abs(gradientBase[j]) > threshold) {
         selectVals[i][j] = false;
       } else {
@@ -334,19 +330,18 @@ void algorithms::MorphInduction::filterWaveforms(const std::vector<std::vector<s
   rmss.resize(numChannels);
   correctedMedians.resize(nGroups);
 
-  for (auto i=0; i<nGroups; ++i) {
+  for (size_t i=0; i<nGroups; ++i) {
     correctedMedians[i].resize(nTicks);
   }
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     float mean = 0;
     float median = 0;
-    float mode = 0;
     float rms = 0.0;
     float skewness = 0.0;
     filteredWaveforms[i].resize(waveforms.at(0).size());
     WaveformUtils wUtils;
-    wUtils.getWaveformParams(waveforms[i], mean, median, mode, skewness, rms);
+    wUtils.getWaveformParams(waveforms[i], mean, median, skewness, rms);
     // Subtract Pedestals (Median of given waveform, one channel)
     std::transform(waveforms[i].begin(),waveforms[i].end(),filteredWaveforms[i].begin(),std::bind(std::minus<float>(),std::placeholders::_1,median));
     means[i] = mean;

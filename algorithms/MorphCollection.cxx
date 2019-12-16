@@ -23,12 +23,12 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
   for (auto& v : selectVals) {
     v.resize(filteredWaveforms.at(0).size());
   }
-  for (auto i=0; i<selectVals.size(); ++i) {
-    for (auto j=0; j<selectVals.at(0).size(); ++j) {
+  for (size_t i=0; i<selectVals.size(); ++i) {
+    for (size_t j=0; j<selectVals.at(0).size(); ++j) {
       selectVals[i][j] = true;
     }
   }
-  getSelectVals(filteredWaveforms, grouping, nTicks, structuringElement, selectVals, thresholdFactor);
+  getSelectVals(filteredWaveforms, nTicks, structuringElement, selectVals, thresholdFactor);
 
   auto numChannels = (int) filteredWaveforms.size();
   auto nGroups = numChannels / grouping;
@@ -38,8 +38,8 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
     v.resize(nTicks);
   }
 
-  for (auto i=0; i<nTicks; ++i) {
-    for (auto j=0; j<numChannels/grouping; ++j) {
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<numChannels/grouping; ++j) {
       int group_start = j * grouping;
       int group_end = (j+1) * grouping;
       // Compute median.
@@ -80,8 +80,8 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
     v.resize(nTicks);
   }
   float rms = 0.0;
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<nGroups; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       std::vector<float> v;
       for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);
@@ -94,7 +94,6 @@ std::vector<std::vector<float>> algorithms::MorphCollection::removeCoherentNoise
 }
 
 void algorithms::MorphCollection::getSelectVals(const std::vector<std::vector<float>>& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
                                                 std::vector<std::vector<bool>>& selectVals,
@@ -104,13 +103,13 @@ void algorithms::MorphCollection::getSelectVals(const std::vector<std::vector<fl
   auto numChannels = waveforms.size();
   selectVals.resize(numChannels);
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     std::vector<float> dilation;
     wUtils.getDilation(waveforms[i], structuringElement, dilation);
     float dilationMed = 0.0;
     std::vector<float> localDilation;
     localDilation.resize(nTicks);
-    for (auto j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       localDilation[j] = dilation[j];
     }
     if (localDilation.size() % 2 == 0) {
@@ -128,7 +127,7 @@ void algorithms::MorphCollection::getSelectVals(const std::vector<std::vector<fl
     }
     std::vector<float> dilationBase;
     dilationBase.resize(dilation.size());
-    for (auto i=0; i<dilationBase.size(); ++i) {
+    for (size_t i=0; i<dilationBase.size(); ++i) {
       dilationBase[i] = dilation[i] - dilationMed;
     }
     float dilationRMS;
@@ -136,7 +135,7 @@ void algorithms::MorphCollection::getSelectVals(const std::vector<std::vector<fl
       dilationBase.end(), dilationBase.begin(), 0.) / float(dilationBase.size()));
     float threshold;
     threshold = dilationRMS * thresholdFactor;
-    for (auto j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       bool sVal = true;
       if (waveforms[i][j] >= threshold) {
         sVal = false;
@@ -172,10 +171,10 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
   intrinsicRMS.resize(nGroups);
   correctedMedians.resize(nGroups);
 
-  for (auto i=0; i<nGroups; ++i) {
+  for (size_t i=0; i<nGroups; ++i) {
     intrinsicRMS[i].resize(nTicks);
   }
-  for (auto i=0; i<nGroups; ++i) {
+  for (size_t i=0; i<nGroups; ++i) {
     correctedMedians[i].resize(nTicks);
   }
 
@@ -185,7 +184,7 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
   float rms = 0.0;
   float skewness = 0.0;
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     filteredWaveforms[i].resize(waveforms.at(0).size());
     WaveformUtils wUtils;
     wUtils.getWaveformParams(waveforms[i], mean, median, mode, skewness, rms);
@@ -200,7 +199,7 @@ void algorithms::MorphCollection::filterWaveforms(const std::vector<std::vector<
   noiseRemovedWfs = removeCoherentNoise(filteredWaveforms, grouping, nTicks, 
                                         structuringElement, intrinsicRMS, selectVals, correctedMedians);
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     WaveformUtils wUtils;
     wUtils.getWaveformParams(noiseRemovedWfs[i], mean, median, mode, skewness, rms);
     cleanRMS[i] = rms;

@@ -6,33 +6,30 @@
 void algorithms::WaveformUtils::getWaveformParams(const std::vector<short>& waveform,
                                                  float& mean,
                                                  float& median,
-                                                 float& mode,
                                                  float& skewness,
                                                  float& rms)
 {
-  getWaveformParams<short>(waveform, mean, median, mode, skewness, rms);
+  getWaveformParams<short>(waveform, mean, median, skewness, rms);
   return;
 }
 
 void algorithms::WaveformUtils::getWaveformParams(const std::vector<float>& waveform,
                                                  float& mean,
                                                  float& median,
-                                                 float& mode,
                                                  float& skewness,
                                                  float& rms)
 {
-  getWaveformParams<float>(waveform, mean, median, mode, skewness, rms);
+  getWaveformParams<float>(waveform, mean, median, skewness, rms);
   return;
 }
 
 void algorithms::WaveformUtils::getWaveformParams(const std::vector<double>& waveform,
                                                  float& mean,
                                                  float& median,
-                                                 float& mode,
                                                  float& skewness,
                                                  float& rms)
 {
-  getWaveformParams<double>(waveform, mean, median, mode, skewness, rms);
+  getWaveformParams<double>(waveform, mean, median, skewness, rms);
   return;
 }
 
@@ -40,7 +37,6 @@ void algorithms::WaveformUtils::getWaveformParams(const std::vector<double>& wav
 template <typename T> void algorithms::WaveformUtils::getWaveformParams(const std::vector<T>& waveform,
                                                  float& mean,
                                                  float& median,
-                                                 float& mode,
                                                  float& skewness,
                                                  float& rms)
 {
@@ -318,14 +314,12 @@ template <typename T> void algorithms::WaveformUtils::getOpeningAndClosing(const
 
 
 void algorithms::WaveformUtils::getMorph2D(const std::vector<std::vector<float> >& waveforms,
-                                            const unsigned int grouping,
                                             const unsigned int nTicks,
                                             const unsigned int structuringElementx,
                                             const unsigned int structuringElementy,
                                             std::vector<std::vector<float> >& dilation2D,
                                             std::vector<std::vector<float> >& erosion2D,
-                                            std::vector<std::vector<float> >& gradient2D,
-                                            const unsigned int window)
+                                            std::vector<std::vector<float> >& gradient2D)
 {
   WaveformUtils wUtils;
   auto numChannels = waveforms.size();
@@ -336,26 +330,26 @@ void algorithms::WaveformUtils::getMorph2D(const std::vector<std::vector<float> 
   erosion2D.resize(waveforms.size());
   gradient2D.resize(waveforms.size());
 
-  for (auto i=0; i<waveforms.size(); ++i) {
+  for (size_t i=0; i<waveforms.size(); ++i) {
     dilation2D[i].resize(waveforms.at(0).size());
     erosion2D[i].resize(waveforms.at(0).size());
     gradient2D[i].resize(waveforms.at(0).size());
   }
 
-  for (auto i=0; i<numChannels; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       // For each center pixel, do 2D morphological filtering.
       int lbx = i - (int) xHalfWindowSize;
       int ubx = i + (int) xHalfWindowSize;
       int lby = j - (int) yHalfWindowSize;
       int uby = j + (int) yHalfWindowSize;
-      int lowerBoundx = std::max(lbx, 0);
-      int upperBoundx = std::min(ubx, (int) numChannels);
-      int lowerBoundy = std::max(lby, 0);
-      int upperBoundy = std::min(uby, (int) nTicks);
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<float> v;
-      for (auto ix=lowerBoundx; ix<upperBoundx; ++ix) {
-        for (auto iy=lowerBoundy; iy<upperBoundy; ++iy) {
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveforms[ix][iy]);
         }
       }

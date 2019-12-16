@@ -48,7 +48,7 @@ void sigproc_tools::Denoising::getSelectVals(
   auto numChannels = waveforms.size();
   auto nTicks = waveforms.at(0).size();
 
-  for (auto i=0; i<numChannels; ++i) {
+  for (size_t i=0; i<numChannels; ++i) {
     T median = 0.0;
     std::vector<T> localVec = morphedWaveforms[i];
     if (localVec.size() % 2 == 0) {
@@ -66,7 +66,7 @@ void sigproc_tools::Denoising::getSelectVals(
     }
     std::vector<T> baseVec;
     baseVec.resize(localVec.size());
-    for (auto j=0; j<baseVec.size(); ++j) {
+    for (size_t j=0; j<baseVec.size(); ++j) {
       baseVec[j] = morphedWaveforms[i][j] - median;
     }
     float rms;
@@ -75,7 +75,7 @@ void sigproc_tools::Denoising::getSelectVals(
     float threshold;
     threshold = rms * thresholdFactor;
 
-    for (int j=0; j<nTicks; ++j) {
+    for (size_t j=0; j<nTicks; ++j) {
       if (morphedWaveforms[i][j] > threshold) {
         // Check Bounds
         int lb = j - (int) window;
@@ -238,8 +238,8 @@ void removeCoherentNoise1D(
   getSelectVals(filteredWaveforms, morphedWaveforms, 
     selectVals, window, thresholdFactor);
 
-  for (auto i=0; i<nTicks; ++i) {
-    for (auto j=0; j<nGroups; ++j) {
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<nGroups; ++j) {
       int group_start = j * grouping;
       int group_end = (j+1) * grouping;
       // Compute median.
@@ -277,8 +277,8 @@ void removeCoherentNoise1D(
   }
 
   T rms = (T) 0;
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<nGroups; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       std::vector<T> v;
       for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);

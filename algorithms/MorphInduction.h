@@ -55,7 +55,6 @@ namespace algorithms {
                          const unsigned int nTicks,
                          const unsigned int structuringElementx,
                          const unsigned int structuringElementy,
-                         const unsigned int window,
                          std::vector<std::vector<float> >& intrinsicRMS,
                          std::vector<std::vector<bool> >& selectVals,
                          std::vector<std::vector<float> >& correctedMedians,
@@ -73,7 +72,6 @@ namespace algorithms {
                                                std::vector<std::vector<float> >& intrinsicRMS);
 
     void getSelectVals(const std::vector<std::vector<float> >& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
                                                 std::vector<std::vector<bool> >& selectVals,
@@ -81,12 +79,10 @@ namespace algorithms {
                                                 const float thresholdFactor=2.5);
 
     void getSelectVals2D(const std::vector<std::vector<float> >& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElementx,
                                                 const unsigned int structuringElementy,
                                                 std::vector<std::vector<bool> >& selectVals,
-                                                const unsigned int window,
                                                 const float thresholdFactor=2.5);
     
     /// Default destructor

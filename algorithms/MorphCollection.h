@@ -59,7 +59,6 @@ namespace algorithms {
                                                std::vector<float>& cleanRMS);
 
     void getSelectVals(const std::vector<std::vector<float>>& waveforms,
-                                                const unsigned int grouping,
                                                 const unsigned int nTicks,
                                                 const unsigned int structuringElement,
                                                 std::vector<std::vector<bool>>& selectVals,

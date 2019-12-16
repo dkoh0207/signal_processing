@@ -10,6 +10,7 @@ HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
 
 # include options for this package
 INCFLAGS  = -I.                       #Include itself
+CXXFLAGS=-Werror
 
 # platform-specific options
 OSNAME          = $(shell uname -s)

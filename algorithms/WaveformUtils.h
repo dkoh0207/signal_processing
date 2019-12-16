@@ -43,18 +43,15 @@ namespace algorithms {
                                                  float&,
                                                  float&,
                                                  float&,
-                                                 float&,
                                                  float&);
 
     void getWaveformParams(const std::vector<float>&,
                                                  float&,
                                                  float&,
                                                  float&,
-                                                 float&,
                                                  float&);
 
     void getWaveformParams(const std::vector<double>&,
-                                                 float&,
                                                  float&,
                                                  float&,
                                                  float&,
@@ -102,11 +99,9 @@ namespace algorithms {
                     const unsigned int,
                     const unsigned int,
                     const unsigned int,
-                    const unsigned int,
                     std::vector<std::vector<float>>&,
                     std::vector<std::vector<float>>&,
-                    std::vector<std::vector<float>>&,
-                    const unsigned int);
+                    std::vector<std::vector<float>>&);
     /// Default destructor
     ~WaveformUtils(){}
     
@@ -115,7 +110,6 @@ namespace algorithms {
     template <typename T> void getWaveformParams(const std::vector<T>& waveform,
                                                  float& mean,
                                                  float& median,
-                                                 float& mode,
                                                  float& skewness,
                                                  float& rms);
 
