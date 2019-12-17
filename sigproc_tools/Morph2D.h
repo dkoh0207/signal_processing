@@ -60,6 +60,38 @@ namespace sigproc_tools {
                       std::vector<std::vector<double> >&) const;
 
 
+      void getDilation(const std::vector<std::vector<short> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<short> >&) const;
+
+      void getDilation(const std::vector<std::vector<float> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<float> >&) const;
+
+      void getDilation(const std::vector<std::vector<double> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<double> >&) const;
+
+
+      void getErosion(const std::vector<std::vector<short> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<short> >&) const;
+
+      void getErosion(const std::vector<std::vector<float> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<float> >&) const;
+
+      void getErosion(const std::vector<std::vector<double> >&,
+                      const unsigned int,
+                      const unsigned int,
+                      std::vector<std::vector<double> >&) const;
+
+
       void getGradient(const std::vector<std::vector<short> >&,
                       const unsigned int,
                       const unsigned int,
@@ -115,6 +147,20 @@ namespace sigproc_tools {
         const unsigned int structuringElementx,
         const unsigned int structuringElementy,
         std::vector<std::vector<T> >& gradient2D) const;
+
+      template <typename T> 
+      void getDilation(
+        const std::vector<std::vector<T> >& waveform2D,
+        const unsigned int structuringElementx,
+        const unsigned int structuringElementy,
+        std::vector<std::vector<T> >& dilation2D) const;
+
+      template <typename T> 
+      void getErosion(
+        const std::vector<std::vector<T> >& waveform2D,
+        const unsigned int structuringElementx,
+        const unsigned int structuringElementy,
+        std::vector<std::vector<T> >& erosion2D) const;
 
       template <typename T> 
       void getOpeningAndClosing(

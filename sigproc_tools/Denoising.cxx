@@ -69,20 +69,20 @@ void sigproc_tools::Denoising::getSelectVals(
     for (size_t j=0; j<baseVec.size(); ++j) {
       baseVec[j] = morphedWaveforms[i][j] - median;
     }
-    float rms;
-    rms = std::sqrt(std::inner_product(baseVec.begin(), 
-      baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
+    // float rms;
+    // rms = std::sqrt(std::inner_product(baseVec.begin(), 
+    //   baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
     float threshold;
-    threshold = rms * thresholdFactor;
+    threshold = median + 3.0 * thresholdFactor;
 
     for (size_t j=0; j<nTicks; ++j) {
-      if (morphedWaveforms[i][j] > threshold) {
+      if (abs(morphedWaveforms[i][j]) > threshold) {
         // Check Bounds
         int lb = j - (int) window;
         int ub = j + (int) window + 1;
-        int lowerBound = std::max(lb, 0);
-        int upperBound = std::min(ub, (int) nTicks);
-        for (auto k=lowerBound; k<upperBound; ++k) {
+        size_t lowerBound = std::max(lb, 0);
+        size_t upperBound = std::min(ub, (int) nTicks);
+        for (size_t k=lowerBound; k<upperBound; ++k) {
           selectVals[i][k] = true;
         }
       } else {
@@ -94,7 +94,7 @@ void sigproc_tools::Denoising::getSelectVals(
 }
 
 
-void removeCoherentNoise1D(
+void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<short>>& waveLessCoherent,
   const std::vector<std::vector<short>>& filteredWaveforms,
   std::vector<std::vector<short>>& morphedWaveforms,
@@ -107,14 +107,14 @@ void removeCoherentNoise1D(
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise1D(
+  removeCoherentNoise1D<short>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
 }
 
-void removeCoherentNoise1D(
+void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<float>>& waveLessCoherent,
   const std::vector<std::vector<float>>& filteredWaveforms,
   std::vector<std::vector<float>>& morphedWaveforms,
@@ -127,14 +127,14 @@ void removeCoherentNoise1D(
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise1D(
+  removeCoherentNoise1D<float>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
 }
 
-void removeCoherentNoise1D(
+void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<double>>& waveLessCoherent,
   const std::vector<std::vector<double>>& filteredWaveforms,
   std::vector<std::vector<double>>& morphedWaveforms,
@@ -147,7 +147,7 @@ void removeCoherentNoise1D(
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise1D(
+  removeCoherentNoise1D<double>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
@@ -155,7 +155,7 @@ void removeCoherentNoise1D(
 }
 
 template <typename T>
-void removeCoherentNoise1D(
+void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<T>>& waveLessCoherent,
   const std::vector<std::vector<T>>& filteredWaveforms,
   std::vector<std::vector<T>>& morphedWaveforms,
@@ -204,31 +204,31 @@ void removeCoherentNoise1D(
 
   switch (filterName) {
     case 'd':
-      for (auto i=0; i<numChannels; ++i) {
+      for (size_t i=0; i<numChannels; ++i) {
         denoiser.getDilation(filteredWaveforms[i],
           structuringElement, morphedWaveforms[i]);
       };
       break;
     case 'e':
-      for (auto i=0; i<numChannels; ++i) {
+      for (size_t i=0; i<numChannels; ++i) {
         denoiser.getErosion(filteredWaveforms[i],
           structuringElement, morphedWaveforms[i]);
       };
       break;
     case 'a':
-      for (auto i=0; i<numChannels; ++i) {
+      for (size_t i=0; i<numChannels; ++i) {
         denoiser.getAverage(filteredWaveforms[i],
           structuringElement, morphedWaveforms[i]);
       };
       break;
     case 'g':
-      for (auto i=0; i<numChannels; ++i) {
+      for (size_t i=0; i<numChannels; ++i) {
         denoiser.getGradient(filteredWaveforms[i],
           structuringElement, morphedWaveforms[i]);
       };
       break;
     default:
-      for (auto i=0; i<numChannels; ++i) {
+      for (size_t i=0; i<numChannels; ++i) {
         denoiser.getDilation(filteredWaveforms[i],
           structuringElement, morphedWaveforms[i]);
       };
@@ -240,11 +240,11 @@ void removeCoherentNoise1D(
 
   for (size_t i=0; i<nTicks; ++i) {
     for (size_t j=0; j<nGroups; ++j) {
-      int group_start = j * grouping;
-      int group_end = (j+1) * grouping;
+      size_t group_start = j * grouping;
+      size_t group_end = (j+1) * grouping;
       // Compute median.
       std::vector<T> v;
-      for (auto c=group_start; c<group_end; ++c) {
+      for (size_t c=group_start; c<group_end; ++c) {
         if (!selectVals[c][i]) {
           v.push_back(filteredWaveforms[c][i]);
         }
@@ -280,7 +280,7 @@ void removeCoherentNoise1D(
   for (size_t i=0; i<nGroups; ++i) {
     for (size_t j=0; j<nTicks; ++j) {
       std::vector<T> v;
-      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+      for (size_t k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(
@@ -293,7 +293,7 @@ void removeCoherentNoise1D(
 }
 
 
-void removeCoherentNoise2D(
+void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<short>>& waveLessCoherent,
   const std::vector<std::vector<short>>& filteredWaveforms,
   std::vector<std::vector<short>>& morphedWaveforms,
@@ -302,18 +302,20 @@ void removeCoherentNoise2D(
   std::vector<std::vector<short>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
-  const unsigned int structuringElement,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise2D(
+  removeCoherentNoise2D<short>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
-    filterName, grouping, structuringElement, window, thresholdFactor);
+    filterName, grouping, structuringElementx, structuringElementy, 
+    window, thresholdFactor);
   return;
 }
 
-void removeCoherentNoise2D(
+void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<float>>& waveLessCoherent,
   const std::vector<std::vector<float>>& filteredWaveforms,
   std::vector<std::vector<float>>& morphedWaveforms,
@@ -322,18 +324,20 @@ void removeCoherentNoise2D(
   std::vector<std::vector<float>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
-  const unsigned int structuringElement,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise2D(
+  removeCoherentNoise2D<float>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
-    filterName, grouping, structuringElement, window, thresholdFactor);
+    filterName, grouping, structuringElementx, structuringElementy, 
+    window, thresholdFactor);
   return;
 }
 
-void removeCoherentNoise2D(
+void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<double>>& waveLessCoherent,
   const std::vector<std::vector<double>>& filteredWaveforms,
   std::vector<std::vector<double>>& morphedWaveforms,
@@ -342,19 +346,21 @@ void removeCoherentNoise2D(
   std::vector<std::vector<double>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
-  const unsigned int structuringElement,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
   const unsigned int window,
   const float thresholdFactor)
 {
-  removeCoherentNoise2D(
+  removeCoherentNoise2D<double>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
     intrinsicRMS, selectVals, correctedMedians,
-    filterName, grouping, structuringElement, window, thresholdFactor);
+    filterName, grouping, structuringElementx, structuringElementy, 
+    window, thresholdFactor);
   return;
 }
 
 template <typename T>
-void removeCoherentNoise2D(
+void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<T>>& waveLessCoherent,
   const std::vector<std::vector<T>>& filteredWaveforms,
   std::vector<std::vector<T>>& morphedWaveforms,
@@ -432,18 +438,18 @@ void removeCoherentNoise2D(
       break;
   }
 
-  for (auto i=0; i<nTicks; ++i) {
-    for (auto j=0; j<nGroups; ++j) {
-      int group_start = j * grouping;
-      int group_end = (j+1) * grouping;
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<nGroups; ++j) {
+      size_t group_start = j * grouping;
+      size_t group_end = (j+1) * grouping;
       // Compute median.
       std::vector<T> v;
-      for (auto c=group_start; c<group_end; ++c) {
+      for (size_t c=group_start; c<group_end; ++c) {
         if (!selectVals[c][i]) {
           v.push_back(filteredWaveforms[c][i]);
         }
       }
-      T median = (T) 0;
+      T median = (T) 0.0;
       if (v.size() > 0) {
         if (v.size() % 2 == 0) {
           const auto m1 = v.begin() + v.size() / 2 - 1;
@@ -460,7 +466,7 @@ void removeCoherentNoise2D(
         }
       }
       correctedMedians[j][i] = median;
-      for (auto k=group_start; k<group_end; ++k) {
+      for (size_t k=group_start; k<group_end; ++k) {
         if (!selectVals[k][i]) {
           waveLessCoherent[k][i] = filteredWaveforms[k][i] - median;
         } else {
@@ -471,10 +477,10 @@ void removeCoherentNoise2D(
   }
 
   float rms = 0.0;
-  for (auto i=0; i<nGroups; ++i) {
-    for (auto j=0; j<nTicks; ++j) {
+  for (size_t i=0; i<nGroups; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
       std::vector<T> v;
-      for (auto k=i*grouping; k<(i+1)*grouping; ++k) {
+      for (size_t k=i*grouping; k<(i+1)*grouping; ++k) {
         v.push_back(waveLessCoherent[k][j]);
       }
       rms = std::sqrt(
