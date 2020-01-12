@@ -88,6 +88,7 @@ void sigproc_tools::Morph2D::getFilter2D(
       size_t lowerBoundy = std::max(lby, 0);
       size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
+      v.reserve(structuringElementx * structuringElementy);
       for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
         for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
@@ -170,6 +171,7 @@ void sigproc_tools::Morph2D::getDilation(
       size_t lowerBoundy = std::max(lby, 0);
       size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
+      v.reserve(structuringElementx * structuringElementy);
       for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
         for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
@@ -246,6 +248,7 @@ void sigproc_tools::Morph2D::getErosion(
       size_t lowerBoundy = std::max(lby, 0);
       size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
+      v.reserve(structuringElementx * structuringElementy);
       for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
         for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
@@ -324,6 +327,7 @@ void sigproc_tools::Morph2D::getGradient(
       size_t lowerBoundy = std::max(lby, 0);
       size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v;
+      v.reserve(structuringElementx * structuringElementy);
       for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
         for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v.push_back(waveform2D[ix][iy]);
@@ -333,6 +337,91 @@ void sigproc_tools::Morph2D::getGradient(
       erosion = *std::min_element(v.begin(), v.end());
       gradient = dilation - erosion;
       gradient2D[i][j] = gradient;
+    }
+  }
+  return;
+}
+
+
+void sigproc_tools::Morph2D::getMedian(
+  const std::vector<std::vector<short> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<short> >& median2D) const
+{
+  getMedian<short>(waveform2D, structuringElementx, 
+    structuringElementy, median2D);
+  return;
+}
+
+void sigproc_tools::Morph2D::getMedian(
+  const std::vector<std::vector<float> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<float> >& median2D) const
+{
+  getMedian<float>(waveform2D, structuringElementx, 
+    structuringElementy, median2D);
+  return;
+}
+
+void sigproc_tools::Morph2D::getMedian(
+  const std::vector<std::vector<double> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<double> >& median2D) const
+{
+  getMedian<double>(waveform2D, structuringElementx, 
+    structuringElementy, median2D);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::Morph2D::getMedian(
+  const std::vector<std::vector<T> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<T> >& median2D) const
+{
+  auto numChannels = waveform2D.size();
+  auto nTicks = waveform2D.at(0).size();
+  int xHalfWindowSize(structuringElementx / 2);
+  int yHalfWindowSize(structuringElementy / 2);
+
+  median2D.resize(waveform2D.size());
+
+  for (size_t i=0; i<waveform2D.size(); ++i) {
+    median2D[i].resize(waveform2D.at(0).size());
+  }
+  float median;
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      // For each center pixel, do 2D morphological filtering.
+      int lbx = i - (int) xHalfWindowSize;
+      int ubx = i + (int) xHalfWindowSize;
+      int lby = j - (int) yHalfWindowSize;
+      int uby = j + (int) yHalfWindowSize;
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
+      std::vector<T> v;
+      v.reserve(structuringElementx * structuringElementy);
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
+          v.push_back(waveform2D[ix][iy]);
+        }
+      }
+      if (v.size() % 2 == 0) {
+        const auto m1 = v.begin() + v.size() / 2 - 1;
+        const auto m2 = v.begin() + v.size() / 2;
+        std::nth_element(v.begin(), m1, v.end());
+        std::nth_element(v.begin(), m2, v.end());
+        median = (*m1 + *m2) / 2.0;
+      } else {
+        median = v[v.size() / 2];
+      }
+      median2D[i][j] = median;
     }
   }
   return;
@@ -431,6 +520,8 @@ void sigproc_tools::Morph2D::getOpeningAndClosing(
       size_t upperBoundy = std::min(uby, (int) nTicks);
       std::vector<T> v1;
       std::vector<T> v2;
+      v1.reserve(structuringElementx * structuringElementy);
+      v2.reserve(structuringElementx * structuringElementy);
       for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
         for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
           v1.push_back(dilation2D[ix][iy]);

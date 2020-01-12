@@ -8,33 +8,36 @@ void sigproc_tools::Denoising::getSelectVals(
   const std::vector<std::vector<short>>& waveforms,
   const std::vector<std::vector<short>>& morphedWaveforms,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   const unsigned int window,
   const float thresholdFactor)
 {
-  getSelectVals<short>(waveforms, morphedWaveforms,
-    selectVals, window, thresholdFactor);
+  getSelectVals<short>(waveforms, morphedWaveforms, selectVals,
+    roi, window, thresholdFactor);
 }
 
 void sigproc_tools::Denoising::getSelectVals(
   const std::vector<std::vector<float>>& waveforms,
   const std::vector<std::vector<float>>& morphedWaveforms,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   const unsigned int window,
   const float thresholdFactor)
 {
-  getSelectVals<float>(waveforms, morphedWaveforms,
-    selectVals, window, thresholdFactor);
+  getSelectVals<float>(waveforms, morphedWaveforms, selectVals,
+    roi, window, thresholdFactor);
 }
 
 void sigproc_tools::Denoising::getSelectVals(
   const std::vector<std::vector<double>>& waveforms,
   const std::vector<std::vector<double>>& morphedWaveforms,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   const unsigned int window,
   const float thresholdFactor)
 {
-  getSelectVals<double>(waveforms, morphedWaveforms,
-    selectVals, window, thresholdFactor);
+  getSelectVals<double>(waveforms, morphedWaveforms, selectVals,
+    roi, window, thresholdFactor);
 }
 
 template <typename T>
@@ -42,6 +45,7 @@ void sigproc_tools::Denoising::getSelectVals(
   const std::vector<std::vector<T>>& waveforms,
   const std::vector<std::vector<T>>& morphedWaveforms,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   const unsigned int window,
   const float thresholdFactor)
 {
@@ -78,12 +82,13 @@ void sigproc_tools::Denoising::getSelectVals(
     for (size_t j=0; j<nTicks; ++j) {
       if (abs(morphedWaveforms[i][j]) > threshold) {
         // Check Bounds
+        selectVals[i][j] = true;
         int lb = j - (int) window;
         int ub = j + (int) window + 1;
         size_t lowerBound = std::max(lb, 0);
         size_t upperBound = std::min(ub, (int) nTicks);
         for (size_t k=lowerBound; k<upperBound; ++k) {
-          selectVals[i][k] = true;
+          roi[i][k] = true;
         }
       } else {
         selectVals[i][j] = false;
@@ -100,6 +105,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<short>>& morphedWaveforms,
   std::vector<std::vector<short>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<short>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -109,7 +115,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
 {
   removeCoherentNoise1D<short>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
 }
@@ -120,6 +126,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<float>>& morphedWaveforms,
   std::vector<std::vector<float>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<float>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -129,7 +136,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
 {
   removeCoherentNoise1D<float>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
 }
@@ -140,6 +147,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<double>>& morphedWaveforms,
   std::vector<std::vector<double>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<double>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -149,7 +157,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
 {
   removeCoherentNoise1D<double>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
 }
@@ -161,6 +169,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   std::vector<std::vector<T>>& morphedWaveforms,
   std::vector<std::vector<T>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<T>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -187,6 +196,11 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   // Regions to protect waveform from coherent noise subtraction.
   selectVals.resize(filteredWaveforms.size());
   for (auto& v : selectVals) {
+    v.resize(filteredWaveforms.at(0).size());
+  }
+
+  roi.resize(filteredWaveforms.size());
+  for (auto& v : roi) {
     v.resize(filteredWaveforms.at(0).size());
   }
 
@@ -236,7 +250,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   }
 
   getSelectVals(filteredWaveforms, morphedWaveforms, 
-    selectVals, window, thresholdFactor);
+    selectVals, roi, window, thresholdFactor);
 
   for (size_t i=0; i<nTicks; ++i) {
     for (size_t j=0; j<nGroups; ++j) {
@@ -299,6 +313,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<short>>& morphedWaveforms,
   std::vector<std::vector<short>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<short>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -309,7 +324,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
 {
   removeCoherentNoise2D<short>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElementx, structuringElementy, 
     window, thresholdFactor);
   return;
@@ -321,6 +336,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<float>>& morphedWaveforms,
   std::vector<std::vector<float>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<float>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -331,7 +347,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
 {
   removeCoherentNoise2D<float>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElementx, structuringElementy, 
     window, thresholdFactor);
   return;
@@ -343,6 +359,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<double>>& morphedWaveforms,
   std::vector<std::vector<double>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<double>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -353,7 +370,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
 {
   removeCoherentNoise2D<double>(
     waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-    intrinsicRMS, selectVals, correctedMedians,
+    intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElementx, structuringElementy, 
     window, thresholdFactor);
   return;
@@ -366,6 +383,7 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   std::vector<std::vector<T>>& morphedWaveforms,
   std::vector<std::vector<T>>& intrinsicRMS,
   std::vector<std::vector<bool>>& selectVals,
+  std::vector<std::vector<bool>>& roi,
   std::vector<std::vector<T>>& correctedMedians,
   const char filterName,
   const unsigned int grouping,
@@ -387,6 +405,11 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   // Regions to protect waveform from coherent noise subtraction.
   selectVals.resize(filteredWaveforms.size());
   for (auto& v : selectVals) {
+    v.resize(filteredWaveforms.at(0).size());
+  }
+
+  roi.resize(filteredWaveforms.size());
+  for (auto& v : roi) {
     v.resize(filteredWaveforms.at(0).size());
   }
 
@@ -413,27 +436,27 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   switch (filterName) {
     case 'd':
       getSelectVals(filteredWaveforms, dilation, 
-        selectVals, window, thresholdFactor);
+        selectVals, roi, window, thresholdFactor);
       morphedWaveforms = dilation;
       break;
     case 'e':
       getSelectVals(filteredWaveforms, erosion, 
-        selectVals, window, thresholdFactor);
+        selectVals, roi, window, thresholdFactor);
       morphedWaveforms = erosion;
       break;
     case 'a':
       getSelectVals(filteredWaveforms, average, 
-        selectVals, window, thresholdFactor);
+        selectVals, roi, window, thresholdFactor);
       morphedWaveforms = average;
       break;
     case 'g':
       getSelectVals(filteredWaveforms, gradient, 
-        selectVals, window, thresholdFactor);
+        selectVals, roi, window, thresholdFactor);
       morphedWaveforms = gradient;
       break;
     default:
       getSelectVals(filteredWaveforms, gradient, 
-        selectVals, window, thresholdFactor);
+        selectVals, roi, window, thresholdFactor);
       morphedWaveforms = gradient;
       break;
   }

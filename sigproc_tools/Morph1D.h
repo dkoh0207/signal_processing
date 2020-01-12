@@ -106,17 +106,17 @@ namespace sigproc_tools {
                       Waveform<double>&) const;
 
 
-      // void getMedian(const Waveform<short>&,
-      //                 const unsigned int,
-      //                 Waveform<short>&) const;
+      void getMedian(const Waveform<short>&,
+                      const unsigned int,
+                      Waveform<short>&) const;
 
-      // void getMedian(const Waveform<float>&,
-      //                 const unsigned int,
-      //                 Waveform<float>&) const;
+      void getMedian(const Waveform<float>&,
+                      const unsigned int,
+                      Waveform<float>&) const;
 
-      // void getMedian(const Waveform<double>&,
-      //                 const unsigned int,
-      //                 Waveform<double>&) const;
+      void getMedian(const Waveform<double>&,
+                      const unsigned int,
+                      Waveform<double>&) const;
 
 
       void getOpeningAndClosing(const Waveform<short>&,
@@ -170,10 +170,11 @@ namespace sigproc_tools {
         const unsigned int structuringElement,
         Waveform<T>& averageVec) const;
 
-      // template <typename T> void getMedian(
-      //   const Waveform<T>& inputWaveform,
-      //   const unsigned int structuringElement,
-      //   Waveform<T>& medianVec) const;
+      template <typename T> 
+      void getMedian(
+        const Waveform<T>& inputWaveform,
+        const unsigned int structuringElement,
+        Waveform<T>& medianVec) const;
 
       template <typename T> 
       void getOpeningAndClosing(

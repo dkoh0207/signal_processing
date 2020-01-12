@@ -44,6 +44,7 @@ namespace sigproc_tools {
         const std::vector<std::vector<short>>&,
         const std::vector<std::vector<short>>&,
         std::vector<std::vector<bool>>&,
+        std::vector<std::vector<bool>>&,
         const unsigned int,
         const float);
 
@@ -51,12 +52,14 @@ namespace sigproc_tools {
         const std::vector<std::vector<float>>&,
         const std::vector<std::vector<float>>&,
         std::vector<std::vector<bool>>&,
+        std::vector<std::vector<bool>>&,
         const unsigned int,
         const float);
 
       void getSelectVals(
         const std::vector<std::vector<double>>&,
         const std::vector<std::vector<double>>&,
+        std::vector<std::vector<bool>>&,
         std::vector<std::vector<bool>>&,
         const unsigned int,
         const float);
@@ -67,6 +70,7 @@ namespace sigproc_tools {
         const std::vector<std::vector<short> >&,
         std::vector<std::vector<short> >&,
         std::vector<std::vector<short> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<short> >&,
         const char,
@@ -82,6 +86,7 @@ namespace sigproc_tools {
         std::vector<std::vector<float> >&,
         std::vector<std::vector<float> >&,
         std::vector<std::vector<bool> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<float> >&,
         const char,
         const unsigned int,
@@ -95,6 +100,7 @@ namespace sigproc_tools {
         const std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<double> >&,
         const char,
@@ -111,6 +117,7 @@ namespace sigproc_tools {
         std::vector<std::vector<short> >&,
         std::vector<std::vector<short> >&,
         std::vector<std::vector<bool> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<short> >&,
         const char, 
         const unsigned int,
@@ -125,6 +132,7 @@ namespace sigproc_tools {
         std::vector<std::vector<float> >&,
         std::vector<std::vector<float> >&,
         std::vector<std::vector<bool> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<float> >&,
         const char, 
         const unsigned int,
@@ -138,6 +146,7 @@ namespace sigproc_tools {
         const std::vector<std::vector<double> >&, 
         std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
+        std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<double> >&,
         const char, 
@@ -155,9 +164,10 @@ namespace sigproc_tools {
 
       template <typename T>
       void getSelectVals(
-        const std::vector<std::vector<T>>& waveforms,
-        const std::vector<std::vector<T>>& morphedWaveforms,
-        std::vector<std::vector<bool>>& selectVals,
+        const std::vector<std::vector<T> >& waveforms,
+        const std::vector<std::vector<T> >& morphedWaveforms,
+        std::vector<std::vector<bool> >& selectVals,
+        std::vector<std::vector<bool> >& roi,
         const unsigned int window,
         const float thresholdFactor
       );
@@ -170,6 +180,7 @@ namespace sigproc_tools {
         std::vector<std::vector<T> >& morphedWaveforms, 
         std::vector<std::vector<T> >& intrinsicRMS,
         std::vector<std::vector<bool> >& selectVals,
+        std::vector<std::vector<bool> >& roi,
         std::vector<std::vector<T> >& correctedMedians,
         const char filterName='d', 
         const unsigned int grouping=64,
@@ -185,6 +196,7 @@ namespace sigproc_tools {
         std::vector<std::vector<T> >& morphedWaveforms, 
         std::vector<std::vector<T> >& intrinsicRMS,
         std::vector<std::vector<bool> >& selectVals,
+        std::vector<std::vector<bool> >& roi,
         std::vector<std::vector<T> >& correctedMedians,
         const char filterName='g',
         const unsigned int grouping=64, 

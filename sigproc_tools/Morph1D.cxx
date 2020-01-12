@@ -395,90 +395,69 @@ void sigproc_tools::Morph1D::getAverage(
 }
 
 
-// void sigproc_tools::Morph1D::getMedian(
-//   const Waveform<short>& waveform,
-//   const unsigned int structuringElement,
-//   Waveform<short>& medianVec) const
-// {
-//   getMedian<short>(waveform, structuringElement, medianVec);
-//   return;
-// }
+void sigproc_tools::Morph1D::getMedian(
+  const Waveform<short>& waveform,
+  const unsigned int structuringElement,
+  Waveform<short>& medianVec) const
+{
+  getMedian<short>(waveform, structuringElement, medianVec);
+  return;
+}
 
-// void sigproc_tools::Morph1D::getMedian(
-//   const Waveform<float>& waveform,
-//   const unsigned int structuringElement,
-//   Waveform<short>& medianVec) const
-// {
-//   getMedian<float>(waveform, structuringElement, medianVec);
-//   return;
-// }
+void sigproc_tools::Morph1D::getMedian(
+  const Waveform<float>& waveform,
+  const unsigned int structuringElement,
+  Waveform<float>& medianVec) const
+{
+  getMedian<float>(waveform, structuringElement, medianVec);
+  return;
+}
 
-// void sigproc_tools::Morph1D::getMedian(
-//   const Waveform<double>& waveform,
-//   const unsigned int structuringElement,
-//   Waveform<double>& medianVec) const
-// {
-//   getMedian<double>(waveform, structuringElement, medianVec);
-//   return;
-// }
+void sigproc_tools::Morph1D::getMedian(
+  const Waveform<double>& waveform,
+  const unsigned int structuringElement,
+  Waveform<double>& medianVec) const
+{
+  getMedian<double>(waveform, structuringElement, medianVec);
+  return;
+}
 
-// template <typename T> void sigproc_tools::Morph1D::getMedian(
-//   const Waveform<T>& inputWaveform,
-//   const unsigned int structuringElement,
-//   Waveform<T>& medianVec) const
-// {
-//   // Set the window size
-//   int halfWindowSize(structuringElement/2);
-//   typename std::vector<T> localWaveform = waveform;
+template <typename T> 
+void sigproc_tools::Morph1D::getMedian(
+  const Waveform<T>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<T>& medianVec) const
+{
+  // Set the window size
+  int halfWindowSize(structuringElement/2);
+  medianVec.resize(inputWaveform.size());
+  size_t nTicks = inputWaveform.size();
 
-//   if (localWaveform.size() % 2 == 0) {
-//     const auto m1 = localWaveform.begin() + localWaveform.size() / 2 - 1;
-//     const auto m2 = localWaveform.begin() + localWaveform.size() / 2;
-//     std::nth_element(localWaveform.begin(), m1, localWaveform.end());
-//     std::nth_element(localWaveform.begin(), m2, localWaveform.end());
-//     median = (*m1 + *m2) / 2.0;
-//   } else {
-//     median = localWaveform[localWaveform.size()/2];
-//   }
-//   // Initialize min and max elements
-//   std::pair<typename Waveform<T>::const_iterator,
-//             typename Waveform<T>::const_iterator> minMaxItr =
-//             std::minmax_element(
-//               inputWaveform.begin(),inputWaveform.begin()+halfWindowSize);
+  T median = 0;
 
-//   typename Waveform<T>::const_iterator minElementItr = minMaxItr.first;
-//   typename Waveform<T>::const_iterator maxElementItr = minMaxItr.second;
-
-//   // Initialize the erosion and dilation vectors
-//   medianVec.resize(inputWaveform.size());
-//   // Now loop through remaining elements and complete the vectors
-//   typename Waveform<T>::iterator avgItr = medianVec.begin();
-
-//   for (typename Waveform<T>::const_iterator inputItr = 
-//     inputWaveform.begin(); inputItr != inputWaveform.end(); inputItr++)
-//   {
-//     // There are two conditions to check:
-//     // 1) is the current min/max element outside the current window?
-//     // 2) is the new element smaller/larger than the current min/max?
-//     // Make sure we are not running off the end of the vector
-//     if (std::distance(inputItr,inputWaveform.end()) > halfWindowSize)
-//     {
-//       if (std::distance(minElementItr,inputItr) >= halfWindowSize)
-//           minElementItr = std::min_element(
-//             inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
-//       else if (*(inputItr + halfWindowSize) < *minElementItr)
-//           minElementItr = inputItr + halfWindowSize;
-//       if (std::distance(maxElementItr,inputItr) >= halfWindowSize)
-//           maxElementItr = std::max_element(
-//             inputItr - halfWindowSize, inputItr + halfWindowSize + 1);
-//       else if (*(inputItr + halfWindowSize) > *maxElementItr)
-//           maxElementItr = inputItr + halfWindowSize;
-//     }
-//     // Update the vectors
-//     *avgItr++ = 0.5 * (*maxElementItr + *minElementItr);
-//   }
-//   return;
-// }
+  for (size_t i=0; i<nTicks; ++i) {
+    typename std::vector<T> localVec;
+    localVec.reserve(structuringElement);
+    int lbx = i - (int) halfWindowSize;
+    int ubx = i + (int) halfWindowSize;
+    size_t lowerBoundx = std::max(lbx, 0);
+    size_t upperBoundx = std::min(ubx, (int) nTicks);
+    for (size_t j=lowerBoundx; j<upperBoundx+1; ++j) {
+      localVec.push_back(inputWaveform[j]);
+    }
+    if (structuringElement % 2 == 0) {
+      const auto m1 = localVec.begin() + localVec.size() / 2 - 1;
+      const auto m2 = localVec.begin() + localVec.size() / 2;
+      std::nth_element(localVec.begin(), m1, localVec.end());
+      std::nth_element(localVec.begin(), m2, localVec.end());
+      median = (*m1 + *m2) / 2.0;
+    } else {
+      median = localVec[localVec.size() / 2];
+    }
+    medianVec[i] = median;
+  }
+  return;
+}
 
 
 void sigproc_tools::Morph1D::getOpeningAndClosing(
