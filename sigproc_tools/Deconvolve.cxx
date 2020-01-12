@@ -92,41 +92,41 @@ void sigproc_tools::Deconvolve::filterLee(
 }
 
 
-void sigproc_tools::Deconvolve::filterLeeMedian(
+void sigproc_tools::Deconvolve::MMWF(
   std::vector<std::vector<short>>& deconvolvedWaveform,
   const std::vector<std::vector<short>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
   const unsigned int sy)
 {
-  filterLeeMedian<short>(
+  MMWF<short>(
     deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy);
 }
 
-void sigproc_tools::Deconvolve::filterLeeMedian(
+void sigproc_tools::Deconvolve::MMWF(
   std::vector<std::vector<float>>& deconvolvedWaveform,
   const std::vector<std::vector<float>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
   const unsigned int sy)
 {
-  filterLeeMedian<float>(
+  MMWF<float>(
     deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy);
 }
 
-void sigproc_tools::Deconvolve::filterLeeMedian(
+void sigproc_tools::Deconvolve::MMWF(
   std::vector<std::vector<double>>& deconvolvedWaveform,
   const std::vector<std::vector<double>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
   const unsigned int sy)
 {
-  filterLeeMedian<double>(
+  MMWF<double>(
     deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy);
 }
 
 template <typename T>
-void sigproc_tools::Deconvolve::filterLeeMedian(
+void sigproc_tools::Deconvolve::MMWF(
   std::vector<std::vector<T>>& deconvolvedWaveform,
   const std::vector<std::vector<T>>& waveLessCoherent,
   const float noiseVar,
@@ -178,6 +178,120 @@ void sigproc_tools::Deconvolve::filterLeeMedian(
       }
     }
   }
+  return;
+}
+
+
+void sigproc_tools::Deconvolve::MMWFStar(
+  std::vector<std::vector<short>>& deconvolvedWaveform,
+  const std::vector<std::vector<short>>& waveLessCoherent,
+  const unsigned int sx,
+  const unsigned int sy)
+{
+  MMWFStar<short>(
+    deconvolvedWaveform, waveLessCoherent, sx, sy);
+}
+
+void sigproc_tools::Deconvolve::MMWFStar(
+  std::vector<std::vector<float>>& deconvolvedWaveform,
+  const std::vector<std::vector<float>>& waveLessCoherent,
+  const unsigned int sx,
+  const unsigned int sy)
+{
+  MMWFStar<float>(
+    deconvolvedWaveform, waveLessCoherent, sx, sy);
+}
+
+void sigproc_tools::Deconvolve::MMWFStar(
+  std::vector<std::vector<double>>& deconvolvedWaveform,
+  const std::vector<std::vector<double>>& waveLessCoherent,
+  const unsigned int sx,
+  const unsigned int sy)
+{
+  MMWFStar<double>(
+    deconvolvedWaveform, waveLessCoherent, sx, sy);
+}
+
+template <typename T>
+void sigproc_tools::Deconvolve::MMWFStar(
+  std::vector<std::vector<T>>& deconvolvedWaveform,
+  const std::vector<std::vector<T>>& waveLessCoherent,
+  const unsigned int sx,
+  const unsigned int sy)
+{
+  size_t numChannels = waveLessCoherent.size();
+  size_t nTicks = waveLessCoherent.at(0).size();
+  int xHalfWindowSize(sx / 2);
+  int yHalfWindowSize(sy / 2);
+
+  deconvolvedWaveform.resize(numChannels);
+  for (size_t i=0; i<numChannels; ++i) {
+    deconvolvedWaveform[i].resize(nTicks);
+  }
+
+  sigproc_tools::MiscUtils utils;
+
+  std::vector<std::vector<T>> localMedians;
+  std::vector<std::vector<T>> localVars;
+
+  localMedians.resize(numChannels);
+  for (size_t i=0; i<numChannels; ++i) {
+    localMedians[i].resize(nTicks);
+  }
+
+  localVars.resize(numChannels);
+  for (size_t i=0; i<numChannels; ++i) {
+    localVars[i].resize(nTicks);
+  }
+
+  std::vector<T> localVarTemp;
+  localVarTemp.reserve(numChannels * nTicks);
+
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      // For each center pixel, apply a adaptive local wiener filter.
+      int lbx = i - (int) xHalfWindowSize;
+      int ubx = i + (int) xHalfWindowSize;
+      int lby = j - (int) yHalfWindowSize;
+      int uby = j + (int) yHalfWindowSize;
+      size_t lowerBoundx = std::max(lbx, 0);
+      size_t upperBoundx = std::min(ubx, (int) numChannels);
+      size_t lowerBoundy = std::max(lby, 0);
+      size_t upperBoundy = std::min(uby, (int) nTicks);
+      std::vector<T> x;
+      x.reserve(sx * sy);
+      std::vector<T> xsq;
+      xsq.reserve(sx * sy);
+      for (size_t ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (size_t iy=lowerBoundy; iy<upperBoundy; ++iy) {
+          x.push_back(waveLessCoherent[ix][iy]);
+          xsq.push_back(waveLessCoherent[ix][iy] * waveLessCoherent[ix][iy]);
+        }
+      }
+      T localMean = std::accumulate(x.begin(), x.end(), 0.0) / x.size() ;
+      T localSquare = std::accumulate(xsq.begin(), xsq.end(), 0.0) / x.size() ;
+      T localMedian = utils.computeMedian(x);
+      T localVar = localSquare - 2.0 * localMean * localMedian + std::pow(localMean, 2.0);
+      localMedians[i][j] = localMedian;
+      localVarTemp.push_back(localVar);
+      localVars[i][j] = localVar;
+    }
+  }
+
+  float noiseMedian = utils.computeMedian(localVarTemp);
+  std::cout << noiseMedian << std::endl;
+
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      if (noiseMedian > localVars[i][j]) {
+        deconvolvedWaveform[i][j] = localMedians[i][j];
+      } else {
+        deconvolvedWaveform[i][j] = localMedians[i][j] + 
+        (1.0 - noiseMedian / localVars[i][j]) * (waveLessCoherent[i][j] - localMedians[i][j]);
+      }
+    }
+  }
+
   return;
 }
 
@@ -287,6 +401,8 @@ void sigproc_tools::Deconvolve::filterLeeEnhanced(
   }
   return;
 }
+
+
 
 
 template <typename T>

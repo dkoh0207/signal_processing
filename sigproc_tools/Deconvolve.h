@@ -63,7 +63,7 @@ namespace sigproc_tools {
       );
 
 
-      void filterLeeMedian(
+      void MMWF(
         std::vector<std::vector<short>>&,
         const std::vector<std::vector<short>>&,
         const float,
@@ -71,7 +71,7 @@ namespace sigproc_tools {
         const unsigned int
       );
 
-      void filterLeeMedian(
+      void MMWF(
         std::vector<std::vector<float>>&,
         const std::vector<std::vector<float>>&,
         const float,
@@ -79,10 +79,32 @@ namespace sigproc_tools {
         const unsigned int
       );
 
-      void filterLeeMedian(
+      void MMWF(
         std::vector<std::vector<double>>&,
         const std::vector<std::vector<double>>&,
         const float,
+        const unsigned int,
+        const unsigned int
+      );
+
+
+      void MMWFStar(
+        std::vector<std::vector<short>>&,
+        const std::vector<std::vector<short>>&,
+        const unsigned int,
+        const unsigned int
+      );
+
+      void MMWFStar(
+        std::vector<std::vector<float>>&,
+        const std::vector<std::vector<float>>&,
+        const unsigned int,
+        const unsigned int
+      );
+
+      void MMWFStar(
+        std::vector<std::vector<double>>&,
+        const std::vector<std::vector<double>>&,
         const unsigned int,
         const unsigned int
       );
@@ -132,10 +154,17 @@ namespace sigproc_tools {
         const unsigned int sy=7);
 
       template <typename T>
-      void filterLeeMedian(
+      void MMWF(
         std::vector<std::vector<T> >& deconvolvedWaveform,
         const std::vector<std::vector<T> >& waveLessCoherent,
         const float noiseVar,
+        const unsigned int sx=7,
+        const unsigned int sy=7);
+
+      template <typename T>
+      void MMWFStar(
+        std::vector<std::vector<T> >& deconvolvedWaveform,
+        const std::vector<std::vector<T> >& waveLessCoherent,
         const unsigned int sx=7,
         const unsigned int sy=7);
     
