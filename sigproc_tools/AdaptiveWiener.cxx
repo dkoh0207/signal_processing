@@ -525,12 +525,12 @@ void sigproc_tools::AdaptiveWiener::sigmaFilter(
   const std::vector<std::vector<short>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
-  const unsigned int sy
+  const unsigned int sy,
   const unsigned int K,
-  const unsigned float sigmaFactor)
+  const float sigmaFactor)
 {
   sigmaFilter<short>(
-    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, xy, K, sigmaFactor);
+    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy, K, sigmaFactor);
 }
 
 void sigproc_tools::AdaptiveWiener::sigmaFilter(
@@ -538,12 +538,12 @@ void sigproc_tools::AdaptiveWiener::sigmaFilter(
   const std::vector<std::vector<float>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
-  const unsigned int sy
+  const unsigned int sy,
   const unsigned int K,
-  const unsigned float sigmaFactor)
+  const float sigmaFactor)
 {
   sigmaFilter<float>(
-    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, xy, K, sigmaFactor);
+    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy, K, sigmaFactor);
 }
 
 void sigproc_tools::AdaptiveWiener::sigmaFilter(
@@ -551,12 +551,12 @@ void sigproc_tools::AdaptiveWiener::sigmaFilter(
   const std::vector<std::vector<double>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
-  const unsigned int sy
+  const unsigned int sy,
   const unsigned int K,
-  const unsigned float sigmaFactor)
+  const float sigmaFactor)
 {
   sigmaFilter<double>(
-    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, xy, K, sigmaFactor);
+    deconvolvedWaveform, waveLessCoherent, noiseVar, sx, sy, K, sigmaFactor);
 }
 
 
@@ -566,9 +566,9 @@ void sigproc_tools::AdaptiveWiener::sigmaFilter(
   const std::vector<std::vector<T>>& waveLessCoherent,
   const float noiseVar,
   const unsigned int sx,
-  const unsigned int sy
+  const unsigned int sy,
   const unsigned int K,
-  const unsigned float sigmaFactor)
+  const float sigmaFactor)
 {
   size_t numChannels = waveLessCoherent.size();
   size_t nTicks = waveLessCoherent.at(0).size();

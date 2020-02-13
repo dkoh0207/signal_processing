@@ -12,6 +12,20 @@
 
     @{*/
 #ifndef __SIGPROC_TOOLS_DECONVOLUTION_H__
+
+#include <vector>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+#include <numeric>
+#include <cmath>
+#include <functional>
+#include "MiscUtils.h"
+
+#include <Eigen/Core>
+#include <unsupported/Eigen/FFT>
+
+
 #define __SIGPROC_TOOLS_DECONVOLUTION_H__
 
 namespace sigproc_tools {
@@ -23,15 +37,83 @@ namespace sigproc_tools {
   */
   class Deconvolution{
     
-  public:
-    
-    /// Default constructor
-    Deconvolution(){}
-    
-    /// Default destructor
-    ~Deconvolution(){}
-    
-  };
+    public:
+      
+      /// Default constructor
+      Deconvolution(){}
+
+      void Inverse1D(
+        std::vector<std::vector<float>>&,
+        const std::vector<std::vector<float>>&,
+        const std::vector<float>&
+      );
+
+      void Inverse1D(
+        std::vector<std::vector<double>>&,
+        const std::vector<std::vector<double>>&,
+        const std::vector<double>&
+      );
+
+
+      void Wiener1D(
+        std::vector<std::vector<float>>&,
+        const std::vector<std::vector<float>>&,
+        const std::vector<float>&,
+        const float
+      );
+
+      void Wiener1D(
+        std::vector<std::vector<double>>&,
+        const std::vector<std::vector<double>>&,
+        const std::vector<double>&,
+        const float
+      );
+
+
+      void AdaptiveWiener1D(
+        std::vector<std::vector<float>>&,
+        const std::vector<std::vector<float>>&,
+        const std::vector<float>&,
+        const std::vector<std::vector<bool>>&
+      );
+
+      void AdaptiveWiener1D(
+        std::vector<std::vector<double>>&,
+        const std::vector<std::vector<double>>&,
+        const std::vector<double>&,
+        const std::vector<std::vector<bool>>&
+      );
+
+      
+      /// Default destructor
+      ~Deconvolution(){}
+
+    private:
+
+      template <typename T>
+      void Inverse1D(
+        std::vector<std::vector<T>>& outputWaveform,
+        const std::vector<std::vector<T>>& inputWaveform,
+        const std::vector<T>& responseFunction
+      );
+
+      template <typename T>
+      void Wiener1D(
+        std::vector<std::vector<T>>& outputWaveform,
+        const std::vector<std::vector<T>>& inputWaveform,
+        const std::vector<T>& responseFunction,
+        const float noiseVar
+      );
+
+      template <typename T>
+      void AdaptiveWiener1D(
+        std::vector<std::vector<T>>& outputWaveform,
+        const std::vector<std::vector<T>>& inputWaveform,
+        const std::vector<T>& responseFunction,
+        const std::vector<std::vector<bool>>& selectVals
+      );
+      
+    };
 }
 
 #endif

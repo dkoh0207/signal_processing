@@ -182,7 +182,7 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const unsigned float);
+        const float);
 
       void sigmaFilter(
         std::vector<std::vector<float>>&,
@@ -191,7 +191,7 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const unsigned float);
+        const float);
 
       void sigmaFilter(
         std::vector<std::vector<double>>&,
@@ -200,7 +200,7 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const unsigned float);
+        const float);
 
       /// Default destructor
       ~AdaptiveWiener(){}
@@ -259,7 +259,7 @@ namespace sigproc_tools {
         const unsigned int sx=7,
         const unsigned int sy=7,
         const unsigned int K=5,
-        const unsigned float sigmaFactor=2.0);
+        const float sigmaFactor=2.0);
   };
 }
 

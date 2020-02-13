@@ -73,11 +73,12 @@ void sigproc_tools::Denoising::getSelectVals(
     for (size_t j=0; j<baseVec.size(); ++j) {
       baseVec[j] = morphedWaveforms[i][j] - median;
     }
-    // float rms;
-    // rms = std::sqrt(std::inner_product(baseVec.begin(), 
-    //   baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
+
+    float rms;
+    rms = std::sqrt(std::inner_product(baseVec.begin(), 
+      baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
     float threshold;
-    threshold = median + 3.0 * thresholdFactor;
+    threshold = thresholdFactor * rms;
 
     for (size_t j=0; j<nTicks; ++j) {
       if (abs(morphedWaveforms[i][j]) > threshold) {
