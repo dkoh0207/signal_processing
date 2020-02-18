@@ -517,4 +517,38 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
 }
 
 
+void sigproc_tools::Denoising::subtractPedestals(
+  std::vector<std::vector<float>>& wf2d,
+  const std::vector<std::vector<bool>>& selectVals)
+{
+  size_t numChannels = wf2d.size();
+  size_t nTicks = wf2d.at(0).size();
+
+  std::vector<float> medians;
+  medians.reserve(numChannels);
+
+  sigproc_tools::MiscUtils utils;
+
+  for (size_t i=0; i<numChannels; ++i) {
+    std::vector<float> v;
+    v.reserve(nTicks);
+    for (size_t j=0; j<nTicks; ++j) {
+      if (!selectVals[i][j]) {
+        v.push_back(wf2d[i][j]);
+      }
+    }
+    float median = utils.computeMedian(v);
+    medians.push_back(median);
+  }
+
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      if (!selectVals[i][j]) {
+        wf2d[i][j] = wf2d[i][j] - medians[i];
+      }
+    }
+  }
+}
+
+
 #endif

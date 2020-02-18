@@ -24,6 +24,7 @@
 #include <functional>
 #include "Morph1D.h"
 #include "Morph2D.h"
+#include "MiscUtils.h"
 
 namespace sigproc_tools {
 
@@ -155,6 +156,10 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const float);
+
+      void subtractPedestals(
+        std::vector<std::vector<float>>& wf2d,
+        const std::vector<std::vector<bool>>& selectVals);
 
     
     /// Default destructor

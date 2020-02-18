@@ -185,7 +185,39 @@ void sigproc_tools::Deconvolution::AdaptiveWiener1D(
   return;
 }
 
-// 2D PseudoWiener Filtering
+// Fourier Shrinkage
+
+void sigproc_tools::Deconvolution::FourierShrinkage1D(
+  std::vector<std::vector<float>>& outputWaveform,
+  const std::vector<std::vector<float>>& inputWaveform,
+  const std::vector<float>& responseFunction,
+  const float regParam)
+{
+  size_t numChannels = inputWaveform.size();
+  size_t nTicks = inputWaveform.at(0).size();
+  outputWaveform.resize(numChannels);
+  for (size_t i=0; i<numChannels; ++i) {
+    outputWaveform[i].resize(nTicks);
+  }
+  for (size_t i=0; i<numChannels; ++i) {
+    Eigen::FFT<float> fft;
+    fft.SetFlag(fft.HalfSpectrum);
+    std::complex<float> wienerReg;
+    std::vector<std::complex<float>> freqVec;
+    std::vector<std::complex<float>> responseFFT;
+    fft.fwd(freqVec, inputWaveform[i]);
+    fft.fwd(responseFFT, responseFunction);
+    for (size_t j=0; j<responseFFT.size(); ++j) {
+      wienerReg = std::conj(responseFFT[j]) / 
+            ((std::complex<float>) std::pow(std::abs(responseFFT[j]), 2.0) + 
+              (std::complex<float>) regParam);
+      freqVec[j] = freqVec[j] * wienerReg;
+    }
+    fft.inv(outputWaveform[i], freqVec);
+    fft.ClearFlag(fft.HalfSpectrum);
+  }
+  return;
+}
 
 
 #endif

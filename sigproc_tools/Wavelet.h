@@ -28,21 +28,21 @@ namespace sigproc_tools {
     
     public:
 
-      virtual void filt(
-        std::vector<float>& inputWaveform,
-        const size_t n, 
-        const int isign) const = 0;
+      // virtual void filt(
+      //   std::vector<float>& inputWaveform,
+      //   const size_t n, 
+      //   const int isign) const = 0 {};
 
       virtual void condition(
         std::vector<float>& inputWaveform,
         const size_t n,
         const int isign) const = 0;
 
-      virtual ~Wavelet();
+      virtual ~Wavelet(){};
     
   };
 
-  class Daubechies4 : public Wavelet{
+  class Daubechies4 {
 
     public: 
 
@@ -56,14 +56,9 @@ namespace sigproc_tools {
         const size_t n,
         const int isign) const;
 
-      void transformInterval(
+      void transform(
         std::vector<float>& inputWaveform,
         const size_t n,
-        const int isign) const;
-
-      void filt(
-        std::vector<float>& inputWaveform,
-        const size_t n, 
         const int isign) const;
 
       void condition(
@@ -71,7 +66,24 @@ namespace sigproc_tools {
         const size_t n,
         const int isign) const;
 
-      ~Daubechies4();
+      ~Daubechies4(){};
+  };
+
+  class Haar {
+
+    public:
+
+      std::vector<float> filters;
+      unsigned int filterLength;
+
+      Haar(){};
+
+      void transform(
+        std::vector<float>& inputWaveform,
+        const size_t n,
+        const int isign) const;
+
+      ~Haar(){};
   };
 }
 

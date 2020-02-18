@@ -84,6 +84,12 @@ namespace sigproc_tools {
         const std::vector<std::vector<bool>>&
       );
 
+      void FourierShrinkage1D(
+        std::vector<std::vector<float>>& outputWaveform,
+        const std::vector<std::vector<float>>& inputWaveform,
+        const std::vector<float>& responseFunction,
+        const float regParam);
+
       
       /// Default destructor
       ~Deconvolution(){}

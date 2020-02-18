@@ -39,7 +39,7 @@ T sigproc_tools::MiscUtils::computeMedian(const std::vector<T>& vec)
   return median;
 }
 
-float sigproc_tools::MiscUtils::compute_noise_power(
+float sigproc_tools::MiscUtils::estimateNoiseVariance(
   const std::vector<std::vector<float>>& waveLessCoherent,
   const std::vector<std::vector<bool>>& selectVals)
 {
@@ -63,5 +63,24 @@ float sigproc_tools::MiscUtils::compute_noise_power(
   var = var / ((float) count) - std::pow(mean, 2.0);
   return var;
 }
+
+float sigproc_tools::MiscUtils::estimateMAD(
+  const std::vector<float>& wf)
+{
+  size_t numChannels = wf.size();
+
+  std::vector<float> wksp;
+  wksp.reserve(numChannels);
+
+  for (size_t i=0; i<numChannels; ++i) {
+    wksp.push_back(std::abs(wf[i]));
+  }
+
+  float median;
+  median = computeMedian(wksp);
+  return median / 0.6745;
+}
+
+
 
 #endif

@@ -16,7 +16,9 @@
 
 #include <vector>
 #include <cmath>
+#include <iostream>
 #include "Wavelet.h"
+#include "MiscUtils.h"
 
 namespace sigproc_tools {
 
@@ -46,7 +48,18 @@ namespace sigproc_tools {
       const size_t nTicks,
       const int isign,
       Daubechies4& wavelet,
-      const int levels) const;
+      const int levelChannels,
+      const int levelTicks) const;
+
+    void estimateLevelNoise(
+      const std::vector<std::vector<float>>& transform,
+      const int levels,
+      std::vector<float>& noiseEstimates) const;
+
+    void WaveletWienerShrink(
+      std::vector<std::vector<float>>& transform,
+      const int levels,
+      const std::vector<float>& noiseEstimates) const;
     
     /// Default destructor
     ~WaveletTransform(){}

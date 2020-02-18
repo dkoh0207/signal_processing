@@ -3,6 +3,54 @@
 
 #include "Wavelet.h"
 
+// Haar Wavelets
+
+void sigproc_tools::Haar::transform(
+  std::vector<float>& wf,
+  const size_t n,
+  const int isign) const
+{
+  /*
+  From Numerical Recipes:
+  Press, William H. and Teukolsky, Saul A. and Vetterling, William T. and Flannery, Brian P.
+  Numerical Recipes 3rd Edition: The Art of Scientific Computing
+  Chapter 13.11 Wavelet Transforms
+
+  1D Wavelet Transform with Daubechies 4 filter with 
+  periodic boundary conditions.
+
+  INPUTS:
+    - wf: input waveform to be transformed
+    - isign: parameter for forward/inverse transform mode (i = 1 or -1)
+    - wksp: transformed waveform. 
+  */
+
+  std::vector<float> wksp(n);
+  const std::vector<float> C = this->filters;
+  float invSqrt = 0.70710678118;
+
+  size_t nh, i, j;
+  nh = n >> 1;
+
+  if (isign >= 0) {
+    for (i=0, j=0; j<n-1; j+=2, ++i) {
+        // Compute and store scaling coefficients
+        wksp[i] = invSqrt * (wf[j] + wf[j+1]);
+        // Compute and store detail coefficients
+        wksp[i + nh] = invSqrt * (wf[j] - wf[j+1]);
+      }
+  } else {
+    for (i=0, j=0; i<nh-1; ++i) {
+      wksp[j++] = invSqrt * (wf[i] + wf[i+nh]);
+      wksp[j++] = invSqrt * (wf[i] - wf[i+nh]);
+    }
+  }
+  for (i=0; i<n; ++i) wf[i] = wksp[i];
+  return;
+}
+
+// Daubechies Family of Wavelets
+
 sigproc_tools::Daubechies4::Daubechies4(const unsigned int n)
 {
   /*
@@ -69,11 +117,14 @@ void sigproc_tools::Daubechies4::transformPeriodic(
   return;
 }
 
-void sigproc_tools::Daubechies4::transformInterval(
+void sigproc_tools::Daubechies4::transform(
   std::vector<float>& wf,
   const size_t n,
   const int isign) const
 {
+  /*
+  The Cohen-Daubechies-Vial Wavelet 4 Filter on the interval. 
+  */
   const float C0=0.4829629131445341, C1=0.8365163037378077,
   C2=0.2241438680420134, C3=-0.1294095225512603;
   const float R00=0.603332511928053,R01=0.690895531839104,
@@ -152,12 +203,5 @@ void sigproc_tools::Daubechies4::condition(
   }
 }
 
-// void sigproc_tools::Daubechies4::filt(
-//   std::vector<float>& inputWaveform,
-//   const size_t n,
-//   const int isign) const
-// {
-
-// }
 
 #endif

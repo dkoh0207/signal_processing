@@ -38,9 +38,12 @@ namespace sigproc_tools {
       float computeMedian(const std::vector<float>& vec);
       double computeMedian(const std::vector<double>& vec);
 
-      float compute_noise_power(
+      float estimateNoiseVariance(
         const std::vector<std::vector<float>>& waveLessCoherent,
         const std::vector<std::vector<bool>>& selectVals);
+
+      float estimateMAD(
+        const std::vector<float>& wf);
 
       
       /// Default destructor
