@@ -75,7 +75,7 @@ void sigproc_tools::Denoising::getSelectVals(
     }
 
     float rms;
-    rms = std::sqrt(std::inner_product(baseVec.begin(), 
+    rms = std::sqrt(std::inner_product(baseVec.begin(),
       baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
     float threshold;
     threshold = thresholdFactor * rms;
@@ -115,7 +115,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   const float thresholdFactor)
 {
   removeCoherentNoise1D<short>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
@@ -136,7 +136,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   const float thresholdFactor)
 {
   removeCoherentNoise1D<float>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
@@ -157,7 +157,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
   const float thresholdFactor)
 {
   removeCoherentNoise1D<double>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
     filterName, grouping, structuringElement, window, thresholdFactor);
   return;
@@ -250,7 +250,7 @@ void sigproc_tools::Denoising::removeCoherentNoise1D(
       break;
   }
 
-  getSelectVals(filteredWaveforms, morphedWaveforms, 
+  getSelectVals(filteredWaveforms, morphedWaveforms,
     selectVals, roi, window, thresholdFactor);
 
   for (size_t i=0; i<nTicks; ++i) {
@@ -324,9 +324,9 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   const float thresholdFactor)
 {
   removeCoherentNoise2D<short>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
-    filterName, grouping, structuringElementx, structuringElementy, 
+    filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
 }
@@ -347,9 +347,9 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   const float thresholdFactor)
 {
   removeCoherentNoise2D<float>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
-    filterName, grouping, structuringElementx, structuringElementy, 
+    filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
 }
@@ -370,9 +370,9 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
   const float thresholdFactor)
 {
   removeCoherentNoise2D<double>(
-    waveLessCoherent, filteredWaveforms, morphedWaveforms, 
+    waveLessCoherent, filteredWaveforms, morphedWaveforms,
     intrinsicRMS, selectVals, roi, correctedMedians,
-    filterName, grouping, structuringElementx, structuringElementy, 
+    filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
 }
@@ -436,27 +436,27 @@ void sigproc_tools::Denoising::removeCoherentNoise2D(
 
   switch (filterName) {
     case 'd':
-      getSelectVals(filteredWaveforms, dilation, 
+      getSelectVals(filteredWaveforms, dilation,
         selectVals, roi, window, thresholdFactor);
       morphedWaveforms = dilation;
       break;
     case 'e':
-      getSelectVals(filteredWaveforms, erosion, 
+      getSelectVals(filteredWaveforms, erosion,
         selectVals, roi, window, thresholdFactor);
       morphedWaveforms = erosion;
       break;
     case 'a':
-      getSelectVals(filteredWaveforms, average, 
+      getSelectVals(filteredWaveforms, average,
         selectVals, roi, window, thresholdFactor);
       morphedWaveforms = average;
       break;
     case 'g':
-      getSelectVals(filteredWaveforms, gradient, 
+      getSelectVals(filteredWaveforms, gradient,
         selectVals, roi, window, thresholdFactor);
       morphedWaveforms = gradient;
       break;
     default:
-      getSelectVals(filteredWaveforms, gradient, 
+      getSelectVals(filteredWaveforms, gradient,
         selectVals, roi, window, thresholdFactor);
       morphedWaveforms = gradient;
       break;

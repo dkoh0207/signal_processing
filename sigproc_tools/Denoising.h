@@ -2,7 +2,7 @@
  * \file Denoising.h
  *
  * \ingroup sigproc_tools
- * 
+ *
  * \brief Class def header for a class Denoising
  *
  * @author koh0207
@@ -34,9 +34,9 @@ namespace sigproc_tools {
      doxygen documentation!
   */
   class Denoising{
-    
+
     public:
-      
+
       /// Default constructor
       Denoising(){}
 
@@ -78,7 +78,7 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const float 
+        const float
       );
 
       void removeCoherentNoise1D(
@@ -93,11 +93,11 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const float 
+        const float
       );
 
       void removeCoherentNoise1D(
-        std::vector<std::vector<double> >&, 
+        std::vector<std::vector<double> >&,
         const std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
@@ -108,19 +108,19 @@ namespace sigproc_tools {
         const unsigned int,
         const unsigned int,
         const unsigned int,
-        const float 
+        const float
       );
 
 
       void removeCoherentNoise2D(
         std::vector<std::vector<short> >&,
-        const std::vector<std::vector<short> >&, 
+        const std::vector<std::vector<short> >&,
         std::vector<std::vector<short> >&,
         std::vector<std::vector<short> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<short> >&,
-        const char, 
+        const char,
         const unsigned int,
         const unsigned int,
         const unsigned int,
@@ -129,13 +129,13 @@ namespace sigproc_tools {
 
       void removeCoherentNoise2D(
         std::vector<std::vector<float> >&,
-        const std::vector<std::vector<float> >&, 
+        const std::vector<std::vector<float> >&,
         std::vector<std::vector<float> >&,
         std::vector<std::vector<float> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<float> >&,
-        const char, 
+        const char,
         const unsigned int,
         const unsigned int,
         const unsigned int,
@@ -143,14 +143,14 @@ namespace sigproc_tools {
         const float);
 
       void removeCoherentNoise2D(
-        std::vector<std::vector<double> >&, 
-        const std::vector<std::vector<double> >&, 
+        std::vector<std::vector<double> >&,
+        const std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
         std::vector<std::vector<double> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<bool> >&,
         std::vector<std::vector<double> >&,
-        const char, 
+        const char,
         const unsigned int,
         const unsigned int,
         const unsigned int,
@@ -161,7 +161,7 @@ namespace sigproc_tools {
         std::vector<std::vector<float>>& wf2d,
         const std::vector<std::vector<bool>>& selectVals);
 
-    
+
     /// Default destructor
     ~Denoising(){}
 
@@ -180,14 +180,14 @@ namespace sigproc_tools {
 
       template <typename T>
       void removeCoherentNoise1D(
-        std::vector<std::vector<T> >& waveLessCoherent, 
-        const std::vector<std::vector<T> >& filteredWaveforms, 
-        std::vector<std::vector<T> >& morphedWaveforms, 
+        std::vector<std::vector<T> >& waveLessCoherent,
+        const std::vector<std::vector<T> >& filteredWaveforms,
+        std::vector<std::vector<T> >& morphedWaveforms,
         std::vector<std::vector<T> >& intrinsicRMS,
         std::vector<std::vector<bool> >& selectVals,
         std::vector<std::vector<bool> >& roi,
         std::vector<std::vector<T> >& correctedMedians,
-        const char filterName='d', 
+        const char filterName='d',
         const unsigned int grouping=64,
         const unsigned int structuringElement=5,
         const unsigned int window=0,
@@ -196,23 +196,22 @@ namespace sigproc_tools {
 
       template <typename T>
       void removeCoherentNoise2D(
-        std::vector<std::vector<T> >& waveLessCoherent, 
+        std::vector<std::vector<T> >& waveLessCoherent,
         const std::vector<std::vector<T> >& filteredWaveforms,
-        std::vector<std::vector<T> >& morphedWaveforms, 
+        std::vector<std::vector<T> >& morphedWaveforms,
         std::vector<std::vector<T> >& intrinsicRMS,
         std::vector<std::vector<bool> >& selectVals,
         std::vector<std::vector<bool> >& roi,
         std::vector<std::vector<T> >& correctedMedians,
         const char filterName='g',
-        const unsigned int grouping=64, 
+        const unsigned int grouping=64,
         const unsigned int structuringElementx=5,
         const unsigned int structuringElementy=20,
         const unsigned int window=0,
         const float thresholdFactor=2.5);
-    
+
   };
 }
 
 #endif
-/** @} */ // end of doxygen group 
-
+/** @} */ // end of doxygen group
