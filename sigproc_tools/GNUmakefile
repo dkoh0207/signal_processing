@@ -9,7 +9,7 @@ FMWK_HEADERS = LinkDef.h
 HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
 
 # include options for this package
-INCFLAGS  = -I. -I/u/nu/koh0207/eigen
+INCFLAGS  = -I. -I/u/nu/koh0207/DSP/eigen
 #Include itself
 CXXFLAGS=-Werror
 

@@ -46,37 +46,23 @@ void sigproc_tools::MorphologicalCNC::getSelectVals(
 {
   auto numChannels = morphedWaveforms.size();
   auto nTicks = morphedWaveforms.at(0).size();
+  sigproc_tools::MiscUtils utils;
 
   for (size_t i=0; i<numChannels; ++i) {
-    T median = 0.0;
+    float median = 0.0;
     std::vector<T> localVec = morphedWaveforms[i];
-    if (localVec.size() % 2 == 0) {
-      const auto m1 = localVec.begin() + localVec.size() / 2 - 1;
-      const auto m2 = localVec.begin() + localVec.size() / 2;
-      std::nth_element(localVec.begin(), m1, localVec.end());
-      const auto e1 = *m1;
-      std::nth_element(localVec.begin(), m2, localVec.end());
-      const auto e2 = *m2;
-      median = (e1 + e2) / 2.0;
-    } else {
-      const auto m = localVec.begin() + localVec.size() / 2;
-      std::nth_element(localVec.begin(), m, localVec.end());
-      median = *m;
-    }
-    std::vector<T> baseVec;
-    baseVec.resize(localVec.size());
-    for (size_t j=0; j<baseVec.size(); ++j) {
-      baseVec[j] = morphedWaveforms[i][j] - median;
+    median = utils.computeMedian(localVec);
+    std::vector<T> absoluteDeviation(localVec.size());
+    for (size_t j=0; j<absoluteDeviation.size(); ++j) {
+      absoluteDeviation[j] = std::abs(morphedWaveforms[i][j] - median);
     }
 
-    float rms;
-    rms = std::sqrt(std::inner_product(baseVec.begin(),
-      baseVec.end(), baseVec.begin(), 0.) / float(baseVec.size()));
+    float mad = utils.computeMedian(absoluteDeviation);
     float threshold;
-    threshold = thresholdFactor * rms;
+    threshold = thresholdFactor * mad;
 
     for (size_t j=0; j<nTicks; ++j) {
-      if (std::abs(morphedWaveforms[i][j]) > threshold) {
+      if (std::abs(morphedWaveforms[i][j] - median) > threshold) {
         // Check Bounds
         selectVals[i][j] = true;
         int lb = j - (int) window;

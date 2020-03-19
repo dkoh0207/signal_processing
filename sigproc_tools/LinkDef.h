@@ -15,7 +15,6 @@
 #pragma link C++ class sigproc_tools::Denoising+;
 #pragma link C++ class sigproc_tools::AdaptiveWiener+;
 #pragma link C++ class sigproc_tools::Deconvolution+;
-#pragma link C++ class sigproc_tools::Chain+;
 #pragma link C++ class sigproc_tools::Wavelet+;
 #pragma link C++ class sigproc_tools::Daubechies4+;
 #pragma link C++ class sigproc_tools::WaveletTransform+;
