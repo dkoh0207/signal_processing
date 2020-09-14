@@ -308,4 +308,71 @@ void sigproc_tools::Morph2DFast::getOpening(
   return;
 }
 
+void sigproc_tools::Morph2DFast::getDilationTest(
+  const std::vector<std::vector<short> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<short> >& dilation2D) const
+{
+  getDilationTest<short>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::getDilationTest(
+  const std::vector<std::vector<float> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<float> >& dilation2D) const
+{
+  getDilationTest<float>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::getDilationTest(
+  const std::vector<std::vector<double> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<double> >& dilation2D) const
+{
+  getDilationTest<double>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::Morph2DFast::getDilationTest(
+  const std::vector<std::vector<T> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<T> >& dilation2D) const
+{
+  size_t numChannels = waveform2D.size();
+  size_t nTicks = waveform2D.at(0).size();
+
+  dilation2D.resize(numChannels);
+  for (size_t i=0; i<numChannels; ++i) {
+    dilation2D[i].resize(nTicks);
+  }
+
+  sigproc_tools::Morph1DFast fast1D;
+
+  for (size_t i=0; i<numChannels; ++i) {
+    fast1D.getDilationTest(waveform2D[i], structuringElementy, dilation2D[i]);
+  }
+  for (size_t j=0; j<nTicks; ++j) {
+    std::vector<T> column(numChannels);
+    std::vector<T> columnOut(numChannels);
+    for (size_t i=0; i<numChannels; ++i) {
+      column[i] = dilation2D[i][j];
+    }
+    fast1D.getDilationTest(column, structuringElementx, columnOut);
+    for (size_t i=0; i<numChannels; ++i) {
+      dilation2D[i][j] = columnOut[i];
+    }
+  }
+  return;
+}
+
 #endif

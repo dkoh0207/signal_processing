@@ -130,6 +130,22 @@ namespace sigproc_tools {
                         const unsigned int,
                         const unsigned int,
                         std::vector<std::vector<double> >&) const;
+
+
+        void getDilationTest(const std::vector<std::vector<short> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<short> >&) const;
+
+        void getDilationTest(const std::vector<std::vector<float> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<float> >&) const;
+
+        void getDilationTest(const std::vector<std::vector<double> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<double> >&) const;
       /// Default destructor
       ~Morph2DFast(){}
 
@@ -177,6 +193,13 @@ namespace sigproc_tools {
         const unsigned int structuringElementx,
         const unsigned int structuringElementy,
         std::vector<std::vector<T> >& opening2D) const;
+
+      template <typename T>
+      void getDilationTest(
+        const std::vector<std::vector<T> >& waveform2D,
+        const unsigned int structuringElementx,
+        const unsigned int structuringElementy,
+        std::vector<std::vector<T> >& dilation2D) const;
 
   };
 }

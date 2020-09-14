@@ -213,4 +213,96 @@ void sigproc_tools::Morph1DFast::getGradient(
   return;
 }
 
+
+void sigproc_tools::Morph1DFast::getDilationTest(
+  const Waveform<short>& waveform,
+  const unsigned int structuringElement,
+  Waveform<short>& dilationVec) const
+{
+  getDilationTest<short>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getDilationTest(
+  const Waveform<float>& waveform,
+  const unsigned int structuringElement,
+  Waveform<float>& dilationVec) const
+{
+  getDilationTest<float>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getDilationTest(
+  const Waveform<double>& waveform,
+  const unsigned int structuringElement,
+  Waveform<double>& dilationVec) const
+{
+  getDilationTest<double>(waveform, structuringElement, dilationVec);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::Morph1DFast::getDilationTest(
+  const Waveform<T>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<T>& dilationVec) const
+{
+  size_t N = inputWaveform.size();
+  size_t k = (size_t) structuringElement;
+  if (N <= k) {
+    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
+    return;
+  }
+  size_t bufferSize = N + 2 * (k/2) + (k - (N % k));
+  size_t windowSize = k/2;
+  size_t paddingSize = k - (N % k);
+  std::vector<T> suffixArr(bufferSize);
+  std::vector<T> prefixArr(bufferSize);
+  dilationVec.resize(N);
+
+  // Padding Operations on Buffers
+  for (size_t i=0; i<windowSize; ++i) {
+    suffixArr[i] = std::numeric_limits<T>::min();
+    prefixArr[i] = std::numeric_limits<T>::min();
+  }
+
+  for (size_t i=N+windowSize; i<bufferSize; ++i) {
+    suffixArr[i] = std::numeric_limits<T>::min();
+    prefixArr[i] = std::numeric_limits<T>::min();
+  }
+
+  // Compute Prefix and Suffix Buffers
+  for (size_t i=0; i<N+paddingSize; ++i) {
+    if (i % k == 0) {
+      prefixArr[i+windowSize] = inputWaveform[i];
+    } else {
+      prefixArr[i+windowSize] = std::max(prefixArr[i+windowSize-1], inputWaveform[i]);
+    }
+  }
+
+  for (size_t i=N+paddingSize; i!=0; --i) {
+    if (i > N) {
+      // Compensate for divisibility padding (must be -inf)
+      continue;
+    }
+    else if (i % k == 0) {
+      suffixArr[i+windowSize-1] = inputWaveform[i-1];
+    } 
+    else {
+      suffixArr[i+windowSize-1] = std::max(suffixArr[i+windowSize], inputWaveform[i-1]);
+    }
+  }
+
+  int prefixIndex = 0;
+  int suffixIndex = 0;
+
+  for (size_t i=0; i<N; ++i) {
+    prefixIndex = i + 2 * windowSize;
+    suffixIndex = i;
+    dilationVec[i] = std::max(prefixArr[prefixIndex],
+      suffixArr[suffixIndex]);
+  }
+  return;
+}
+
 #endif

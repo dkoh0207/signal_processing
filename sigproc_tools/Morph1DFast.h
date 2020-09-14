@@ -21,6 +21,7 @@
 #include <numeric>
 #include <cmath>
 #include <functional>
+#include <limits>
 
 namespace sigproc_tools {
 
@@ -77,6 +78,18 @@ namespace sigproc_tools {
                       const unsigned int,
                       Waveform<double>&) const;
 
+      void getDilationTest(const Waveform<short>&,
+                      const unsigned int,
+                      Waveform<short>&) const;
+
+      void getDilationTest(const Waveform<float>&,
+                      const unsigned int,
+                      Waveform<float>&) const;
+
+      void getDilationTest(const Waveform<double>&,
+                      const unsigned int,
+                      Waveform<double>&) const;
+
       // void getMedian(const Waveform<short>&,
       //                 const unsigned int,
       //                 Waveform<short>&) const;
@@ -112,12 +125,11 @@ namespace sigproc_tools {
         const unsigned int structuringElement,
         Waveform<T>& gradientVec) const;
 
-      // template <typename T> 
-      // void getMedian(
-      //   const Waveform<T>& inputWaveform,
-      //   const unsigned int structuringElement,
-      //   Waveform<T>& medianVec) const;
-
+      template <typename T> 
+      void getDilationTest(
+        const Waveform<T>& inputWaveform,
+        const unsigned int structuringElement,
+        Waveform<T>& dilationVec) const;
     
   };
 }
