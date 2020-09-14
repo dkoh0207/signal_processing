@@ -78,15 +78,29 @@ namespace sigproc_tools {
                       const unsigned int,
                       Waveform<double>&) const;
 
-      void getDilationTest(const Waveform<short>&,
+
+      void getOpening(const Waveform<short>&,
                       const unsigned int,
                       Waveform<short>&) const;
 
-      void getDilationTest(const Waveform<float>&,
+      void getOpening(const Waveform<float>&,
                       const unsigned int,
                       Waveform<float>&) const;
 
-      void getDilationTest(const Waveform<double>&,
+      void getOpening(const Waveform<double>&,
+                      const unsigned int,
+                      Waveform<double>&) const;
+
+            
+      void getClosing(const Waveform<short>&,
+                      const unsigned int,
+                      Waveform<short>&) const;
+
+      void getClosing(const Waveform<float>&,
+                      const unsigned int,
+                      Waveform<float>&) const;
+
+      void getClosing(const Waveform<double>&,
                       const unsigned int,
                       Waveform<double>&) const;
 
@@ -119,17 +133,23 @@ namespace sigproc_tools {
         const unsigned int structuringElement,
         Waveform<T>& erosionVec) const;
 
+      template <typename T>
+      void getOpening(
+        const Waveform<T>& inputWaveform,
+        const unsigned int structuringElement,
+        Waveform<T>& openingVec) const;
+
+      template <typename T>
+      void getClosing(
+        const Waveform<T>& inputWaveform,
+        const unsigned int structuringElement,
+        Waveform<T>& closingVec) const;
+
       template <typename T> 
       void getGradient(
         const Waveform<T>& inputWaveform,
         const unsigned int structuringElement,
         Waveform<T>& gradientVec) const;
-
-      template <typename T> 
-      void getDilationTest(
-        const Waveform<T>& inputWaveform,
-        const unsigned int structuringElement,
-        Waveform<T>& dilationVec) const;
     
   };
 }
