@@ -82,57 +82,61 @@ void sigproc_tools::MorphologicalCNC::getSelectVals(
 
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
-  std::vector<std::vector<short> >& waveLessCoherent,
-  const std::vector<std::vector<short> >& fullEvent,
-  std::vector<std::vector<bool> >& selectVals,
-  std::vector<std::vector<bool> >& roi,
+  Array2D<short>& waveLessCoherent,
+  Array2D<short>& morphedWaveforms,
+  const Array2D<short>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElement,
   const unsigned int window,
   const float thresholdFactor) const
 {
-  denoiseMorph1D<short>(waveLessCoherent, fullEvent, selectVals, roi,
+  denoiseMorph1D<short>(waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElement, window, thresholdFactor);
 }
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
-  std::vector<std::vector<float> >& waveLessCoherent,
-  const std::vector<std::vector<float> >& fullEvent,
-  std::vector<std::vector<bool> >& selectVals,
-  std::vector<std::vector<bool> >& roi,
+  Array2D<float>& waveLessCoherent,
+  Array2D<float>& morphedWaveforms,
+  const Array2D<float>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElement,
   const unsigned int window,
   const float thresholdFactor) const
 {
-  denoiseMorph1D<float>(waveLessCoherent, fullEvent, selectVals, roi,
+  denoiseMorph1D<float>(waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElement, window, thresholdFactor);
 }
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
-  std::vector<std::vector<double> >& waveLessCoherent,
-  const std::vector<std::vector<double> >& fullEvent,
-  std::vector<std::vector<bool> >& selectVals,
-  std::vector<std::vector<bool> >& roi,
+  Array2D<double>& waveLessCoherent,
+  Array2D<double>& morphedWaveforms,
+  const Array2D<double>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElement,
   const unsigned int window,
   const float thresholdFactor) const
 {
-  denoiseMorph1D<double>(waveLessCoherent, fullEvent, selectVals, roi,
+  denoiseMorph1D<double>(waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElement, window, thresholdFactor);
 }
 
 
 template <typename T>
 void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
-  std::vector<std::vector<T> >& waveLessCoherent,
-  const std::vector<std::vector<T> >& fullEvent,
-  std::vector<std::vector<bool> >& selectVals,
-  std::vector<std::vector<bool> >& roi,
+  Array2D<T>& waveLessCoherent,
+  Array2D<T>& morphedWaveforms,
+  const Array2D<T>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElement,
@@ -145,7 +149,6 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
 
   sigproc_tools::Morph1DFast filter;
   sigproc_tools::MiscUtils utils;
-  std::vector<std::vector<T>> morphedWaveforms;
   morphedWaveforms.resize(numChannels);
   for (auto& v : morphedWaveforms) {
     v.resize(nTicks);
@@ -210,10 +213,11 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
 
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
-  std::vector<std::vector<short>>& waveLessCoherent,
-  const std::vector<std::vector<short>>& fullEvent,
-  std::vector<std::vector<bool>>& selectVals,
-  std::vector<std::vector<bool>>& roi,
+  Array2D<short>& waveLessCoherent,
+  Array2D<short>& morphedWaveforms,
+  const Array2D<short>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElementx,
@@ -222,17 +226,18 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
   const float thresholdFactor) const
 {
   denoiseMorph2D<short>(
-    waveLessCoherent, fullEvent, selectVals, roi,
+    waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
 }
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
-  std::vector<std::vector<float>>& waveLessCoherent,
-  const std::vector<std::vector<float>>& fullEvent,
-  std::vector<std::vector<bool>>& selectVals,
-  std::vector<std::vector<bool>>& roi,
+  Array2D<float>& waveLessCoherent,
+  Array2D<float>& morphedWaveforms,
+  const Array2D<float>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElementx,
@@ -241,17 +246,18 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
   const float thresholdFactor) const
 {
   denoiseMorph2D<float>(
-    waveLessCoherent, fullEvent, selectVals, roi,
+    waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
 }
 
 void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
-  std::vector<std::vector<double>>& waveLessCoherent,
-  const std::vector<std::vector<double>>& fullEvent,
-  std::vector<std::vector<bool>>& selectVals,
-  std::vector<std::vector<bool>>& roi,
+  Array2D<double>& waveLessCoherent,
+  Array2D<double>& morphedWaveforms,
+  const Array2D<double>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElementx,
@@ -260,7 +266,7 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
   const float thresholdFactor) const
 {
   denoiseMorph2D<double>(
-    waveLessCoherent, fullEvent, selectVals, roi,
+    waveLessCoherent, morphedWaveforms, fullEvent, selectVals, roi,
     filterName, grouping, structuringElementx, structuringElementy,
     window, thresholdFactor);
   return;
@@ -268,10 +274,11 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
 
 template <typename T>
 void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
-  std::vector<std::vector<T>>& waveLessCoherent,
-  const std::vector<std::vector<T>>& fullEvent,
-  std::vector<std::vector<bool>>& selectVals,
-  std::vector<std::vector<bool>>& roi,
+  Array2D<T>& waveLessCoherent,
+  Array2D<T>& morphedWaveforms,
+  const Array2D<T>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
   const unsigned int structuringElementx,
@@ -285,7 +292,6 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
 
   sigproc_tools::Morph2DFast filter;
   sigproc_tools::MiscUtils utils;
-  std::vector<std::vector<T>> morphedWaveforms;
   morphedWaveforms.resize(numChannels);
   for (auto& v : morphedWaveforms) {
     v.resize(nTicks);
@@ -347,6 +353,7 @@ void sigproc_tools::MorphologicalCNC::denoiseMorph2D(
 
 void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<short>& waveLessCoherent,
+  Array2D<short>& morphedWaveforms,
   const Array2D<short>& fullEvent,
   Array2D<bool>& selectVals,
   Array2D<bool>& refinedSelectVals,
@@ -368,6 +375,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 {
   denoiseHough2D<short>(
     waveLessCoherent, 
+    morphedWaveforms,
     fullEvent,
     selectVals,
     refinedSelectVals,
@@ -391,6 +399,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 
 void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<float>& waveLessCoherent,
+  Array2D<float>& morphedWaveforms,
   const Array2D<float>& fullEvent,
   Array2D<bool>& selectVals,
   Array2D<bool>& refinedSelectVals,
@@ -412,6 +421,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 {
   denoiseHough2D<float>(
     waveLessCoherent, 
+    morphedWaveforms,
     fullEvent,
     selectVals,
     refinedSelectVals,
@@ -435,6 +445,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 
 void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<double>& waveLessCoherent,
+  Array2D<double>& morphedWaveforms,
   const Array2D<double>& fullEvent,
   Array2D<bool>& selectVals,
   Array2D<bool>& refinedSelectVals,
@@ -456,6 +467,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 {
   denoiseHough2D<double>(
     waveLessCoherent, 
+    morphedWaveforms, 
     fullEvent,
     selectVals,
     refinedSelectVals,
@@ -480,6 +492,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 template <typename T>
 void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<T>& waveLessCoherent,
+  Array2D<T>& morphedWaveforms,
   const Array2D<T>& fullEvent,
   Array2D<bool>& selectVals,
   Array2D<bool>& refinedSelectVals,
@@ -506,7 +519,6 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   sigproc_tools::Morph2DFast filter;
   sigproc_tools::MiscUtils utils;
   sigproc_tools::LineDetection lineModule;
-  std::vector<std::vector<T>> morphedWaveforms;
   morphedWaveforms.resize(numChannels);
   for (auto& v : morphedWaveforms) {
     v.resize(nTicks);
@@ -555,6 +567,12 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
     dilationX,
     dilationY,
     eps);
+
+  for (size_t i=0; i<refinedSelectVals.size(); ++i) {
+    for (size_t j=0; j<refinedSelectVals.at(0).size(); ++j) {
+      refinedSelectVals[i][j] = refinedSelectVals[i][j] && selectVals[i][j];
+    }
+  }
 
   for (size_t i=0; i<nTicks; ++i) {
     for (size_t j=0; j<nGroups; ++j) {

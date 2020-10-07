@@ -241,7 +241,7 @@ sigproc_tools::Line sigproc_tools::LineDetection::getLine(
   int height = binary2D.at(0).size();
 
   const double pi = 3.141592653589793238462643383279502884;
-  int theta_deg = (int) std::round(theta * (float) pi / 180.0);
+  int theta_deg = (int) std::round(theta * 180.0 / (float) pi);
   // Ignore lines which are near parallel to tick axis (these don't cause problems)
   if (std::abs(theta_deg) < angleWindow || std::abs(180 - theta_deg) < angleWindow) {
     Line l = {-1, -1, 0};
@@ -395,10 +395,14 @@ void sigproc_tools::LineDetection::refineSelectVals(
   float rho = 0.0;
   float angle = 0.0;
 
+  std::cout << rhoIndex.size() << std::endl;
+  std::cout << thetaIndex.size() << std::endl;
+
   for (size_t i=0; i<rhoIndex.size(); ++i) {
     rho = rhoIndex[i] - diagLength;
     angle = thetaIndex[i] * pi / ( (float) thetaSteps );
     Line l = getLine(selectVals, angle, rho, eps, angleWindow);
+    std::cout << "x0 = " << l.x0 << ", y0 = " << l.y0 << ", slope = " << l.slope << std::endl;
     drawLine(refinedSelectVals, l, dilationX, dilationY);
   }
   return;

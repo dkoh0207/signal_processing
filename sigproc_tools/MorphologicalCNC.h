@@ -68,6 +68,7 @@ namespace sigproc_tools {
 
       void denoiseMorph1D(
         Array2D<short>&,
+        Array2D<short>&,
         const Array2D<short>&,
         Array2D<bool>&,
         Array2D<bool>&,
@@ -79,6 +80,7 @@ namespace sigproc_tools {
 
       void denoiseMorph1D(
         Array2D<float>&,
+        Array2D<float>&,
         const Array2D<float>&,
         Array2D<bool>&,
         Array2D<bool>&,
@@ -89,6 +91,7 @@ namespace sigproc_tools {
         const float) const;
 
       void denoiseMorph1D(
+        Array2D<double>&,
         Array2D<double>&,
         const Array2D<double>&,
         Array2D<bool>&,
@@ -102,6 +105,7 @@ namespace sigproc_tools {
 
       void denoiseMorph2D(
         Array2D<short>&,
+        Array2D<short>&,
         const Array2D<short>&,
         Array2D<bool>&,
         Array2D<bool>&,
@@ -114,6 +118,7 @@ namespace sigproc_tools {
 
       void denoiseMorph2D(
         Array2D<float>&,
+        Array2D<float>&,
         const Array2D<float>&,
         Array2D<bool>&,
         Array2D<bool>&,
@@ -125,6 +130,7 @@ namespace sigproc_tools {
         const float) const;
 
       void denoiseMorph2D(
+        Array2D<double>&,
         Array2D<double>&,
         const Array2D<double>&,
         Array2D<bool>&,
@@ -139,6 +145,7 @@ namespace sigproc_tools {
 
       void denoiseHough2D(
         Array2D<short>& waveLessCoherent,
+        Array2D<short>& morphedWaveforms,
         const Array2D<short>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& refinedSelectVals,
@@ -160,6 +167,7 @@ namespace sigproc_tools {
 
       void denoiseHough2D(
         Array2D<float>& waveLessCoherent,
+        Array2D<float>& morphedWaveforms,
         const Array2D<float>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& refinedSelectVals,
@@ -181,6 +189,7 @@ namespace sigproc_tools {
 
       void denoiseHough2D(
         Array2D<double>& waveLessCoherent,
+        Array2D<double>& morphedWaveforms,
         const Array2D<double>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& refinedSelectVals,
@@ -214,6 +223,7 @@ namespace sigproc_tools {
       template <typename T>
       void denoiseMorph1D(
         Array2D<T>& waveLessCoherent,
+        Array2D<T>& morphedWaveforms,
         const Array2D<T>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& roi,
@@ -226,6 +236,7 @@ namespace sigproc_tools {
       template <typename T>
       void denoiseMorph2D(
         Array2D<T>& waveLessCoherent,
+        Array2D<T>& morphedWaveforms,
         const Array2D<T>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& roi,
@@ -239,6 +250,7 @@ namespace sigproc_tools {
       template <typename T>
       void denoiseHough2D(
         Array2D<T>& waveLessCoherent,
+        Array2D<T>& morphedWaveforms,
         const Array2D<T>& fullEvent,
         Array2D<bool>& selectVals,
         Array2D<bool>& refinedSelectVals,
@@ -256,8 +268,7 @@ namespace sigproc_tools {
         const unsigned int dilationX = 5,
         const unsigned int dilationY = 20,
         const unsigned int maxLines = 20,
-        const float eps = 0.00001
-      ) const;
+        const float eps = 0.00001) const;
       /// Default destructor
       ~MorphologicalCNC(){}
 
