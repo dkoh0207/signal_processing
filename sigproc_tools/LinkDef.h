@@ -17,9 +17,15 @@
 #pragma link C++ class sigproc_tools::Deconvolution+;
 #pragma link C++ class sigproc_tools::Morph1DFast+;
 #pragma link C++ class sigproc_tools::Morph2DFast+;
+#pragma link C++ class sigproc_tools::LineDetection+;
 #pragma link C++ class sigproc_tools::MorphologicalCNC+;
-#pragma link C++ class sigproc_tools::FourierCNC+;
-#pragma link C++ class FrequencyFilters::sigproc_tools+;
+#pragma link C++ class sigproc_tools::FrequencyFilters1D+;
+#pragma link C++ class sigproc_tools::FrequencyFilters2D+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
+
+
+
 

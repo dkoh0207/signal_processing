@@ -13,6 +13,8 @@
     @{*/
 #ifndef __SIGPROC_TOOLS_DECONVOLUTION_H__
 
+#define EIGEN_FFTW_DEFAULT
+
 #include <vector>
 #include <iostream>
 #include <algorithm>
