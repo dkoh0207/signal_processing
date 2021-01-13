@@ -208,7 +208,8 @@ namespace sigproc_tools {
         const unsigned int dilationY = 20,
         const unsigned int maxLines = 20,
         const float eps = 0.00001) const;
-
+      /// Default destructor
+      ~MorphologicalCNC(){}
 
     private:
 
@@ -269,8 +270,6 @@ namespace sigproc_tools {
         const unsigned int dilationY = 20,
         const unsigned int maxLines = 20,
         const float eps = 0.00001) const;
-      /// Default destructor
-      ~MorphologicalCNC(){}
 
   };
 }

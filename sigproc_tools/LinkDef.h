@@ -21,8 +21,12 @@
 #pragma link C++ class sigproc_tools::MorphologicalCNC+;
 #pragma link C++ class sigproc_tools::FrequencyFilters1D+;
 #pragma link C++ class sigproc_tools::FrequencyFilters2D+;
+#pragma link C++ class sigproc_tools::Thresholding+;
+#pragma link C++ class sigproc_tools::FindROI2D+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
+
 
 
 
