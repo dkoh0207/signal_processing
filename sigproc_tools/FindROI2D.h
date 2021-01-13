@@ -53,6 +53,7 @@ namespace sigproc_tools {
         Array2D<bool>& outputROI,
         Array2D<float>& waveLessCoherent,
         Array2D<float>& morphedWaveform2D,
+        Array2D<float>& finalErosion2D,
         // Default Parameters
         size_t FREQUENCY_THRESHOLD,
         size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,

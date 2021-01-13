@@ -9,6 +9,7 @@ void sigproc_tools::FindROI2D::applyChainFilter(
   Array2D<bool>& outputROI,
   Array2D<float>& waveLessCoherent,
   Array2D<float>& morphedWaveform2D,
+  Array2D<float>& finalErosion2D,
   // Default Parameters
   size_t FREQUENCY_THRESHOLD = 30,
   size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER = 2,
@@ -86,6 +87,11 @@ void sigproc_tools::FindROI2D::applyChainFilter(
   // 4. Run Coherent Noise Correction
   sigproc_tools::MorphologicalCNC denoiser;
 
+  buffer.resize(numChannels);
+  for (auto& v : buffer) {
+    v.resize(numTicks);
+  }
+
   denoiser.denoiseHough2D(
     waveLessCoherent,
     morphedWaveform2D,
@@ -108,6 +114,11 @@ void sigproc_tools::FindROI2D::applyChainFilter(
 
   sigproc_tools::AdaptiveWiener adFilter;
   
+  buffer.resize(numChannels);
+  for (auto& v : buffer) {
+    v.resize(numTicks);
+  }
+
   adFilter.MMWFStar(
     buffer,
     waveLessCoherent,
@@ -115,24 +126,29 @@ void sigproc_tools::FindROI2D::applyChainFilter(
     ADFILTER_SY
   );
 
-  Array2D<float> erosion2D(numChannels);
-  for (auto& v : erosion2D) {
+  finalErosion2D.resize(numChannels);
+  for (auto& v : finalErosion2D) {
     v.resize(numTicks);
   }
 
   sigproc_tools::Morph2DFast morph2D;
 
+  buffer.resize(numChannels);
+  for (auto& v : buffer) {
+    v.resize(numTicks);
+  }
+
   morph2D.getErosion(
     buffer,
-    ADFILTER_SX,
-    ADFILTER_SY,
-    erosion2D
+    STRUCTURING_ELEMENT_X,
+    STRUCTURING_ELEMENT_Y,
+    finalErosion2D
   );
 
   for (int i=0; i<numChannels; ++i) {
     for (int j=0; j<numTicks; ++j) {
-      if (erosion2D[i][j] < 0) {
-        erosion2D[i][j] = -erosion2D[i][j];
+      if (finalErosion2D[i][j] < 0) {
+        finalErosion2D[i][j] = -finalErosion2D[i][j];
       }
     }
   }
@@ -140,7 +156,7 @@ void sigproc_tools::FindROI2D::applyChainFilter(
   // 6. Run Thresholding
   sigproc_tools::Thresholding thresholder;
   thresholder.globalMean(
-    erosion2D,
+    finalErosion2D,
     outputROI,
     GLOBAL_THRESHOLDING_FACTOR
   );
