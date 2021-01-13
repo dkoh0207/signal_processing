@@ -138,13 +138,40 @@ void sigproc_tools::FindROI2D::applyChainFilter(
     v.resize(numTicks);
   }
 
-  morph2D.getErosion(
-    buffer,
-    STRUCTURING_ELEMENT_X,
-    STRUCTURING_ELEMENT_Y,
-    finalErosion2D
-  );
+  if (MORPHOLOGICAL_FILTER_NAME == 'e') {
+    morph2D.getErosion(
+      buffer,
+      STRUCTURING_ELEMENT_X,
+      STRUCTURING_ELEMENT_Y,
+      finalErosion2D
+    );
+  }
+  else if (MORPHOLOGICAL_FILTER_NAME == 'd') {
+    morph2D.getDilation(
+      buffer,
+      STRUCTURING_ELEMENT_X,
+      STRUCTURING_ELEMENT_Y,
+      finalErosion2D
+    );
+  }
+  else if (MORPHOLOGICAL_FILTER_NAME == 'g') {
+    morph2D.getGradient(
+      buffer,
+      STRUCTURING_ELEMENT_X,
+      STRUCTURING_ELEMENT_Y,
+      finalErosion2D
+    );
+  }
+  else {
+    morph2D.getGradient(
+      buffer,
+      STRUCTURING_ELEMENT_X,
+      STRUCTURING_ELEMENT_Y,
+      finalErosion2D
+    );
+  }
 
+  // Take absolute value
   for (int i=0; i<numChannels; ++i) {
     for (int j=0; j<numTicks; ++j) {
       if (finalErosion2D[i][j] < 0) {
