@@ -23,6 +23,8 @@
 #include <cmath>
 #include <functional>
 #include "MiscUtils.h"
+#include <complex>
+#include "assert.h"
 
 namespace sigproc_tools {
 
@@ -33,6 +35,8 @@ namespace sigproc_tools {
   */
 
   template <class T> using Array2D = std::vector<std::vector<T>>;
+  template <class T> using Array3D = std::vector<Array2D<T>>;
+  // std::complex<float> I(0, 1);
 
   class BilateralFilters{
     
@@ -51,6 +55,48 @@ namespace sigproc_tools {
         float sigma_r
       ) const;
 
+      void Gaussian(
+        const Array2D<float>& input2D,
+        const float sigma,
+        Array2D<float>& output2D
+      ) const;
+
+      void Gaussian(
+        const Array2D<std::complex<float>>& input2D,
+        const float sigma,
+        Array2D<std::complex<float>>& output2D
+      ) const;
+
+      void Gaussian1D(
+        const std::vector<float>& input1D,
+        const std::vector<float>& filterCoeffs,
+        std::vector<float>& output1D) const;
+
+      void Gaussian1D(
+        const std::vector<std::complex<float>>& input1D,
+        const std::vector<float>& filterCoeffs,
+        std::vector<std::complex<float>>& output1D) const;
+
+      void Discretize(
+        const Array2D<float>& input2D,
+        const unsigned int maxPixelValue,
+        Array2D<short>& output2D
+      ) const;
+
+      void Discretize(
+        const Array2D<float>& input2D,
+        const unsigned int maxPixelValue,
+        Array2D<float>& output2D
+      ) const;
+
+      void CSUBilateral(
+        const Array2D<float>& input2D,
+        Array2D<float>& output2D,
+        const unsigned int T,
+        const float sigma_s,
+        const float sigma_r
+      ) const;
+
       void guidedBilateral(
         const Array2D<float>& input2D,
         Array2D<float>& output2D,
@@ -60,6 +106,29 @@ namespace sigproc_tools {
       
       /// Default destructor
       ~BilateralFilters(){}
+
+    private:
+
+      template <typename T>
+      void Gaussian1D(
+        const std::vector<T>& input1D,
+        const std::vector<float>& filterCoeffs,
+        std::vector<T>& output1D) const;
+
+      template <typename T>
+      void Gaussian(
+        const Array2D<T>& input2D,
+        const float sigma,
+        Array2D<T>& output2D
+      ) const;
+
+      template <typename T>
+      void Discretize(
+        const Array2D<float>& input2D,
+        const unsigned int maxPixelValue,
+        Array2D<T>& output2D
+      ) const;
+      
       
     };
 }

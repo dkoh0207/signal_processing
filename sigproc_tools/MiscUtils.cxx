@@ -82,5 +82,84 @@ float sigproc_tools::MiscUtils::estimateMAD(
 }
 
 
+short sigproc_tools::MiscUtils::computeMaximum(const Array2D<short>& input2D) {
+  short res = computeMaximum<short>(input2D);
+  return res;
+}
+
+float sigproc_tools::MiscUtils::computeMaximum(const Array2D<float>& input2D) {
+  float res = computeMaximum<float>(input2D);
+  return res;
+}
+
+double sigproc_tools::MiscUtils::computeMaximum(const Array2D<double>& input2D) {
+  double res = computeMaximum<double>(input2D);
+  return res;
+}
+
+template <typename T>
+T sigproc_tools::MiscUtils::computeMaximum(const Array2D<T>& input2D) {
+
+  T res = std::numeric_limits<T>::min();
+
+  for (size_t i=0; i<input2D.size(); ++i) {
+    for (size_t j=0; j<input2D.at(0).size(); ++j) {
+      if (input2D[i][j] > res) {
+        res = input2D[i][j];
+      }
+    }
+  }
+  return res;
+}
+
+
+short sigproc_tools::MiscUtils::computeMinimum(const Array2D<short>& input2D) {
+  short res = computeMinimum<short>(input2D);
+  return res;
+}
+
+float sigproc_tools::MiscUtils::computeMinimum(const Array2D<float>& input2D) {
+  float res = computeMinimum<float>(input2D);
+  return res;
+}
+
+double sigproc_tools::MiscUtils::computeMinimum(const Array2D<double>& input2D) {
+  double res = computeMinimum<double>(input2D);
+  return res;
+}
+
+template <typename T>
+T sigproc_tools::MiscUtils::computeMinimum(const Array2D<T>& input2D) {
+
+  T res = std::numeric_limits<T>::max();
+
+  for (size_t i=0; i<input2D.size(); ++i) {
+    for (size_t j=0; j<input2D.at(0).size(); ++j) {
+      if (input2D[i][j] < res) {
+        res = input2D[i][j];
+      }
+    }
+  }
+  return res;
+}
+
+
+unsigned sigproc_tools::MiscUtils::nChoosek( unsigned n, unsigned k ) const
+{
+    if (k > n) return 0;
+    if (k * 2 > n) k = n-k;
+    if (k == 0) return 1;
+
+    unsigned result = n;
+    for( unsigned i = 2; i <= k; ++i ) {
+        result *= (n-i+1);
+        result /= i;
+    }
+    return result;
+}
+
+
+
+
 
 #endif

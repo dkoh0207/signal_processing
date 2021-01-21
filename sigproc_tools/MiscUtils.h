@@ -41,12 +41,24 @@ namespace sigproc_tools {
       float computeMedian(const std::vector<float>& vec);
       double computeMedian(const std::vector<double>& vec);
 
+      short computeMaximum(const Array2D<short>& input2D);
+      float computeMaximum(const Array2D<float>& input2D);
+      double computeMaximum(const Array2D<double>& input2D);
+
+      short computeMinimum(const Array2D<short>& input2D);
+      float computeMinimum(const Array2D<float>& input2D);
+      double computeMinimum(const Array2D<double>& input2D);
+
       float estimateNoiseVariance(
         const std::vector<std::vector<float>>& waveLessCoherent,
         const std::vector<std::vector<bool>>& selectVals);
 
       float estimateMAD(
         const std::vector<float>& wf);
+
+      unsigned nChoosek(unsigned n, unsigned k) const;
+
+
 
       
       /// Default destructor
@@ -56,6 +68,12 @@ namespace sigproc_tools {
 
       template <typename T>
       T computeMedian(const std::vector<T>& vec);
+
+      template <typename T>
+      T computeMaximum(const Array2D<T>& input2D);
+
+      template <typename T>
+      T computeMinimum(const Array2D<T>& input2D);
 
 
       // template <typename T> T computeMedian(
