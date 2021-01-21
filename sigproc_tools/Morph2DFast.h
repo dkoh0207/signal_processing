@@ -20,6 +20,7 @@
 #include <iterator>
 #include <numeric>
 #include <cmath>
+#include <assert.h>
 #include <functional>
 #include "Morph1DFast.h"
 
@@ -37,6 +38,11 @@ namespace sigproc_tools {
       /// Default constructor
       Morph2DFast(){}
 
+        void getDilation(const std::vector<std::vector<bool> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<bool> >&) const;
+
         void getDilation(const std::vector<std::vector<short> >&,
                         const unsigned int,
                         const unsigned int,
@@ -52,6 +58,11 @@ namespace sigproc_tools {
                         const unsigned int,
                         std::vector<std::vector<double> >&) const;
 
+
+        void getErosion(const std::vector<std::vector<bool> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<bool> >&) const;
 
         void getErosion(const std::vector<std::vector<short> >&,
                         const unsigned int,
@@ -101,6 +112,11 @@ namespace sigproc_tools {
                         std::vector<std::vector<double> >&) const;
 
 
+        void getOpening(const std::vector<std::vector<bool> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<bool> >&) const;
+
         void getOpening(const std::vector<std::vector<short> >&,
                         const unsigned int,
                         const unsigned int,
@@ -115,6 +131,12 @@ namespace sigproc_tools {
                         const unsigned int,
                         const unsigned int,
                         std::vector<std::vector<double> >&) const;
+
+
+        void getClosing(const std::vector<std::vector<bool> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<bool> >&) const;
 
         void getClosing(const std::vector<std::vector<short> >&,
                         const unsigned int,

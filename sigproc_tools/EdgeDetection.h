@@ -1,0 +1,112 @@
+/**
+ * \file EdgeDetection.h
+ *
+ * \ingroup sigproc_tools
+ * 
+ * \brief Class def header for a class EdgeDetection
+ *
+ * @author koh0207
+ */
+
+/** \addtogroup sigproc_tools
+
+    @{*/
+#ifndef __SIGPROC_TOOLS_EDGEDETECTION_H__
+#define __SIGPROC_TOOLS_EDGEDETECTION_H__
+#define _USE_MATH_DEFINES
+
+#include <vector>
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <iterator>
+#include <cmath>
+#include <assert.h>
+
+#include "MiscUtils.h"
+#include "Morph2DFast.h"
+
+namespace sigproc_tools {
+
+  /**
+     \class EdgeDetection
+     User defined class EdgeDetection ... these comments are used to generate
+     doxygen documentation!
+  */
+
+  template <class T> using Array2D = std::vector<std::vector<T>>;
+
+  class EdgeDetection{
+    
+    public:
+      
+      /// Default constructor
+      EdgeDetection(){}
+
+      void Convolve2D(
+        const Array2D<float>& input2D,
+        Array2D<float>& output2D,
+        const Array2D<float>& kernel) const;
+
+      void SobelX(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradient) const;
+
+      void SobelY(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradient) const;
+
+      void Sobel(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradient,
+        Array2D<float>& direction) const;
+
+      void Gauss(
+        const Array2D<float>& input2D,
+        Array2D<float>& output2D,
+        unsigned int radius
+      ) const;
+
+      void EdgeNMS(
+        const Array2D<float>& gradient2D,
+        const Array2D<float>& radians2D,
+        Array2D<float>& output2D
+      ) const;
+
+      void EdgeNMSInterpolation(
+        const Array2D<float>& gradient2D,
+        const Array2D<float>& gradX,
+        const Array2D<float>& gradY,
+        const Array2D<float>& degrees2D,
+        Array2D<float>& output2D
+      ) const;
+
+      void DoubleThresholding(
+        const Array2D<float>& doneNMS2D,
+        Array2D<bool>& binary2D,
+        std::vector<int>& strongEdgeRows,
+        std::vector<int>& strongEdgeCols,
+        std::vector<int>& weakEdgeRows,
+        std::vector<int>& weakEdgeCols,
+        float lowThreshold,
+        float highThreshold
+      ) const;
+
+      void HysteresisThresholding(
+        const Array2D<bool>& binary2D,
+        const std::vector<int>& strongEdgeRows,
+        const std::vector<int>& strongEdgeCols,
+        const std::vector<int>& weakEdgeRows,
+        const std::vector<int>& weakEdgeCols,
+        Array2D<bool>& output2D
+      ) const;
+      
+      /// Default destructor
+      ~EdgeDetection(){}
+      
+    };
+}
+
+#endif
+/** @} */ // end of doxygen group 
+

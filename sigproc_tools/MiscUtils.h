@@ -27,6 +27,9 @@ namespace sigproc_tools {
      \class MiscUtils
      Miscellaneous utility functions. 
   */
+
+  template <class T> using Array2D = std::vector<std::vector<T>>;
+
   class MiscUtils{
     
     public:

@@ -5,6 +5,17 @@
 
 
 void sigproc_tools::Morph2DFast::getDilation(
+  const std::vector<std::vector<bool> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<bool> >& dilation2D) const
+{
+  getDilation<bool>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::getDilation(
   const std::vector<std::vector<short> >& waveform2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
@@ -47,10 +58,8 @@ void sigproc_tools::Morph2DFast::getDilation(
   size_t numChannels = waveform2D.size();
   size_t nTicks = waveform2D.at(0).size();
 
-  dilation2D.resize(numChannels);
-  for (size_t i=0; i<numChannels; ++i) {
-    dilation2D[i].resize(nTicks);
-  }
+  assert(dilation2D.size() == numChannels);
+  assert(dilation2D.at(0).size() == nTicks);
 
   sigproc_tools::Morph1DFast fast1D;
 
@@ -71,6 +80,17 @@ void sigproc_tools::Morph2DFast::getDilation(
   return;
 }
 
+
+void sigproc_tools::Morph2DFast::getErosion(
+  const std::vector<std::vector<bool> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<bool> >& erosion2D) const
+{
+  getErosion<bool>(waveform2D, structuringElementx,
+    structuringElementy, erosion2D);
+  return;
+}
 
 void sigproc_tools::Morph2DFast::getErosion(
   const std::vector<std::vector<short> >& waveform2D,
@@ -115,10 +135,8 @@ void sigproc_tools::Morph2DFast::getErosion(
   size_t numChannels = waveform2D.size();
   size_t nTicks = waveform2D.at(0).size();
 
-  erosion2D.resize(numChannels);
-  for (size_t i=0; i<numChannels; ++i) {
-    erosion2D[i].resize(nTicks);
-  }
+  assert(erosion2D.size() == numChannels);
+  assert(erosion2D.at(0).size() == nTicks);
 
   sigproc_tools::Morph1DFast fast1D;
 
@@ -183,13 +201,19 @@ void sigproc_tools::Morph2DFast::getGradient(
   size_t numChannels = waveform2D.size();
   size_t nTicks = waveform2D.at(0).size();
 
-  gradient2D.resize(numChannels);
-  for (size_t i=0; i<numChannels; ++i) {
-    gradient2D[i].resize(nTicks);
-  }
+  assert(gradient2D.size() == numChannels);
+  assert(gradient2D.at(0).size() == nTicks);
 
   std::vector<std::vector<T> > dilation2D;
+  dilation2D.resize(numChannels);
+  for (auto& v : dilation2D) {
+    v.resize(nTicks);
+  }
   std::vector<std::vector<T> > erosion2D;
+  erosion2D.resize(numChannels);
+  for (auto& v : erosion2D) {
+    v.resize(nTicks);
+  }
 
   getDilation<T>(waveform2D, structuringElementx, structuringElementy, dilation2D);
   getErosion<T>(waveform2D, structuringElementx, structuringElementy, erosion2D);
@@ -202,6 +226,17 @@ void sigproc_tools::Morph2DFast::getGradient(
   return;
 }
 
+
+void sigproc_tools::Morph2DFast::getClosing(
+  const std::vector<std::vector<bool> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<bool> >& closing2D) const
+{
+  getClosing<bool>(waveform2D, structuringElementx,
+    structuringElementy, closing2D);
+  return;
+}
 
 void sigproc_tools::Morph2DFast::getClosing(
   const std::vector<std::vector<short> >& waveform2D,
@@ -243,13 +278,32 @@ void sigproc_tools::Morph2DFast::getClosing(
   const unsigned int structuringElementy,
   std::vector<std::vector<T> >& closing2D) const
 {
-  std::vector<std::vector<T>> temp;
+  size_t numChannels = waveform2D.size();
+  size_t numTicks = waveform2D.at(0).size();
+
+  assert(closing2D.size() == numChannels);
+  assert(closing2D.at(0).size() == numTicks);
+
+  std::vector<std::vector<T>> temp(numChannels);
+  for (auto& v : temp) {
+    v.resize(numTicks);
+  }
   getDilation<T>(waveform2D, structuringElementx, structuringElementy, temp);
   getErosion<T>(temp, structuringElementx, structuringElementy, closing2D);
   return;
 }
 
 
+void sigproc_tools::Morph2DFast::getOpening(
+  const std::vector<std::vector<bool> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<bool> >& opening2D) const
+{
+  getOpening<bool>(waveform2D, structuringElementx,
+    structuringElementy, opening2D);
+  return;
+}
 
 void sigproc_tools::Morph2DFast::getOpening(
   const std::vector<std::vector<short> >& waveform2D,
@@ -291,7 +345,16 @@ void sigproc_tools::Morph2DFast::getOpening(
   const unsigned int structuringElementy,
   std::vector<std::vector<T> >& opening2D) const
 {
-  std::vector<std::vector<T>> temp;
+  size_t numChannels = waveform2D.size();
+  size_t numTicks = waveform2D.at(0).size();
+
+  assert(opening2D.size() == numChannels);
+  assert(opening2D.at(0).size() == numTicks);
+
+  std::vector<std::vector<T>> temp(numChannels);
+  for (auto& v : temp) {
+    v.resize(numTicks);
+  }
   getErosion<T>(waveform2D, structuringElementx, structuringElementy, temp);
   getDilation<T>(temp, structuringElementx, structuringElementy, opening2D);
 

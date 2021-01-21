@@ -4,30 +4,95 @@
 #include "Morph1DFast.h"
 
 
+
 void sigproc_tools::Morph1DFast::getDilation(
-  const Waveform<short>& waveform,
+  const Waveform<bool>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<bool>& dilationVec) const
+{
+  size_t N = inputWaveform.size();
+  size_t k = (size_t) structuringElement;
+
+  assert(dilationVec.size() == N);
+
+  if (N <= k) {
+    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
+    return;
+  }
+  size_t bufferSize = N + 2 * (k/2) + (k - (N % k));
+  size_t windowSize = k/2;
+  size_t paddingSize = k - (N % k);
+  std::vector<bool> suffixArr(bufferSize);
+  std::vector<bool> prefixArr(bufferSize);
+
+  // Padding Operations on Buffers
+  for (size_t i=0; i<windowSize; ++i) {
+    suffixArr[i] = false;
+    prefixArr[i] = false;
+  }
+
+  for (size_t i=N+windowSize; i<bufferSize; ++i) {
+    suffixArr[i] = false;
+    prefixArr[i] = false;
+  }
+
+  // Compute Prefix and Suffix Buffers
+  for (size_t i=0; i<N+paddingSize; ++i) {
+    if (i % k == 0) {
+      prefixArr[i+windowSize] = inputWaveform[i];
+    } else {
+      prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] || inputWaveform[i]);
+    }
+  }
+
+  for (size_t i=N+paddingSize; i!=0; --i) {
+    if (i > N) {
+      // Compensate for divisibility padding (must be -inf)
+      continue;
+    }
+    else if (i % k == 0) {
+      suffixArr[i+windowSize-1] = inputWaveform[i-1];
+    } 
+    else {
+      suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] || inputWaveform[i-1]);
+    }
+  }
+
+  int prefixIndex = 0;
+  int suffixIndex = 0;
+
+  for (size_t i=0; i<N; ++i) {
+    prefixIndex = i + 2 * windowSize;
+    suffixIndex = i;
+    dilationVec[i] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
+  }
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getDilation(
+  const Waveform<short>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<short>& dilationVec) const
 {
-  getDilation<short>(waveform, structuringElement, dilationVec);
+  getDilation<short>(inputWaveform, structuringElement, dilationVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getDilation(
-  const Waveform<float>& waveform,
+  const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& dilationVec) const
 {
-  getDilation<float>(waveform, structuringElement, dilationVec);
+  getDilation<float>(inputWaveform, structuringElement, dilationVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getDilation(
-  const Waveform<double>& waveform,
+  const Waveform<double>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<double>& dilationVec) const
 {
-  getDilation<double>(waveform, structuringElement, dilationVec);
+  getDilation<double>(inputWaveform, structuringElement, dilationVec);
   return;
 }
 
@@ -38,6 +103,7 @@ void sigproc_tools::Morph1DFast::getDilation(
   Waveform<T>& dilationVec) const
 {
   size_t N = inputWaveform.size();
+  assert(dilationVec.size() == N);
   size_t k = (size_t) structuringElement;
   if (N <= k) {
     std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
@@ -48,7 +114,6 @@ void sigproc_tools::Morph1DFast::getDilation(
   size_t paddingSize = k - (N % k);
   std::vector<T> suffixArr(bufferSize);
   std::vector<T> prefixArr(bufferSize);
-  dilationVec.resize(N);
 
   // Padding Operations on Buffers
   for (size_t i=0; i<windowSize; ++i) {
@@ -97,29 +162,91 @@ void sigproc_tools::Morph1DFast::getDilation(
 
 
 void sigproc_tools::Morph1DFast::getErosion(
-  const Waveform<short>& waveform,
+  const Waveform<bool>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<bool>& erosionVec) const
+{
+  size_t N = inputWaveform.size();
+  assert(erosionVec.size() == N);
+  size_t k = (size_t) structuringElement;
+  if (N <= k) {
+    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
+    return;
+  }
+  size_t bufferSize = N + 2 * (k/2) + (k - (N % k));
+  size_t windowSize = k/2;
+  size_t paddingSize = k - (N % k);
+  std::vector<bool> suffixArr(bufferSize);
+  std::vector<bool> prefixArr(bufferSize);
+
+  // Padding Operations on Buffers
+  for (size_t i=0; i<windowSize; ++i) {
+    suffixArr[i] = true;
+    prefixArr[i] = true;
+  }
+
+  for (size_t i=N+windowSize; i<bufferSize; ++i) {
+    suffixArr[i] = true;
+    prefixArr[i] = true;
+  }
+
+  // Compute Prefix and Suffix Buffers
+  for (size_t i=0; i<N+paddingSize; ++i) {
+    if (i % k == 0) {
+      prefixArr[i+windowSize] = inputWaveform[i];
+    } else {
+      prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] && inputWaveform[i]);
+    }
+  }
+
+  for (size_t i=N+paddingSize; i!=0; --i) {
+    if (i > N) {
+      // Compensate for divisibility padding (must be -inf)
+      continue;
+    }
+    else if (i % k == 0) {
+      suffixArr[i+windowSize-1] = inputWaveform[i-1];
+    } 
+    else {
+      suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] && inputWaveform[i-1]);
+    }
+  }
+
+  int prefixIndex = 0;
+  int suffixIndex = 0;
+
+  for (size_t i=0; i<N; ++i) {
+    prefixIndex = i + 2 * windowSize;
+    suffixIndex = i;
+    erosionVec[i] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
+  }
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getErosion(
+  const Waveform<short>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<short>& erosionVec) const
 {
-  getErosion<short>(waveform, structuringElement, erosionVec);
+  getErosion<short>(inputWaveform, structuringElement, erosionVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getErosion(
-  const Waveform<float>& waveform,
+  const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& erosionVec) const
 {
-  getErosion<float>(waveform, structuringElement, erosionVec);
+  getErosion<float>(inputWaveform, structuringElement, erosionVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getErosion(
-  const Waveform<double>& waveform,
+  const Waveform<double>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<double>& erosionVec) const
 {
-  getErosion<double>(waveform, structuringElement, erosionVec);
+  getErosion<double>(inputWaveform, structuringElement, erosionVec);
   return;
 }
 
@@ -130,6 +257,7 @@ void sigproc_tools::Morph1DFast::getErosion(
   Waveform<T>& erosionVec) const
 {
   size_t N = inputWaveform.size();
+  assert(erosionVec.size() == N);
   size_t k = (size_t) structuringElement;
   if (N <= k) {
     std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
@@ -140,7 +268,6 @@ void sigproc_tools::Morph1DFast::getErosion(
   size_t paddingSize = k - (N % k);
   std::vector<T> suffixArr(bufferSize);
   std::vector<T> prefixArr(bufferSize);
-  erosionVec.resize(N);
 
   // Padding Operations on Buffers
   for (size_t i=0; i<windowSize; ++i) {
@@ -189,29 +316,29 @@ void sigproc_tools::Morph1DFast::getErosion(
 
 
 void sigproc_tools::Morph1DFast::getGradient(
-  const Waveform<short>& waveform,
+  const Waveform<short>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<short>& gradientVec) const
 {
-  getGradient<short>(waveform, structuringElement, gradientVec);
+  getGradient<short>(inputWaveform, structuringElement, gradientVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getGradient(
-  const Waveform<float>& waveform,
+  const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& gradientVec) const
 {
-  getGradient<float>(waveform, structuringElement, gradientVec);
+  getGradient<float>(inputWaveform, structuringElement, gradientVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getGradient(
-  const Waveform<double>& waveform,
+  const Waveform<double>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<double>& gradientVec) const
 {
-  getGradient<double>(waveform, structuringElement, gradientVec);
+  getGradient<double>(inputWaveform, structuringElement, gradientVec);
   return;
 }
 
@@ -221,13 +348,13 @@ void sigproc_tools::Morph1DFast::getGradient(
   const unsigned int structuringElement,
   Waveform<T>& gradientVec) const
 {
-  std::vector<T> erosionVec;
-  std::vector<T> dilationVec;
+  size_t N = inputWaveform.size();
+  assert(gradientVec.size() == N);
+  std::vector<T> erosionVec(N);
+  std::vector<T> dilationVec(N);
   getDilation<T>(inputWaveform, structuringElement, dilationVec);
   getErosion<T>(inputWaveform, structuringElement, erosionVec);
 
-  size_t N = inputWaveform.size();
-  gradientVec.resize(N);
   for (size_t i=0; i<N; ++i) {
     gradientVec[i] = dilationVec[i] - erosionVec[i];
   }
@@ -236,29 +363,42 @@ void sigproc_tools::Morph1DFast::getGradient(
 
 
 void sigproc_tools::Morph1DFast::getOpening(
-  const Waveform<short>& waveform,
+  const Waveform<bool>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<bool>& openingVec) const
+{
+  size_t N = inputWaveform.size();
+  assert(openingVec.size() == N);
+  std::vector<bool> tempVec(N);
+  getErosion(inputWaveform, structuringElement, tempVec);
+  getDilation(tempVec, structuringElement, openingVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getOpening(
+  const Waveform<short>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<short>& openingVec) const
 {
-  getOpening<short>(waveform, structuringElement, openingVec);
+  getOpening<short>(inputWaveform, structuringElement, openingVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getOpening(
-  const Waveform<float>& waveform,
+  const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& openingVec) const
 {
-  getOpening<float>(waveform, structuringElement, openingVec);
+  getOpening<float>(inputWaveform, structuringElement, openingVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getOpening(
-  const Waveform<double>& waveform,
+  const Waveform<double>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<double>& openingVec) const
 {
-  getOpening<double>(waveform, structuringElement, openingVec);
+  getOpening<double>(inputWaveform, structuringElement, openingVec);
   return;
 }
 
@@ -268,7 +408,9 @@ void sigproc_tools::Morph1DFast::getOpening(
   const unsigned int structuringElement,
   Waveform<T>& openingVec) const
 {
-  std::vector<T> tempVec;
+  size_t N = inputWaveform.size();
+  assert(openingVec.size() == N);
+  std::vector<T> tempVec(N);
   getErosion<T>(inputWaveform, structuringElement, tempVec);
   getDilation<T>(tempVec, structuringElement, openingVec);
   return;
@@ -276,29 +418,42 @@ void sigproc_tools::Morph1DFast::getOpening(
 
 
 void sigproc_tools::Morph1DFast::getClosing(
-  const Waveform<short>& waveform,
+  const Waveform<bool>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<bool>& closingVec) const
+{
+  size_t N = inputWaveform.size();
+  assert(closingVec.size() == N);
+  std::vector<bool> tempVec(N);
+  getDilation(inputWaveform, structuringElement, tempVec);
+  getErosion(tempVec, structuringElement, closingVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getClosing(
+  const Waveform<short>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<short>& closingVec) const
 {
-  getClosing<short>(waveform, structuringElement, closingVec);
+  getClosing<short>(inputWaveform, structuringElement, closingVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getClosing(
-  const Waveform<float>& waveform,
+  const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& closingVec) const
 {
-  getClosing<float>(waveform, structuringElement, closingVec);
+  getClosing<float>(inputWaveform, structuringElement, closingVec);
   return;
 }
 
 void sigproc_tools::Morph1DFast::getClosing(
-  const Waveform<double>& waveform,
+  const Waveform<double>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<double>& closingVec) const
 {
-  getClosing<double>(waveform, structuringElement, closingVec);
+  getClosing<double>(inputWaveform, structuringElement, closingVec);
   return;
 }
 
@@ -308,7 +463,9 @@ void sigproc_tools::Morph1DFast::getClosing(
   const unsigned int structuringElement,
   Waveform<T>& closingVec) const
 {
-  std::vector<T> tempVec;
+  size_t N = inputWaveform.size();
+  assert(closingVec.size() == N);
+  std::vector<T> tempVec(N);
   getDilation<T>(inputWaveform, structuringElement, tempVec);
   getErosion<T>(tempVec, structuringElement, closingVec);
   return;

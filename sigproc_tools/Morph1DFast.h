@@ -22,6 +22,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <assert.h>
 
 namespace sigproc_tools {
 
@@ -40,18 +41,26 @@ namespace sigproc_tools {
       /// Default constructor
       Morph1DFast(){}
 
+      void getDilation(const Waveform<bool>&,
+                       const unsigned int,
+                       Waveform<bool>&) const;
+
       void getDilation(const Waveform<short>&,
-                      const unsigned int,
-                      Waveform<short>&) const;
+                       const unsigned int,
+                       Waveform<short>&) const;
 
       void getDilation(const Waveform<float>&,
-                      const unsigned int,
-                      Waveform<float>&) const;
+                       const unsigned int,
+                       Waveform<float>&) const;
 
       void getDilation(const Waveform<double>&,
-                      const unsigned int,
-                      Waveform<double>&) const;
+                       const unsigned int,
+                       Waveform<double>&) const;
 
+
+      void getErosion(const Waveform<bool>&,
+                      const unsigned int,
+                      Waveform<bool>&) const;
 
       void getErosion(const Waveform<short>&,
                       const unsigned int,
@@ -79,6 +88,10 @@ namespace sigproc_tools {
                       Waveform<double>&) const;
 
 
+      void getOpening(const Waveform<bool>&,
+                      const unsigned int,
+                      Waveform<bool>&) const;
+
       void getOpening(const Waveform<short>&,
                       const unsigned int,
                       Waveform<short>&) const;
@@ -91,7 +104,11 @@ namespace sigproc_tools {
                       const unsigned int,
                       Waveform<double>&) const;
 
-            
+
+      void getClosing(const Waveform<bool>&,
+                      const unsigned int,
+                      Waveform<bool>&) const;            
+
       void getClosing(const Waveform<short>&,
                       const unsigned int,
                       Waveform<short>&) const;
