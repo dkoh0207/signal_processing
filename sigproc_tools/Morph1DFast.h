@@ -121,17 +121,6 @@ namespace sigproc_tools {
                       const unsigned int,
                       Waveform<double>&) const;
 
-      // void getMedian(const Waveform<short>&,
-      //                 const unsigned int,
-      //                 Waveform<short>&) const;
-
-      // void getMedian(const Waveform<float>&,
-      //                 const unsigned int,
-      //                 Waveform<float>&) const;
-
-      // void getMedian(const Waveform<double>&,
-      //                 const unsigned int,
-      //                 Waveform<double>&) const;
     
     /// Default destructor
       ~Morph1DFast(){}

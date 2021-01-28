@@ -159,7 +159,60 @@ unsigned sigproc_tools::MiscUtils::nChoosek( unsigned n, unsigned k ) const
 }
 
 
+void sigproc_tools::MiscUtils::drawIndextoImage(
+  const std::vector<int>& rows,
+  const std::vector<int>& cols,
+  Array2D<bool>& output2D) const
+{
+  drawIndextoImage<int>(rows, cols, output2D);
+  return;
+}
 
+void sigproc_tools::MiscUtils::drawIndextoImage(
+  const std::vector<size_t>& rows,
+  const std::vector<size_t>& cols,
+  Array2D<bool>& output2D) const
+{
+  drawIndextoImage<size_t>(rows, cols, output2D);
+  return;
+}
+
+void sigproc_tools::MiscUtils::drawIndextoImage(
+  const std::vector<unsigned int>& rows,
+  const std::vector<unsigned int>& cols,
+  Array2D<bool>& output2D) const
+{
+  drawIndextoImage<unsigned int>(rows, cols, output2D);
+  return;
+}
+
+void sigproc_tools::MiscUtils::drawIndextoImage(
+  const std::vector<short>& rows,
+  const std::vector<short>& cols,
+  Array2D<bool>& output2D) const
+{
+  drawIndextoImage<short>(rows, cols, output2D);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::MiscUtils::drawIndextoImage(
+  const std::vector<T>& rows,
+  const std::vector<T>& cols,
+  Array2D<bool>& output2D) const
+{
+  assert (rows.size() == cols.size());
+
+  size_t N = rows.size();
+
+  for (size_t i=0; i<N; ++i) {
+    T ix = rows[i];
+    T iy = cols[i];
+    output2D[ix][iy] = true;
+  }
+  return;
+
+}
 
 
 #endif

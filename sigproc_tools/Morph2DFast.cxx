@@ -227,6 +227,101 @@ void sigproc_tools::Morph2DFast::getGradient(
 }
 
 
+void sigproc_tools::Morph2DFast::updateMedian(
+  short& medianVal,
+  unsigned int& numLowPixels,
+  std::vector<short>& hist,
+  unsigned int halfPixels,
+  unsigned int valRange) const
+{
+  updateMedian<short>(medianVal, numLowPixels, hist, halfPixels, valRange);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::updateMedian(
+  int& medianVal,
+  unsigned int& numLowPixels,
+  std::vector<int>& hist,
+  unsigned int halfPixels,
+  unsigned int valRange) const
+{
+  updateMedian<int>(medianVal, numLowPixels, hist, halfPixels, valRange);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::Morph2DFast::updateMedian(
+  T& medianVal,
+  unsigned int& numLowPixels,
+  std::vector<T>& hist,
+  unsigned int halfPixels,
+  unsigned int valRange) const
+{
+  if (numLowPixels <= halfPixels) {
+    for (T val=medianVal; val< (int) valRange; ++val) {
+      if ( (numLowPixels + hist[val]) > halfPixels) {
+        medianVal = val;
+        break;
+      } else {
+        numLowPixels += hist[val];
+      }
+    }
+  } else {
+    for (int val=medianVal-1; val>-1; --val) {
+      numLowPixels -= hist[val];
+      if (numLowPixels <= halfPixels) {
+        medianVal = val;
+        break;
+      }
+    }
+  }
+  return;
+}
+
+
+template <typename T>
+void sigproc_tools::Morph2DFast::getMedian(
+  const std::vector<std::vector<T> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<T> >& median2D,
+  const unsigned int pixelRange) const
+{
+  int halfWindowX = structuringElementx / 2;
+  int halfWindowY = structuringElementy / 2;
+
+  int numChannels = waveform2D.size();
+  int numTicks = waveform2D.at(0).size();
+
+  bool moveDown = true;
+  int numCompleted = 0;
+
+  int ix = 0;
+  int iy = 0;
+
+  std::vector<T> hist(pixelRange);
+
+  unsigned int halfPixels = 0;
+
+  // Initialize first histogram
+  for (int i=0; i<halfWindowX; ++i) {
+    for (int j=0; j<halfWindowY; ++j) {
+      hist[waveform2D[i][j]]++;
+      halfPixels++;
+    }
+  }
+
+  std::vector<std::vector<int>> partialHist(numChannels);
+  for (auto& v : partialHist) {
+    v.resize(pixelRange);
+  }
+
+  for (int j=0; j<numTicks; ++j) {
+
+  }
+}
+
+
 void sigproc_tools::Morph2DFast::getClosing(
   const std::vector<std::vector<bool> >& waveform2D,
   const unsigned int structuringElementx,

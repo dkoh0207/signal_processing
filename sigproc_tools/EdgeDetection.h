@@ -25,6 +25,8 @@
 
 #include "MiscUtils.h"
 #include "Morph2DFast.h"
+#include "BilateralFilters.h"
+#include <queue>
 
 namespace sigproc_tools {
 
@@ -58,8 +60,26 @@ namespace sigproc_tools {
 
       void Sobel(
         const Array2D<float>& input2D,
+        Array2D<float>& sobelX,
+        Array2D<float>& sobelY,
         Array2D<float>& gradient,
         Array2D<float>& direction) const;
+
+      void LSDGradX(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradient) const;
+
+      void LSDGradY(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradient) const;
+
+      void LSDGrad(
+        const Array2D<float>& input2D,
+        Array2D<float>& gradX,
+        Array2D<float>& gradY,
+        Array2D<float>& gradient,
+        Array2D<float>& direction) const;
+
 
       void Gauss(
         const Array2D<float>& input2D,
@@ -73,6 +93,7 @@ namespace sigproc_tools {
         Array2D<float>& output2D
       ) const;
 
+      // TODO: NEEDS DEBUGGING
       void EdgeNMSInterpolation(
         const Array2D<float>& gradient2D,
         const Array2D<float>& gradX,
@@ -99,6 +120,40 @@ namespace sigproc_tools {
         const std::vector<int>& weakEdgeRows,
         const std::vector<int>& weakEdgeCols,
         Array2D<bool>& output2D
+      ) const;
+
+      void Canny(
+        const Array2D<float>& waveLessCoherent,
+        Array2D<bool>& output2D,
+        const unsigned int sx,
+        const unsigned int sy,
+        const float sigma_x,
+        const float sigma_y,
+        const float sigma_r,
+        const float lowThreshold,
+        const float highThreshold,
+        const char mode
+      ) const;
+
+      void gradientRegionGrow(
+        const Array2D<float>& direction,
+        const int anchorX,
+        const int anchorY,
+        const int regionID,
+        const float tolerance,
+        const unsigned int windowX, 
+        const unsigned int windowY, 
+        Array2D<int>& partitions
+      ) const;
+
+      void regionGrow2D(
+        const Array2D<float>& direction,
+        const std::vector<int>& anchorsX,
+        const std::vector<int>& anchorsY,
+        const float tolerance,
+        const unsigned int windowX, 
+        const unsigned int windowY, 
+        Array2D<int>& partitions
       ) const;
       
       /// Default destructor

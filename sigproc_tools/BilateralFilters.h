@@ -55,15 +55,29 @@ namespace sigproc_tools {
         float sigma_r
       ) const;
 
+      void directional(
+        const Array2D<float>& input2D,
+        const Array2D<float>& direction,
+        Array2D<float>& output2D,
+        const unsigned int sx,
+        const unsigned int sy,
+        float sigma_x,
+        float sigma_y,
+        float sigma_theta,
+        const int angleMesh
+      ) const;
+
       void Gaussian(
         const Array2D<float>& input2D,
-        const float sigma,
+        const float sigma_x,
+        const float sigma_y,
         Array2D<float>& output2D
       ) const;
 
       void Gaussian(
         const Array2D<std::complex<float>>& input2D,
-        const float sigma,
+        const float sigma_x,
+        const float sigma_y,
         Array2D<std::complex<float>>& output2D
       ) const;
 
@@ -77,13 +91,13 @@ namespace sigproc_tools {
         const std::vector<float>& filterCoeffs,
         std::vector<std::complex<float>>& output1D) const;
 
-      void Discretize(
+      float Discretize(
         const Array2D<float>& input2D,
         const unsigned int maxPixelValue,
         Array2D<short>& output2D
       ) const;
 
-      void Discretize(
+      float Discretize(
         const Array2D<float>& input2D,
         const unsigned int maxPixelValue,
         Array2D<float>& output2D
@@ -96,6 +110,24 @@ namespace sigproc_tools {
         const float sigma_s,
         const float sigma_r
       ) const;
+
+      void GPABilateral(
+        const Array2D<float>& input2D,
+        Array2D<float>& output2D,
+        const unsigned int T,
+        const float sigma_x,
+        const float sigma_y,
+        const float sigma_r,
+        const float epsilon
+      ) const;
+
+      unsigned int estimateGPAOrder(
+        float sigma_r,
+        float epsilon,
+        float T
+      ) const;
+
+      std::vector<float> computeGausCoeffs(const float sigma) const;
 
       void guidedBilateral(
         const Array2D<float>& input2D,
@@ -118,12 +150,13 @@ namespace sigproc_tools {
       template <typename T>
       void Gaussian(
         const Array2D<T>& input2D,
-        const float sigma,
+        const float sigma_x,
+        const float sigma_y,
         Array2D<T>& output2D
       ) const;
 
       template <typename T>
-      void Discretize(
+      float Discretize(
         const Array2D<float>& input2D,
         const unsigned int maxPixelValue,
         Array2D<T>& output2D

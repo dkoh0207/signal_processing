@@ -94,24 +94,13 @@ void sigproc_tools::EdgeDetection::SobelY(
 
 void sigproc_tools::EdgeDetection::Sobel(
   const Array2D<float>& input2D,
+  Array2D<float>& sobelX,
+  Array2D<float>& sobelY,
   Array2D<float>& gradient,
   Array2D<float>& direction) const
 {
   int numChannels = input2D.size();
   int numTicks = input2D.at(0).size();
-
-  Array2D<float> sobelX;
-  Array2D<float> sobelY;
-
-  sobelX.resize(numChannels);
-  for (auto& v : sobelX) {
-    v.resize(numTicks);
-  }
-
-  sobelY.resize(numChannels);
-  for (auto& v : sobelY) {
-    v.resize(numTicks);
-  }
 
   SobelX(input2D, sobelX);
   SobelY(input2D, sobelY);
@@ -121,6 +110,91 @@ void sigproc_tools::EdgeDetection::Sobel(
       float g = sqrt(sobelX[i][j]*sobelX[i][j] + sobelY[i][j]*sobelY[i][j]);
       gradient[i][j] = g;
       float gradDir = atan2(sobelY[i][j], sobelX[i][j]);
+      direction[i][j] = gradDir * 180.0 / M_PI;
+    }
+  }
+  return;
+}
+
+
+void sigproc_tools::EdgeDetection::LSDGradX(
+  const Array2D<float>& input2D,
+  Array2D<float>& output2D) const
+{
+  // Input kernel must be normalized. 
+
+  int numChannels = input2D.size();
+  int numTicks = input2D.at(0).size();
+
+  for (int i=0; i<numChannels-1; ++i) {
+    for (int j=0; j<numTicks-1; ++j) {
+      output2D[i][j] = (input2D[i+1][j] + input2D[i+1][j+1] - \
+                        input2D[i][j] - input2D[i][j+1]) / 2.0;
+    }
+  }
+
+  // Use Periodic Boundary
+  for (int j=0; j<numTicks-1; ++j) {
+    output2D[numChannels-1][j] = (input2D[0][j] + input2D[0][j+1] - \
+                                  input2D[numChannels-1][j] - input2D[numChannels-1][j+1]) / 2.0;
+  }
+  for (int i=0; i<numChannels-1; ++i) {
+    output2D[i][numTicks-1] = (input2D[i+1][numTicks-1] + input2D[i+1][0] - \
+                      input2D[i][numTicks-1] - input2D[i][0]) / 2.0;
+  }
+  output2D[numChannels-1][numTicks-1] = (input2D[0][numTicks-1] + input2D[0][0] - \
+                                         input2D[numChannels-1][numTicks-1] - input2D[numChannels-1][0]) / 2.0;
+  return;
+}
+
+void sigproc_tools::EdgeDetection::LSDGradY(
+  const Array2D<float>& input2D,
+  Array2D<float>& output2D) const
+{
+  // Input kernel must be normalized. 
+
+  int numChannels = input2D.size();
+  int numTicks = input2D.at(0).size();
+
+  for (int i=0; i<numChannels-1; ++i) {
+    for (int j=0; j<numTicks-1; ++j) {
+      output2D[i][j] = (input2D[i][j+1] + input2D[i+1][j+1] - \
+                        input2D[i][j] - input2D[i+1][j]) / 2.0;
+    }
+  }
+
+  // Use Periodic Boundary
+  for (int j=0; j<numTicks-1; ++j) {
+    output2D[numChannels-1][j] = (input2D[numChannels-1][j+1] + input2D[0][j+1] - \
+                                  input2D[numChannels-1][j] - input2D[0][j]) / 2.0;
+  }
+  for (int i=0; i<numChannels-1; ++i) {
+    output2D[i][numTicks-1] = (input2D[i][0] + input2D[i+1][0] - \
+                      input2D[i][numTicks-1] - input2D[i+1][numTicks-1]) / 2.0;
+  }
+  output2D[numChannels-1][numTicks-1] = (input2D[numChannels-1][0] + input2D[0][0] - \
+                                         input2D[numChannels-1][numTicks-1] - input2D[0][numTicks-1]) / 2.0;
+  return;
+}
+
+void sigproc_tools::EdgeDetection::LSDGrad(
+  const Array2D<float>& input2D,
+  Array2D<float>& gradX,
+  Array2D<float>& gradY,
+  Array2D<float>& gradient,
+  Array2D<float>& direction) const
+{
+  int numChannels = input2D.size();
+  int numTicks = input2D.at(0).size();
+
+  LSDGradX(input2D, gradX);
+  LSDGradY(input2D, gradY);
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      float g = sqrt(gradX[i][j]*gradX[i][j] + gradY[i][j]*gradY[i][j]);
+      gradient[i][j] = g;
+      float gradDir = atan2(gradX[i][j], -gradY[i][j]);
       direction[i][j] = gradDir * 180.0 / M_PI;
     }
   }
@@ -219,7 +293,7 @@ void sigproc_tools::EdgeDetection::EdgeNMSInterpolation(
         float G = abs(gradY[i][j] / gradX[i][j]);
         if ((gradient2D[i][j] >= v1 + (v2 - v1)*G) && 
             (gradient2D[i][j] >= v4 + G*(v3 - v4))) {
-          output2D[i][j] = G;
+          output2D[i][j] = gradient2D[i][j];
         } else {
           output2D[i][j] = 0;
         }
@@ -233,7 +307,7 @@ void sigproc_tools::EdgeDetection::EdgeNMSInterpolation(
         float G = abs(gradY[i][j] / gradX[i][j]);
         if ((gradient2D[i][j] >= v1 + (v2 - v1)*G) && 
             (gradient2D[i][j] >= v4 + G*(v3 - v4))) {
-          output2D[i][j] = G;
+          output2D[i][j] = gradient2D[i][j];
         } else {
           output2D[i][j] = 0;
         }
@@ -247,7 +321,7 @@ void sigproc_tools::EdgeDetection::EdgeNMSInterpolation(
         float G = abs(gradX[i][j] / gradY[i][j]);
         if ((gradient2D[i][j] >= v1 + (v2 - v1)*G) && 
             (gradient2D[i][j] >= v4 + G*(v3 - v4))) {
-          output2D[i][j] = G;
+          output2D[i][j] = gradient2D[i][j];
         } else {
           output2D[i][j] = 0;
         }
@@ -260,7 +334,7 @@ void sigproc_tools::EdgeDetection::EdgeNMSInterpolation(
         float G = abs(gradX[i][j] / gradY[i][j]);
         if ((gradient2D[i][j] >= v1 + (v2 - v1)*G) && 
             (gradient2D[i][j] >= v4 + G*(v3 - v4))) {
-          output2D[i][j] = G;
+          output2D[i][j] = gradient2D[i][j];
         } else {
           output2D[i][j] = 0;
         }
@@ -338,6 +412,7 @@ void sigproc_tools::EdgeDetection::HysteresisThresholding(
 
   for (size_t i=0; i<strongEdgeRows.size(); ++i) {
     tempBuffer[strongEdgeRows[i]][strongEdgeCols[i]] = true;
+    output2D[strongEdgeRows[i]][strongEdgeCols[i]] = true;
   }
 
   assert(strongEdgeRows.size() == strongEdgeCols.size());
@@ -357,15 +432,14 @@ void sigproc_tools::EdgeDetection::HysteresisThresholding(
   for (size_t i=0; i<weakEdgeRows.size(); ++i) {
     weakEdges2D[weakEdgeRows[i]][weakEdgeCols[i]] = true;
   }
-
   // This fixed point iteration always converges. 
   while (!converged) {
     // Dilation + compute overlap
-    morph2d.getDilation(tempBuffer, 3, 3, output2D);
+    morph2d.getDilation(output2D, 3, 3, tempBuffer);
     for (int i=0; i<numChannels; ++i) {
       for (int j=0; j<numTicks; ++j) {
         // Pixels have to be true in both dilated binary image and weak edges
-        output2D[i][j] = (output2D[i][j] && weakEdges2D[i][j]);
+        tempBuffer[i][j] = output2D[i][j] || (tempBuffer[i][j] && weakEdges2D[i][j]);
       }
     }
     converged = true;
@@ -382,9 +456,197 @@ void sigproc_tools::EdgeDetection::HysteresisThresholding(
     // Update buffer
     for (int i=0; i<numChannels; ++i) {
       for (int j=0; j<numTicks; ++j) {
-        tempBuffer[i][j] = output2D[i][j];
+        output2D[i][j] = tempBuffer[i][j];
       }
     }
+  }
+  return;
+}
+
+
+void sigproc_tools::EdgeDetection::Canny(
+  const Array2D<float>& waveLessCoherent,
+  Array2D<bool>& output2D,
+  const unsigned int sx,
+  const unsigned int sy,
+  const float sigma_x,
+  const float sigma_y,
+  const float sigma_r,
+  const float lowThreshold,
+  const float highThreshold,
+  const char mode) const
+{
+  /*
+  This implementation of canny edge detection replaces gaussian smoothing with
+  edge-preserving bilateral filtering.
+  */
+  int numChannels = waveLessCoherent.size();
+  int numTicks = waveLessCoherent.at(0).size();
+
+  sigproc_tools::BilateralFilters filter;
+
+  sigproc_tools::Morph2DFast morph2d;
+
+  Array2D<float> temp(numChannels);
+  for (auto& v : temp) {
+    v.resize(numTicks);
+  }
+
+  Array2D<bool> boolTemp(numChannels);
+  for (auto& v : boolTemp) {
+    v.resize(numTicks);
+  }
+
+  Array2D<float> gradient(numChannels);
+  for (auto& v : gradient) {
+    v.resize(numTicks);
+  }
+
+  Array2D<float> direction(numChannels);
+  for (auto& v : direction) {
+    v.resize(numTicks);
+  }
+
+  Array2D<float> sobelX(numChannels);
+  for (auto& v : sobelX) {
+    v.resize(numTicks);
+  }
+
+  Array2D<float> sobelY(numChannels);
+  for (auto& v : sobelY) {
+    v.resize(numTicks);
+  }
+
+  Array2D<float> morphed2D(numChannels);
+  for (auto& v : morphed2D) {
+    v.resize(numTicks);
+  }
+
+
+  Sobel(waveLessCoherent, sobelX, sobelY, gradient, direction);
+
+  // 1. Perform Edge-Preserving Smoothing
+  filter.directional(waveLessCoherent, direction, temp, sx, sy, sigma_x, sigma_y, sigma_r, 360);
+
+  // 2. Run Morphological FIlter
+  if (mode == 'e') {
+    morph2d.getErosion(temp, sx, sy, morphed2D);
+  }
+  else if (mode == 'd') {
+    morph2d.getDilation(temp, sx, sy, morphed2D);
+  }
+  else {
+    morph2d.getGradient(temp, sx, sy, morphed2D);
+  }
+
+  // 2. Run Sobel Edge Filtering
+  Sobel(morphed2D, sobelX, sobelY, gradient, direction);
+
+  // 3. NMS Edge with Interpolation
+  EdgeNMSInterpolation(gradient, sobelX, sobelY, direction, temp);
+
+  // 4. Run double thresholding
+
+  std::vector<int> strongEdgeRows;
+  std::vector<int> strongEdgeCols;
+  std::vector<int> weakEdgeRows;
+  std::vector<int> weakEdgeCols;
+
+  DoubleThresholding(temp, boolTemp, 
+    strongEdgeRows, strongEdgeCols, 
+    weakEdgeRows, weakEdgeCols, lowThreshold, highThreshold);
+
+  HysteresisThresholding(boolTemp, strongEdgeRows, strongEdgeCols, weakEdgeRows, weakEdgeCols, output2D);
+
+  return;
+}
+
+
+void sigproc_tools::EdgeDetection::gradientRegionGrow(
+  const Array2D<float>& direction,
+  const int anchorX,
+  const int anchorY,
+  const int regionID,
+  const float tolerance,
+  const unsigned int windowX, 
+  const unsigned int windowY, 
+  Array2D<int>& partitions) const
+{
+  assert(tolerance > 0);
+  assert(regionID > 0);
+  int numChannels = direction.size();
+  int numTicks = direction.at(0).size();
+
+  float Sx = 0.0;
+  float Sy = 0.0;
+  float meanAngle = direction[anchorX][anchorY];
+  std::queue<int> anchorsX;
+  std::queue<int> anchorsY;
+
+  anchorsX.push(anchorX);
+  anchorsY.push(anchorY);
+
+  unsigned int count = 1;
+
+  while (!anchorsX.empty()) {
+    // std::cout << anchorsX.size() << std::endl;
+    // std::cout << anchorsY.size() << std::endl;
+    // Neighbors of current pixel
+    int ix = anchorsX.front();
+    int iy = anchorsY.front();
+    anchorsX.pop();
+    anchorsY.pop();
+
+    int lbx = ix - (int) windowX;
+    int ubx = ix + (int) windowX;
+    int lby = iy - (int) windowY;
+    int uby = iy + (int) windowY;
+    int lowerBoundx = std::max(lbx, 0);
+    int upperBoundx = std::min(ubx, (int) numChannels);
+    int lowerBoundy = std::max(lby, 0);
+    int upperBoundy = std::min(uby, (int) numTicks);
+
+    for (int n=lowerBoundx; n<upperBoundx; ++n) {
+      for (int m=lowerBoundy; m<upperBoundy; ++m) {
+        float diffAngle = (float) abs(meanAngle - direction[n][m]);
+        // std::cout << "Mean Angle = " << meanAngle << std::endl;
+        // std::cout << "Diff Angle = " << diffAngle << std::endl;
+        if (partitions[n][m] == 0 && diffAngle < tolerance) {
+          anchorsX.push(n);
+          anchorsY.push(m);
+          count++;
+          partitions[n][m] = regionID;
+          Sx = Sx + cos(direction[n][m] * M_PI / 180.0);
+          Sy = Sy + sin(direction[n][m] * M_PI / 180.0);
+          meanAngle = atan2(Sy, Sx) * 180.0 / M_PI;
+        }
+      }
+    }
+  }
+  return;
+}
+
+
+void sigproc_tools::EdgeDetection::regionGrow2D(
+  const Array2D<float>& direction,
+  const std::vector<int>& anchorsX,
+  const std::vector<int>& anchorsY,
+  const float tolerance,
+  const unsigned int windowX, 
+  const unsigned int windowY, 
+  Array2D<int>& partitions
+) const
+{
+
+  assert(anchorsX.size() == anchorsY.size());
+
+  int groupID = 1;
+  for (size_t i=0; i<anchorsX.size(); ++i) {
+    // std::cout << "Label = " << groupID << std::endl;
+    int ix = anchorsX[i];
+    int iy = anchorsY[i];
+    gradientRegionGrow(direction, ix, iy, groupID, tolerance, windowX, windowY, partitions);
+    groupID++;
   }
   return;
 }

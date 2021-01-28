@@ -29,7 +29,9 @@
 #include "LineDetection.h"
 #include "FrequencyFilters1D.h"
 #include "MorphologicalCNC.h"
+#include "EdgeDetection.h"
 #include "Morph2DFast.h"
+#include "BilateralFilters.h"
 
 namespace sigproc_tools {
 
@@ -75,7 +77,45 @@ namespace sigproc_tools {
         const unsigned int ADFILTER_SX,
         const unsigned int ADFILTER_SY,
 
+        const unsigned int BINARY_CLOSING_SX,
+        const unsigned int BINARY_CLOSING_SY,
+
         const float GLOBAL_THRESHOLDING_FACTOR) const;
+
+    void applyCannyFilter(
+        const Array2D<float>& waveform2D,
+        Array2D<float>& fullEvent,
+        Array2D<bool>& outputROI,
+        Array2D<float>& waveLessCoherent,
+        Array2D<float>& morphedWaveform2D,
+        // Default Parameters
+        size_t FREQUENCY_THRESHOLD,
+        size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,
+        size_t FREQUENCY_FILTER_MODE,
+
+        char MORPHOLOGICAL_FILTER_NAME,
+        const unsigned int CHANNEL_GROUPING,
+        const unsigned int STRUCTURING_ELEMENT_X,
+        const unsigned int STRUCTURING_ELEMENT_Y,
+        const unsigned int ROI_EXPAND_WINDOW_SIZE,
+        const float MORPHOLOGICAL_THRESHOLD_FACTOR,
+
+        const size_t THETASTEPS,
+        const unsigned int HOUGH_THRESHOLD,
+        const unsigned int NMS_WINDOW_SIZE,
+        const unsigned int ANGLE_WINDOW,
+
+        // float NOISE_VARIANCE = 20.0;
+        const unsigned int ADFILTER_SX,
+        const unsigned int ADFILTER_SY,
+        const float sigma_x, 
+        const float sigma_y, 
+        const float sigma_r, 
+        const float lowThreshold,
+        const float highThreshold,
+
+        const unsigned int BINARY_CLOSING_SX,
+        const unsigned int BINARY_CLOSING_SY) const;
     
     /// Default destructor
     ~FindROI2D(){}

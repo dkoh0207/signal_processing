@@ -20,6 +20,7 @@
 #include <numeric>
 #include <cmath>
 #include <functional>
+#include <assert.h>
 
 namespace sigproc_tools {
 
@@ -58,7 +59,21 @@ namespace sigproc_tools {
 
       unsigned nChoosek(unsigned n, unsigned k) const;
 
+      void drawIndextoImage(const std::vector<int>& rows,
+        const std::vector<int>& cols,
+        Array2D<bool>& output2D) const;
 
+      void drawIndextoImage(const std::vector<size_t>& rows,
+        const std::vector<size_t>& cols,
+        Array2D<bool>& output2D) const;
+
+      void drawIndextoImage(const std::vector<unsigned int>& rows,
+        const std::vector<unsigned int>& cols,
+        Array2D<bool>& output2D) const;
+
+      void drawIndextoImage(const std::vector<short>& rows,
+        const std::vector<short>& cols,
+        Array2D<bool>& output2D) const;
 
       
       /// Default destructor
@@ -75,7 +90,10 @@ namespace sigproc_tools {
       template <typename T>
       T computeMinimum(const Array2D<T>& input2D);
 
-
+      template <typename T>
+      void drawIndextoImage(const std::vector<T>& rows,
+        const std::vector<T>& cols,
+        Array2D<bool>& output2D) const;
       // template <typename T> T computeMedian(
       //   const std::vector<T>& waveform
       // );

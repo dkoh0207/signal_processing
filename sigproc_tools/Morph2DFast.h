@@ -96,20 +96,28 @@ namespace sigproc_tools {
                         std::vector<std::vector<double> >&) const;
 
 
+        void updateMedian(short& medianVal,
+                          unsigned int& numLowPixels,
+                          std::vector<short>& hist,
+                          unsigned int halfPixels,
+                          unsigned int valRange) const;
+
+        void updateMedian(int& medianVal,
+                          unsigned int& numLowPixels,
+                          std::vector<int>& hist,
+                          unsigned int halfPixels,
+                          unsigned int valRange) const;
+
+
         void getMedian(const std::vector<std::vector<short> >&,
                         const unsigned int,
                         const unsigned int,
                         std::vector<std::vector<short> >&) const;
 
-        void getMedian(const std::vector<std::vector<float> >&,
+        void getMedian(const std::vector<std::vector<int> >&,
                         const unsigned int,
                         const unsigned int,
-                        std::vector<std::vector<float> >&) const;
-
-        void getMedian(const std::vector<std::vector<double> >&,
-                        const unsigned int,
-                        const unsigned int,
-                        std::vector<std::vector<double> >&) const;
+                        std::vector<std::vector<int> >&) const;
 
 
         void getOpening(const std::vector<std::vector<bool> >&,
@@ -180,11 +188,19 @@ namespace sigproc_tools {
         std::vector<std::vector<T> >& gradient2D) const;
 
       template <typename T>
+      void updateMedian(T& medianVal,
+                        unsigned int& numLowPixels,
+                        std::vector<T>& hist,
+                        unsigned int halfPixels,
+                        unsigned int valRange) const;
+
+      template <typename T>
       void getMedian(
         const std::vector<std::vector<T> >& waveform2D,
         const unsigned int structuringElementx,
         const unsigned int structuringElementy,
-        std::vector<std::vector<T> >& median2D) const;
+        std::vector<std::vector<T> >& median2D,
+        const unsigned int pixelRange) const;
 
       template <typename T>
       void getClosing(
