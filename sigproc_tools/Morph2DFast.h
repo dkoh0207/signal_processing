@@ -160,6 +160,12 @@ namespace sigproc_tools {
                         const unsigned int,
                         const unsigned int,
                         std::vector<std::vector<double> >&) const;
+
+        void contrastStretching(const std::vector<std::vector<float> >&,
+                                const unsigned int,
+                                const unsigned int,
+                                std::vector<std::vector<float> >&,
+                                const float) const;
       /// Default destructor
       ~Morph2DFast(){}
 

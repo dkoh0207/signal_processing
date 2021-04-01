@@ -456,4 +456,43 @@ void sigproc_tools::Morph2DFast::getOpening(
   return;
 }
 
+
+void sigproc_tools::Morph2DFast::contrastStretching(
+  const std::vector<std::vector<float> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<float> >& output2D,
+  const float scale) const
+{
+  size_t numChannels = waveform2D.size();
+  size_t nTicks = waveform2D.at(0).size();
+
+  assert(output2D.size() == numChannels);
+  assert(output2D.at(0).size() == nTicks);
+
+  std::vector<std::vector<float> > dilation2D;
+  dilation2D.resize(numChannels);
+  for (auto& v : dilation2D) {
+    v.resize(nTicks);
+  }
+  std::vector<std::vector<float> > erosion2D;
+  erosion2D.resize(numChannels);
+  for (auto& v : erosion2D) {
+    v.resize(nTicks);
+  }
+
+  getDilation<float>(waveform2D, structuringElementx, structuringElementy, dilation2D);
+  getErosion<float>(waveform2D, structuringElementx, structuringElementy, erosion2D);
+
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      float newVal = 0.0;
+      newVal = (waveform2D[i][j] - erosion2D[i][j]) / (dilation2D[i][j] - erosion2D[i][j]);
+      output2D[i][j] = scale * newVal;
+    }
+  }
+  return;
+}
+
+
 #endif

@@ -156,6 +156,54 @@ void sigproc_tools::BilateralFilters::directional(
   return;
 }
 
+void sigproc_tools::BilateralFilters::CircularAverage2D(
+  const Array2D<float>& direction,
+  Array2D<float>& output2D,
+  const unsigned int sx,
+  const unsigned int sy) const
+{
+  /*
+  Brute force implementation of Bilateral Filtering
+  WARNING: O(sx * sy) complexity, algorithm may be slow (~17s for 1050 x 4098)
+  */
+  int numChannels = direction.size();
+  int numTicks = direction.at(0).size();
+  int xHalfWindowSize = sx / 2;
+  int yHalfWindowSize = sy / 2;
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+
+      int lbx = i - (int) xHalfWindowSize;
+      int ubx = i + (int) xHalfWindowSize;
+      int lby = j - (int) yHalfWindowSize;
+      int uby = j + (int) yHalfWindowSize;
+      int lowerBoundx = std::max(lbx, 0);
+      int upperBoundx = std::min(ubx, (int) numChannels);
+      int lowerBoundy = std::max(lby, 0);
+      int upperBoundy = std::min(uby, (int) numTicks);
+
+      float Sx = 0.0;
+      float Sy = 0.0;
+      float normFactor = 0.0;
+      float newPixel = 0.0;
+
+      for (int ix=lowerBoundx; ix<upperBoundx; ++ix) {
+        for (int iy=lowerBoundy; iy<upperBoundy; ++iy) {
+          Sx += cos(direction[ix][iy] * M_PI / 180.0);
+          Sy += sin(direction[ix][iy] * M_PI / 180.0);
+          normFactor = normFactor + 1.0;
+        }
+      }
+      Sx = Sx / normFactor;
+      Sy = Sy / normFactor;
+      newPixel = atan2(Sy, Sx);
+      output2D[i][j] = newPixel;
+    }
+  }
+  return;
+} 
+
 
 void sigproc_tools::BilateralFilters::Gaussian(
   const Array2D<float>& input2D,

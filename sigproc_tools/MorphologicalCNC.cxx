@@ -360,6 +360,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
+  const unsigned int groupingOffset,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
   const unsigned int window,
@@ -382,6 +383,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
     roi,
     filterName,
     grouping,
+    groupingOffset,
     structuringElementx,
     structuringElementy,
     window,
@@ -406,6 +408,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
+  const unsigned int groupingOffset,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
   const unsigned int window,
@@ -428,6 +431,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
     roi,
     filterName,
     grouping,
+    groupingOffset,
     structuringElementx,
     structuringElementy,
     window,
@@ -452,6 +456,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
+  const unsigned int groupingOffset,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
   const unsigned int window,
@@ -474,6 +479,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
     roi,
     filterName,
     grouping,
+    groupingOffset,
     structuringElementx,
     structuringElementy,
     window,
@@ -499,6 +505,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
   Array2D<bool>& roi,
   const char filterName,
   const unsigned int grouping,
+  const unsigned int groupingOffset,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
   const unsigned int window,
@@ -514,7 +521,7 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 {
   auto numChannels = fullEvent.size();
   auto nTicks = fullEvent.at(0).size();
-  auto nGroups = numChannels / grouping;
+  auto nGroups = ((int) numChannels - (int) groupingOffset) / grouping;
 
   sigproc_tools::Morph2DFast filter;
   sigproc_tools::MiscUtils utils;
@@ -576,8 +583,8 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 
   for (size_t i=0; i<nTicks; ++i) {
     for (size_t j=0; j<nGroups; ++j) {
-      size_t group_start = j * grouping;
-      size_t group_end = (j+1) * grouping;
+      size_t group_start = j * grouping + (size_t) groupingOffset;
+      size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
       // Compute median.
       std::vector<T> v;
       for (size_t c=group_start; c<group_end; ++c) {
@@ -598,6 +605,30 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
       }
     }
   }
+
+  // Compensate for offset in channel groupings
+  if (groupingOffset > 0) {
+    for (size_t i=0; i<nTicks; ++i) {
+      std::vector<T> v;
+      for (size_t c=0; c<groupingOffset; ++c) {
+        if (!refinedSelectVals[c][i]) {
+          v.push_back(fullEvent[c][i]);
+        }
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        median = utils.computeMedian(v);
+      }
+      for (size_t k=0; k<groupingOffset; ++k) {
+        if (!refinedSelectVals[k][i]) {
+          waveLessCoherent[k][i] = fullEvent[k][i] - median;
+        } else {
+          waveLessCoherent[k][i] = fullEvent[k][i];
+        }
+      }
+    }
+  }
+
   return;
 }
 #endif

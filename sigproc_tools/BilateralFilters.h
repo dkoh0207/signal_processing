@@ -67,6 +67,13 @@ namespace sigproc_tools {
         const int angleMesh
       ) const;
 
+      void CircularAverage2D(
+        const Array2D<float>& direction,
+        Array2D<float>& output2D,
+        const unsigned int sx,
+        const unsigned int sy
+      ) const;
+
       void Gaussian(
         const Array2D<float>& input2D,
         const float sigma_x,
