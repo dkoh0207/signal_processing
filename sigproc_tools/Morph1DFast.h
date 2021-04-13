@@ -33,6 +33,7 @@ namespace sigproc_tools {
   */
 
   template <class T> using Waveform = std::vector<T>;
+  template <class T> using Array2D = std::vector<std::vector<T>>;
 
   class Morph1DFast{
     
@@ -56,6 +57,13 @@ namespace sigproc_tools {
       void getDilation(const Waveform<double>&,
                        const unsigned int,
                        Waveform<double>&) const;
+
+      // Column Major
+
+      void getDilation(const Array2D<float>&,
+                       const unsigned int,
+                       Array2D<float>&,
+                       const unsigned int) const;
 
 
       void getErosion(const Waveform<bool>&,
@@ -157,6 +165,13 @@ namespace sigproc_tools {
         const unsigned int structuringElement,
         Waveform<T>& gradientVec) const;
     
+      template <typename T> 
+      void getDilation(
+        const Array2D<T>& inputArray2D,
+        const unsigned int structuringElementy,
+        Array2D<T>& dilation2D,
+        const unsigned int columnNum) const;
+
   };
 }
 

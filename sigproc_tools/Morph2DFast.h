@@ -58,6 +58,11 @@ namespace sigproc_tools {
                         const unsigned int,
                         std::vector<std::vector<double> >&) const;
 
+        void getDilationFast(const std::vector<std::vector<float> >&,
+                            const unsigned int,
+                            const unsigned int,
+                            std::vector<std::vector<float> >&) const;
+
 
         void getErosion(const std::vector<std::vector<bool> >&,
                         const unsigned int,

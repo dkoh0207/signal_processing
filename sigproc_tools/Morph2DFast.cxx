@@ -80,6 +80,32 @@ void sigproc_tools::Morph2DFast::getDilation(
   return;
 }
 
+void sigproc_tools::Morph2DFast::getDilationFast(
+  const std::vector<std::vector<float> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<float> >& dilation2D) const
+{
+  size_t numChannels = waveform2D.size();
+  size_t nTicks = waveform2D.at(0).size();
+
+  assert(dilation2D.size() == numChannels);
+  assert(dilation2D.at(0).size() == nTicks);
+  assert(structuringElementx < numChannels);
+  assert(structuringElementy < nTicks);
+
+  sigproc_tools::Morph1DFast fast1D;
+
+  Array2D<float> buffer(numChannels, std::vector<float>(nTicks));
+  for (size_t i=0; i<numChannels; ++i) {
+    fast1D.getDilation(waveform2D[i], structuringElementy, buffer[i]);
+  }
+  for (size_t j=0; j<nTicks; ++j) {
+    fast1D.getDilation(buffer, structuringElementx, dilation2D, j);
+  }
+  return;
+}
+
 
 void sigproc_tools::Morph2DFast::getErosion(
   const std::vector<std::vector<bool> >& waveform2D,

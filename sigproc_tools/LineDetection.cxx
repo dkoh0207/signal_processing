@@ -243,7 +243,7 @@ sigproc_tools::Line sigproc_tools::LineDetection::getLine(
   const double pi = 3.141592653589793238462643383279502884;
   int theta_deg = (int) std::round(theta * 180.0 / (float) pi);
   // Ignore lines which are near parallel to tick axis (these don't cause problems)
-  if (std::abs(theta_deg) < angleWindow || std::abs(180 - theta_deg) < angleWindow) {
+  if ( ((int) std::abs(theta_deg)) < ((int) angleWindow) || ((int)std::abs(180 - theta_deg)) < ((int) angleWindow) ) {
     Line l = {-1, -1, 0};
     return l;
   }

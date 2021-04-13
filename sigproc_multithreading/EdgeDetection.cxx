@@ -1,0 +1,6 @@
+#ifndef __SIGPROC_MULTITHREADING_EDGEDETECTION_CXX__
+#define __SIGPROC_MULTITHREADING_EDGEDETECTION_CXX__
+
+#include "EdgeDetection.h"
+
+#endif
