@@ -26,6 +26,7 @@
 #include "MiscUtils.h"
 #include "Morph2DFast.h"
 #include "BilateralFilters.h"
+#include "DisjointSetForest.h"
 #include <queue>
 
 namespace sigproc_tools {
@@ -64,6 +65,25 @@ namespace sigproc_tools {
         Array2D<float>& sobelY,
         Array2D<float>& gradient,
         Array2D<float>& direction) const;
+
+      void SobelXFast(const Array2D<float>& input2D,
+                      Array2D<float>& gradient) const;
+
+      void SobelXFastRow(const std::vector<float>& inputRow,
+                         std::vector<float>& outputRow) const;
+                  
+      void SobelXFastCol(const std::vector<float>& inputRow,
+                         std::vector<float>& outputRow) const;
+
+      void SobelYFast(const Array2D<float>& input2D,
+                      Array2D<float>& gradient) const;
+
+      void SobelYFastRow(const std::vector<float>& inputRow,
+                         std::vector<float>& outputRow) const;
+                  
+      void SobelYFastCol(const std::vector<float>& inputRow,
+                         std::vector<float>& outputRow) const;
+
 
       void LSDGradX(
         const Array2D<float>& input2D,
@@ -120,6 +140,13 @@ namespace sigproc_tools {
         const std::vector<int>& weakEdgeRows,
         const std::vector<int>& weakEdgeCols,
         Array2D<bool>& output2D
+      ) const;
+
+      void HysteresisThresholdingFast(
+        const Array2D<float>& doneNMS2D,
+        float lowThreshold,
+        float highThreshold,
+        Array2D<bool>& outputROI
       ) const;
 
       void Canny(

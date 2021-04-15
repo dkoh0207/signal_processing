@@ -25,8 +25,10 @@
 #pragma link C++ class sigproc_tools::FindROI2D+;
 #pragma link C++ class sigproc_tools::BilateralFilters+;
 #pragma link C++ class sigproc_tools::EdgeDetection+;
+#pragma link C++ class sigproc_tools::DisjointSetForest+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 
 
 

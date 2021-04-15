@@ -15,6 +15,7 @@
 #define __SIGPROC_MULTITHREADING_EDGEDETECTION_H__
 
 #include "SigprocParallelDefs.h"
+#include "assert.h"
 
 namespace sigproc_multithreading {
 

@@ -117,6 +117,99 @@ void sigproc_tools::EdgeDetection::Sobel(
 }
 
 
+void sigproc_tools::EdgeDetection::SobelXFast(
+  const Array2D<float> &input2D,
+  Array2D<float> &gradient) const
+{
+  const size_t numChannels = input2D.size();
+  const size_t numTicks = input2D.at(0).size();
+
+  assert(gradient.size() == numChannels);
+  assert(gradient.at(0).size() == numTicks);
+
+  Array2D<float> buffer(numChannels, std::vector<float>(numTicks));
+
+  for (size_t i=0; i<numChannels; ++i) {
+    SobelXFastRow(input2D[i], buffer[i]);
+  }
+
+  for (size_t j=0; j<numTicks; ++j) {
+    std::vector<float> columnIn(numChannels);
+    std::vector<float> columnOut(numChannels);
+    for (size_t i=0; i<numChannels; ++i) {
+      columnIn[i] = buffer[i][j];
+    }
+    SobelXFastCol(columnIn, columnOut);
+    for (size_t i=0; i<numChannels; ++i) {
+      gradient[i][j] = columnOut[i];
+    }
+  }
+  return;
+}
+
+void sigproc_tools::EdgeDetection::SobelXFastRow(
+  const std::vector<float>& inputRow,
+  std::vector<float>& outputRow) const
+{
+  const size_t N = inputRow.size();
+  assert(outputRow.size() == N);
+
+  outputRow[0] = -inputRow[1];
+  outputRow[N-1] = inputRow[N-2];
+
+  for (size_t i=1; i<N-1; ++i) {
+    outputRow[i] = inputRow[i-1] - inputRow[i+1];
+  }
+  return;
+}
+
+void sigproc_tools::EdgeDetection::SobelXFastCol(
+  const std::vector<float>& inputRow,
+  std::vector<float>& outputRow) const
+{
+  const size_t N = inputRow.size();
+  assert(outputRow.size() == N);
+
+  outputRow[0] = 2.0 * inputRow[0] + inputRow[1];
+  outputRow[N-1] = 2.0 * inputRow[N-1] + inputRow[N-2];
+
+  for (size_t i=1; i<N-1; ++i) {
+    outputRow[i] = inputRow[i-1] + inputRow[i+1] + 2.0 * inputRow[i];
+  }
+  return;
+}
+
+void sigproc_tools::EdgeDetection::SobelYFast(
+  const Array2D<float> &input2D,
+  Array2D<float> &gradient) const
+{
+  const size_t numChannels = input2D.size();
+  const size_t numTicks = input2D.at(0).size();
+
+  assert(gradient.size() == numChannels);
+  assert(gradient.at(0).size() == numTicks);
+
+  Array2D<float> buffer(numChannels, std::vector<float>(numTicks));
+
+  for (size_t i=0; i<numChannels; ++i) {
+    SobelXFastCol(input2D[i], buffer[i]);
+  }
+
+  for (size_t j=0; j<numTicks; ++j) {
+    std::vector<float> columnIn(numChannels);
+    std::vector<float> columnOut(numChannels);
+    for (size_t i=0; i<numChannels; ++i) {
+      columnIn[i] = buffer[i][j];
+    }
+    SobelXFastRow(columnIn, columnOut);
+    for (size_t i=0; i<numChannels; ++i) {
+      gradient[i][j] = columnOut[i];
+    }
+  }
+  return;
+}
+
+
 void sigproc_tools::EdgeDetection::LSDGradX(
   const Array2D<float>& input2D,
   Array2D<float>& output2D) const
@@ -384,6 +477,85 @@ void sigproc_tools::EdgeDetection::DoubleThresholding(
         binary2D[i][j] = false;
       }
     }
+  }
+  return;
+}
+
+void sigproc_tools::EdgeDetection::HysteresisThresholdingFast(
+  const Array2D<float>& doneNMS2D,
+  float lowThreshold,
+  float highThreshold,
+  Array2D<bool>& outputROI) const
+{
+  const int numChannels = doneNMS2D.size();
+  const int numTicks = doneNMS2D.at(0).size();
+
+  const int forestSize = numChannels * numTicks;
+
+  DisjointSetForest forest(forestSize);
+
+  forest.MakeSet();
+  // std::cout << "size = " << forest.size << std::endl;
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      int flatIndex = i * numTicks + j;
+      if (doneNMS2D[i][j] >= highThreshold) forest.parent[flatIndex] = forestSize;
+    }
+  }
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      int flatIndex = i * numTicks + j;
+      int lowerBoundx = std::max(i-1, 0);
+      int upperBoundx = std::min(i+2, (int) numChannels);
+      int lowerBoundy = std::max(j-1, 0);
+      int upperBoundy = std::min(j+2, (int) numTicks);
+      // Process strong edges and its neighbors
+      if (doneNMS2D[i][j] >= highThreshold) {
+        if (forest.Find(flatIndex) == flatIndex) {
+          forest.parent[flatIndex] = forestSize;
+        }
+        // std::cout << "Strong Edge: " << i << ", " << j << "    " << "Parent: " << forest.parent[flatIndex] << std::endl;
+        for (int k=lowerBoundx; k<upperBoundx; ++k) {
+          for (int l=lowerBoundy; l<upperBoundy; ++l) {
+            int flatIndexNeigh = k * numTicks + l;
+            const float &grad = doneNMS2D[k][l];
+            if (grad >= lowThreshold) {
+              // std::cout << "    Neighbor Index: " << k << ", " << l << std::endl;
+              forest.Union(flatIndexNeigh, flatIndex);
+            }
+          }
+        }
+      }
+      // Process weak edges
+      else if ( (doneNMS2D[i][j] < highThreshold) && (doneNMS2D[i][j] >= lowThreshold)) {
+        // std::cout << "Weak Edge: " << i << ", " << j << std::endl;
+        for (int k=lowerBoundx; k<upperBoundx; ++k) {
+          for (int l=lowerBoundy; l<upperBoundy; ++l) {
+            int flatIndexNeigh = k * numTicks + l;
+            const float &grad = doneNMS2D[k][l];
+            // std::cout << "    Weak Edge: " << k << ", " << l << ", grad = " << grad << std::endl;
+            if (grad >= lowThreshold) {
+              forest.Union(flatIndexNeigh, flatIndex);
+            }
+          }
+        }
+      }
+      else continue;
+    }
+  }
+  // std::cout << "-----------------------------------------------" << std::endl;
+  for (int flatIdx=0; flatIdx<forestSize; ++flatIdx) {
+    int rep = forest.Find(flatIdx);
+    int row = (flatIdx / numTicks);
+    int col = (flatIdx % numTicks);
+    if ((rep != flatIdx) || (rep == forestSize)) {
+      // std::cout << "Edge: " << row << ", " << col << std::endl;
+      // std::cout << "Rep: " << (rep / numTicks) << ", " << (rep % numTicks) << std::endl;
+    }
+    if (rep == forestSize) outputROI[row][col] = true;
+    else outputROI[row][col] = false;
   }
   return;
 }
