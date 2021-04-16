@@ -1,0 +1,2 @@
+add_subdirectory(sigproc_tools)
+add_subdirectory(sigproc_multithreading)
