@@ -10,8 +10,8 @@ void sigproc_tools::Morph1DFast::getDilation(
   const unsigned int structuringElement,
   Waveform<bool>& dilationVec) const
 {
-  size_t N = inputWaveform.size();
-  size_t k = (size_t) structuringElement;
+  const size_t N = inputWaveform.size();
+  const size_t k = (size_t) structuringElement;
 
   assert(dilationVec.size() == N);
 
@@ -19,9 +19,9 @@ void sigproc_tools::Morph1DFast::getDilation(
     std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
     return;
   }
-  size_t windowSize = k/2;
-  size_t paddingSize = (k - (N % k)) % k;
-  size_t bufferSize = N + 2 * windowSize + paddingSize;
+  const size_t windowSize = k/2;
+  const size_t paddingSize = (k - (N % k)) % k;
+  const size_t bufferSize = N + 2 * windowSize + paddingSize;
   std::vector<bool> suffixArr(bufferSize);
   std::vector<bool> prefixArr(bufferSize);
 
@@ -36,40 +36,47 @@ void sigproc_tools::Morph1DFast::getDilation(
     prefixArr[i] = false;
   }
 
-  // Compute Prefix and Suffix Buffers
-  for (size_t i=0; i<N+paddingSize; ++i) {
-    if (i % k == 0) {
-      prefixArr[i+windowSize] = inputWaveform[i];
-    } 
-    else if ((i % k == 0) && (i < N)) {
-      prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] || inputWaveform[i]);
-    }
-    else {
-      continue;
-    }
-  }
+  // g_x 
 
-  for (size_t i=N+paddingSize; i>0; --i) {
+  for (size_t i=0; i<N; ++i) {
     if (i > N) {
       // Compensate for divisibility padding (must be -inf)
       continue;
     }
     else if (i % k == 0) {
-      suffixArr[i+windowSize-1] = inputWaveform[i-1];
+      suffixArr[i+windowSize] = inputWaveform[i];
     } 
     else {
-      suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] || inputWaveform[i-1]);
+      suffixArr[i+windowSize] = (suffixArr[i-1+windowSize] || inputWaveform[i]);
+    }
+  }
+
+  // Compute Prefix and Suffix Buffers
+  int kint = (int) k;
+
+  // h_x
+
+  for (int i=N-1; i>-1; --i) {
+    if ((i+1) % kint == 0) {
+      prefixArr[i+windowSize] = inputWaveform[i];
+    } 
+    else if ((i+1) % kint != 0) {
+      prefixArr[i+windowSize] = (prefixArr[i+1+windowSize] || inputWaveform[i]);
+    }
+    else {
+      continue;
     }
   }
 
   int prefixIndex = 0;
   int suffixIndex = 0;
 
-  for (size_t i=windowSize; i<N+windowSize; ++i) {
-    prefixIndex = i + windowSize;
-    suffixIndex = i - windowSize;
-    dilationVec[i-windowSize] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
+  for (size_t i=0; i<N; ++i) {
+    suffixIndex = i + 2 * windowSize;
+    prefixIndex = i;
+    dilationVec[i] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
   }
+
   return;
 }
 
@@ -131,40 +138,44 @@ void sigproc_tools::Morph1DFast::getDilation(
     prefixArr[i] = std::numeric_limits<T>::min();
   }
 
-  // Compute Prefix and Suffix Buffers
-  for (size_t i=0; i<N+paddingSize; ++i) {
-    if (i % k == 0) {
-      prefixArr[i+windowSize] = inputWaveform[i];
-    } 
-    else if ((i % k == 0) && (i < N)) {
-      prefixArr[i+windowSize] = std::max(prefixArr[i+windowSize-1], inputWaveform[i]);
-    }
-    else {
-      continue;
-    }
+  // g_x 
+
+  for (size_t i=0; i<N; ++i) {
+
+      if (i > N) {
+          // Compensate for divisibility padding (must be -inf)
+          continue;
+      }
+      else if (i % k == 0) {
+          suffixArr[i+windowSize] = inputWaveform[i];
+      } 
+      else {
+          suffixArr[i+windowSize] = std::max(suffixArr[i-1+windowSize], inputWaveform[i]);
+      }
   }
 
-  for (size_t i=N+paddingSize; i>0; --i) {
-    if (i > N) {
-      // Compensate for divisibility padding (must be -inf)
-      continue;
-    }
-    else if (i % k == 0) {
-      suffixArr[i+windowSize-1] = inputWaveform[i-1];
-    } 
-    else {
-      suffixArr[i+windowSize-1] = std::max(suffixArr[i+windowSize], inputWaveform[i-1]);
-    }
+  int kint = (int) k;
+  // h_x
+
+  for (int i=N-1; i>-1; --i) {
+      if ((i+1) % kint == 0) {
+          prefixArr[i+windowSize] = inputWaveform[i];
+      } 
+      else if ((i+1) % kint != 0) {
+          prefixArr[i+windowSize] = std::max(prefixArr[i+1+windowSize], inputWaveform[i]);
+      }
+      else {
+          continue;
+      }
   }
 
   int prefixIndex = 0;
   int suffixIndex = 0;
 
-  for (size_t i=windowSize; i<N+windowSize; ++i) {
-    prefixIndex = i + windowSize;
-    suffixIndex = i - windowSize;
-    dilationVec[i-windowSize] = std::max(prefixArr[prefixIndex],
-      suffixArr[suffixIndex]);
+  for (size_t i=0; i<N; ++i) {
+      suffixIndex = i + 2 * windowSize;
+      prefixIndex = i;
+      dilationVec[i] = std::max(prefixArr[prefixIndex], suffixArr[suffixIndex]);
   }
   return;
 }
@@ -199,39 +210,45 @@ void sigproc_tools::Morph1DFast::getErosion(
     prefixArr[i] = true;
   }
 
-  // Compute Prefix and Suffix Buffers
-  for (size_t i=0; i<N+paddingSize; ++i) {
-    if (i % k == 0) {
-      prefixArr[i+windowSize] = inputWaveform[i];
-    }
-    else if ((i % k == 0) && (i < N)) {
-      prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] && inputWaveform[i]);
-    }
-    else {
-      continue;
-    }
-  }
+  // g_x 
 
-  for (size_t i=N+paddingSize; i!=0; --i) {
+  for (size_t i=0; i<N; ++i) {
     if (i > N) {
       // Compensate for divisibility padding (must be -inf)
       continue;
     }
     else if (i % k == 0) {
-      suffixArr[i+windowSize-1] = inputWaveform[i-1];
+      suffixArr[i+windowSize] = inputWaveform[i];
     } 
     else {
-      suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] && inputWaveform[i-1]);
+      suffixArr[i+windowSize] = (suffixArr[i-1+windowSize] && inputWaveform[i]);
+    }
+  }
+
+  // Compute Prefix and Suffix Buffers
+  int kint = (int) k;
+
+  // h_x
+
+  for (int i=N-1; i>-1; --i) {
+    if ((i+1) % kint == 0) {
+      prefixArr[i+windowSize] = inputWaveform[i];
+    } 
+    else if ((i+1) % kint != 0) {
+      prefixArr[i+windowSize] = (prefixArr[i+1+windowSize] && inputWaveform[i]);
+    }
+    else {
+      continue;
     }
   }
 
   int prefixIndex = 0;
   int suffixIndex = 0;
 
-  for (size_t i=windowSize; i<N+windowSize; ++i) {
-    prefixIndex = i + windowSize;
-    suffixIndex = i - windowSize;
-    erosionVec[i-windowSize] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
+  for (size_t i=0; i<N; ++i) {
+    suffixIndex = i + 2 * windowSize;
+    prefixIndex = i;
+    erosionVec[i] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
   }
   return;
 }
@@ -293,40 +310,44 @@ void sigproc_tools::Morph1DFast::getErosion(
     prefixArr[i] = std::numeric_limits<T>::max();
   }
 
-  // Compute Prefix and Suffix Buffers
-  for (size_t i=0; i<N+paddingSize; ++i) {
-    if (i % k == 0) {
-      prefixArr[i+windowSize] = inputWaveform[i];
-    }
-    else if ((i % k == 0) && (i < N)) {
-      prefixArr[i+windowSize] = std::min(prefixArr[i+windowSize-1], inputWaveform[i]);
-    }
-    else {
-      continue;
-    }
+  // g_x 
+
+  for (size_t i=0; i<N; ++i) {
+
+      if (i > N) {
+          // Compensate for divisibility padding (must be -inf)
+          continue;
+      }
+      else if (i % k == 0) {
+          suffixArr[i+windowSize] = inputWaveform[i];
+      } 
+      else {
+          suffixArr[i+windowSize] = std::min(suffixArr[i-1+windowSize], inputWaveform[i]);
+      }
   }
 
-  for (size_t i=N+paddingSize; i!=0; --i) {
-    if (i > N) {
-      // Compensate for divisibility padding (must be -inf)
-      continue;
-    }
-    else if (i % k == 0) {
-      suffixArr[i+windowSize-1] = inputWaveform[i-1];
-    } 
-    else {
-      suffixArr[i+windowSize-1] = std::min(suffixArr[i+windowSize], inputWaveform[i-1]);
-    }
+  int kint = (int) k;
+  // h_x
+
+  for (int i=N-1; i>-1; --i) {
+      if ((i+1) % kint == 0) {
+          prefixArr[i+windowSize] = inputWaveform[i];
+      } 
+      else if ((i+1) % kint != 0) {
+          prefixArr[i+windowSize] = std::min(prefixArr[i+1+windowSize], inputWaveform[i]);
+      }
+      else {
+          continue;
+      }
   }
 
   int prefixIndex = 0;
   int suffixIndex = 0;
 
-  for (size_t i=windowSize; i<N+windowSize; ++i) {
-    prefixIndex = i + windowSize;
-    suffixIndex = i - windowSize;
-    erosionVec[i-windowSize] = std::min(prefixArr[prefixIndex],
-      suffixArr[suffixIndex]);
+  for (size_t i=0; i<N; ++i) {
+      suffixIndex = i + 2 * windowSize;
+      prefixIndex = i;
+      erosionVec[i] = std::min(prefixArr[prefixIndex], suffixArr[suffixIndex]);
   }
   return;
 }
