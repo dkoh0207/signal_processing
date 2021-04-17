@@ -5,705 +5,736 @@
 
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentVector<bool>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<bool>& dilationVec) const
+    const VectorBool& inputWaveform,
+    const unsigned int fStructuringElement,
+    VectorBool& dilationVec) const
 {
-  const size_t N = inputVector.size();
-  const size_t k = (size_t) structuringElement;
+     /*
+      Module for 1D Dilation Filter - special handling for bool arrays
 
-  assert(dilationVec.size() == N);
+      INPUTS:
+      - waveform: 1D Pedestal Corrected Waveform.
+      - fStructuringElement: Size of moving window
   
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<bool> suffixArr(bufferSize);
-  ConcurrentVector<bool> prefixArr(bufferSize);
-
-  // Padding Operations on Buffers
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = false;
-    prefixArr[i] = false;
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = false;
-    prefixArr[i] = false;
-  }
-
-  // Compute Prefix and Suffix Buffers
-  tbb::parallel_invoke(
-    [&prefixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputVector[i];
-        } else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] || inputVector[i]);
-        } else {
-          continue;
-        }
-      }
-    },
-    [&suffixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputVector[i-1];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] || inputVector[i-1]);
-        }
-      }
-    }
-  );
-
-  size_t prefixIndex = 0;
-  size_t suffixIndex = 0;
-
-  tbb::parallel_for( (size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &dilationVec, 
-     &prefixArr, &suffixArr, &windowSize](size_t i) 
+      MODIFIES:
+      - dilationVec: Returned Dilation Vector.
+    */
+    if (dilationVec.size() != inputWaveform.size())
     {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      dilationVec[i-windowSize] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
     }
-  );
-  return;
-}
 
-void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentArray2D<bool>& inputArray2D,
-  const unsigned int structuringElementx,
-  ConcurrentArray2D<bool>& dilation2D,
-  const unsigned int columnNum) const
-{
-  const size_t N = inputArray2D.size();
-  const size_t k = (size_t) structuringElementx;
-  assert(columnNum < inputArray2D.at(0).size());
-  assert(dilation2D.size() == N);
+    const size_t N = inputWaveform.size();
 
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<bool> suffixArr(bufferSize);
-  ConcurrentVector<bool> prefixArr(bufferSize);
-
-  // Padding Operations on Buffers
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = false;
-    prefixArr[i] = false;
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = false;
-    prefixArr[i] = false;
-  }
-
-  // Compute Prefix and Suffix Buffers
-  tbb::parallel_invoke(
-    [&prefixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputArray2D[i][columnNum];
-        } else {
-          prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] || inputArray2D[i][columnNum]);
-        }
-      }
-    },
-    [&suffixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputArray2D[i-1][columnNum];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] || inputArray2D[i-1][columnNum]);
-        }
-      }
-    }
-  );
-
-  size_t prefixIndex = 0;
-  size_t suffixIndex = 0;
-
-  tbb::parallel_for( (size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &dilation2D, 
-     &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i) 
+    if (N <= fStructuringElement) 
     {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      dilation2D[i-windowSize][columnNum] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElement << std::endl;
+        return;
     }
-  );
-  return;
-}
+    const size_t windowSize  = fStructuringElement/2;
+    const size_t paddingSize = (fStructuringElement - 
+                               (N % fStructuringElement)) % fStructuringElement;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentVector<short>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<short>& dilationVec) const
-{
-  getDilation<short>(inputVector, structuringElement, dilationVec);
-  return;
-}
+    VectorBool suffixArr(bufferSize);
+    VectorBool prefixArr(bufferSize);
 
-void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentVector<float>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<float>& dilationVec) const
-{
-  getDilation<float>(inputVector, structuringElement, dilationVec);
-  return;
-}
+    // Padding Operations on Buffers
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = false;
+        prefixArr[i] = false;
+    }
 
-void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentVector<double>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<double>& dilationVec) const
-{
-  getDilation<double>(inputVector, structuringElement, dilationVec);
-  return;
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = false;
+        prefixArr[i] = false;
+    }
+
+    // Compute Prefix (h_x) and Suffix (g_x)
+
+    int kint = (int) fStructuringElement;
+
+    tbb::parallel_invoke(
+        [&prefixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (int i=N-1; i>-1; --i) {
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = (prefixArr[i+1+windowSize] || 
+                                               inputWaveform[i]);
+                }
+                else continue;
+            }
+        },
+        [&suffixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else {
+                    suffixArr[i+windowSize] = (suffixArr[i-1+windowSize] || 
+                                               inputWaveform[i]);
+                }
+            }
+        }
+    );
+
+    int prefixIndex = 0;
+    int suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &dilationVec, 
+        &prefixArr, &suffixArr, &windowSize](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            dilationVec[i] = (prefixArr[prefixIndex] || suffixArr[suffixIndex]);
+        });
+
+    return;
 }
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentVector<T>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<T>& dilationVec) const
+    const Vector<T>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<T>& dilationVec) const
 {
-  const size_t N = inputVector.size();
-  assert(dilationVec.size() == N);
-  const size_t k = (size_t) structuringElement;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<T> suffixArr(bufferSize);
-  ConcurrentVector<T> prefixArr(bufferSize);
+     /*
+      Module for 1D Dilation Filter - special handling for bool arrays
 
-  // Padding Operations on Buffers
-  // This could be done with parallel_for and parallel_invoke, yet as they run
-  // through not many entries anyway it may not be worth it. 
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::min();
-    prefixArr[i] = std::numeric_limits<T>::min();
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::min();
-    prefixArr[i] = std::numeric_limits<T>::min();
-  }
-
-  // Prefix computation is independent from suffix computation,
-  // so we use tbb::parallel_invoke. 
-  // However, each prefix/suffix computation loop must respect the order of
-  // element, so we cannot use tbb::parallel_for here. 
-
-  tbb::parallel_invoke(
-    [&suffixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputVector[i-1];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = std::max(suffixArr[i+windowSize], 
-                                               inputVector[i-1]);
-        }
-      }
-    },
-    [&prefixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputVector[i];
-        }
-        else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = std::max(prefixArr[i+windowSize-1], 
-                                             inputVector[i]);
-        }
-        else {
-          continue;
-        }
-      }
-    }
-  );
-
-  // Compute Prefix and Suffix Buffers
-
-  size_t prefixIndex = 0;
-  size_t suffixIndex = 0;
-
-  tbb::parallel_for((size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &dilationVec, 
-     &prefixArr, &suffixArr, &windowSize](size_t i) {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      dilationVec[i-windowSize] = std::max(prefixArr[prefixIndex],
-        suffixArr[suffixIndex]);
-    }
-  );
-  return;
-}
-
-
-
-
-
-
-void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentVector<bool>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<bool>& erosionVec) const
-{
-  const size_t N = inputVector.size();
-  assert(erosionVec.size() == N);
-  const size_t k = (size_t) structuringElement;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<bool> suffixArr(bufferSize);
-  ConcurrentVector<bool> prefixArr(bufferSize);
-
-  // Padding Operations on Buffers
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = true;
-    prefixArr[i] = true;
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = true;
-    prefixArr[i] = true;
-  }
-
-  // Compute Prefix and Suffix Buffers
-  tbb::parallel_invoke(
-    [&prefixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputVector[i];
-        } 
-        else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] && inputVector[i]);
-        }
-        else {
-          continue;
-        }
-      }
-    },
-    [&suffixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputVector[i-1];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] && inputVector[i-1]);
-        }
-      }
-    }
-  );
-
-  int prefixIndex = 0;
-  int suffixIndex = 0;
-
-  tbb::parallel_for( (size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &erosionVec, 
-     &prefixArr, &suffixArr, &windowSize](size_t i) 
+      INPUTS:
+      - waveform: 1D Pedestal Corrected Waveform.
+      - fStructuringElement: Size of moving window
+  
+      MODIFIES:
+      - dilationVec: Returned Dilation Vector.
+    */
+    if (dilationVec.size() != inputWaveform.size())
     {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      erosionVec[i-windowSize] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
     }
-  );
-  return;
-}
 
-void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentArray2D<bool>& inputArray2D,
-  const unsigned int structuringElementx,
-  ConcurrentArray2D<bool>& erosion2D,
-  const unsigned int columnNum) const
-{
-  const size_t N = inputArray2D.size();
-  assert(erosion2D.size() == N);
-  assert(columnNum < erosion2D.at(0).size());
-  const size_t k = (size_t) structuringElementx;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<bool> suffixArr(bufferSize);
-  ConcurrentVector<bool> prefixArr(bufferSize);
+    const size_t N = inputWaveform.size();
 
-  // Padding Operations on Buffers
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = true;
-    prefixArr[i] = true;
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = true;
-    prefixArr[i] = true;
-  }
-
-  // Compute Prefix and Suffix Buffers
-  tbb::parallel_invoke(
-    [&prefixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputArray2D[i][columnNum];
-        }
-        else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = (prefixArr[i+windowSize-1] && inputArray2D[i][columnNum]);
-        }
-        else{
-          continue;
-        }
-      }
-    },
-    [&suffixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputArray2D[i-1][columnNum];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = (suffixArr[i+windowSize] && inputArray2D[i-1][columnNum]);
-        }
-      }
-    }
-  );
-
-  int prefixIndex = 0;
-  int suffixIndex = 0;
-
-  tbb::parallel_for( (size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &erosion2D, 
-     &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i) 
+    if (N <= fStructuringElement) 
     {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      erosion2D[i-windowSize][columnNum] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElement << std::endl;
+        return;
     }
-  );
-  return;
+    const size_t windowSize  = fStructuringElement/2;
+    const size_t paddingSize = (fStructuringElement - 
+                               (N % fStructuringElement)) % fStructuringElement;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+
+    Vector<T> suffixArr(bufferSize);
+    Vector<T> prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::min();
+        prefixArr[i] = std::numeric_limits<T>::min();
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::min();
+        prefixArr[i] = std::numeric_limits<T>::min();
+    }
+
+
+    // Compute Prefix (h_x) and Suffix (g_x)
+
+    int kint = (int) fStructuringElement;
+
+    tbb::parallel_invoke(
+        [&prefixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (int i=N-1; i>-1; --i) {
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = (prefixArr[i+1+windowSize] || 
+                                               inputWaveform[i]);
+                }
+                else continue;
+            }
+        },
+        [&suffixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else {
+                    suffixArr[i+windowSize] = std::max(
+                        suffixArr[i-1+windowSize], inputWaveform[i]);
+                }
+            }
+        }
+    );
+
+    int prefixIndex = 0;
+    int suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &dilationVec, 
+        &prefixArr, &suffixArr, &windowSize](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            dilationVec[i] = std::max(prefixArr[prefixIndex], 
+                                      suffixArr[suffixIndex]);
+        });
+
+    return;
 }
 
-
-void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentVector<short>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<short>& erosionVec) const
+void sigproc_multithreading::Morph1DFast::getDilation(
+    const Vector<short>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<short>& dilationVec) const
 {
-  getErosion<short>(inputVector, structuringElement, erosionVec);
-  return;
+    getDilation<short>(inputWaveform, fStructuringElement, dilationVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getDilation(
+    const Vector<float>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<float>& dilationVec) const
+{
+    getDilation<float>(inputWaveform, fStructuringElement, dilationVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getDilation(
+    const Vector<double>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<double>& dilationVec) const
+{
+    getDilation<double>(inputWaveform, fStructuringElement, dilationVec);
+    return;
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentVector<float>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<float>& erosionVec) const
+    const VectorBool& inputWaveform,
+    const unsigned int fStructuringElement,
+    VectorBool& erosionVec) const
 {
-  getErosion<float>(inputVector, structuringElement, erosionVec);
-  return;
-}
+     /*
+      Module for 1D Erosion Filter - special handling for bool arrays
 
-void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentVector<double>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<double>& erosionVec) const
-{
-  getErosion<double>(inputVector, structuringElement, erosionVec);
-  return;
+      INPUTS:
+      - waveform: 1D Pedestal Corrected Waveform.
+      - fStructuringElement: Size of moving window
+  
+      MODIFIES:
+      - erosionVec: Returned Erosion Vector.
+    */
+    if (erosionVec.size() != inputWaveform.size())
+    {
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
+    }
+
+    const size_t N = inputWaveform.size();
+
+    if (N <= fStructuringElement) 
+    {
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElement << std::endl;
+        return;
+    }
+    const size_t windowSize  = fStructuringElement/2;
+    const size_t paddingSize = (fStructuringElement - 
+                               (N % fStructuringElement)) % fStructuringElement;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+
+    VectorBool suffixArr(bufferSize);
+    VectorBool prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = true;
+        prefixArr[i] = true;
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = true;
+        prefixArr[i] = true;
+    }
+
+    // Compute Prefix (h_x) and Suffix (g_x)
+
+    int kint = (int) fStructuringElement;
+
+    tbb::parallel_invoke(
+        [&prefixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (int i=N-1; i>-1; --i) {
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = (prefixArr[i+1+windowSize] && 
+                                               inputWaveform[i]);
+                }
+                else continue;
+            }
+        },
+        [&suffixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else {
+                    suffixArr[i+windowSize] = (suffixArr[i-1+windowSize] && 
+                                               inputWaveform[i]);
+                }
+            }
+        }
+    );
+
+    int prefixIndex = 0;
+    int suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &erosionVec, 
+        &prefixArr, &suffixArr, &windowSize](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            erosionVec[i] = (prefixArr[prefixIndex] && suffixArr[suffixIndex]);
+        });
+
+    return;
 }
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentVector<T>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<T>& erosionVec) const
+    const Vector<T>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<T>& erosionVec) const
 {
-  const size_t N = inputVector.size();
-  assert(erosionVec.size() == N);
-  const size_t k = (size_t) structuringElement;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
+    if (erosionVec.size() != inputWaveform.size())
+    {
+        std::cout << "Erosion1D: output erosion vector not same size as "
+            "input waveform array" << std::endl;
+        return;
+    }
+
+    const size_t N = inputWaveform.size();
+
+    if (N <= fStructuringElement) 
+    {
+        std::cout << "Erosion1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElement << std::endl;
+        return;
+    }
+
+    const size_t windowSize  = fStructuringElement/2;
+    const size_t paddingSize = (fStructuringElement - 
+                               (N % fStructuringElement)) % fStructuringElement;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+
+    Vector<T> suffixArr(bufferSize);
+    Vector<T> prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::max();
+        prefixArr[i] = std::numeric_limits<T>::max();
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::max();
+        prefixArr[i] = std::numeric_limits<T>::max();
+    }
+
+    int kint = (int) fStructuringElement;
+    // Compute Prefix and Suffix Buffers
+    tbb::parallel_invoke(
+        [&prefixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (int i=N-1; i>-1; --i) {
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = std::min(
+                        prefixArr[i+1+windowSize], inputWaveform[i]);
+                }
+                else continue;
+            }
+        },
+        [&suffixArr, &inputWaveform, &kint, &windowSize, &N]()
+        {
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputWaveform[i];
+                } 
+                else {
+                    suffixArr[i+windowSize] = std::min(
+                        suffixArr[i-1+windowSize], inputWaveform[i]);
+                }
+            }
+        }
+    );
+
+    int prefixIndex = 0;
+    int suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &erosionVec, 
+        &prefixArr, &suffixArr, &windowSize](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            erosionVec[i] = std::min(prefixArr[prefixIndex], 
+                                     suffixArr[suffixIndex]);
+        });
+    
     return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<T> suffixArr(bufferSize);
-  ConcurrentVector<T> prefixArr(bufferSize);
-
-  // Padding Operations on Buffers
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::max();
-    prefixArr[i] = std::numeric_limits<T>::max();
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::max();
-    prefixArr[i] = std::numeric_limits<T>::max();
-  }
-
-  tbb::parallel_invoke(
-    [&suffixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputVector[i-1];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = std::min(suffixArr[i+windowSize], 
-                                               inputVector[i-1]);
-        }
-      }
-    },
-    [&prefixArr, &inputVector, &windowSize, &paddingSize, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputVector[i];
-        }
-        else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = std::min(prefixArr[i+windowSize-1], 
-                                             inputVector[i]);
-        }
-        else {
-          continue;
-        }
-      }
-    }
-  );
-
-  int prefixIndex = 0;
-  int suffixIndex = 0;
-
-  tbb::parallel_for((size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &erosionVec, 
-     &prefixArr, &suffixArr, &windowSize](size_t i) {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      erosionVec[i-windowSize] = std::min(prefixArr[prefixIndex],
-        suffixArr[suffixIndex]);
-    }
-  );
-  return;
 }
 
+void sigproc_multithreading::Morph1DFast::getErosion(
+    const Vector<short>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<short>& dilationVec) const
+{
+    getErosion<short>(inputWaveform, fStructuringElement, dilationVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getErosion(
+    const Vector<float>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<float>& dilationVec) const
+{
+    getErosion<float>(inputWaveform, fStructuringElement, dilationVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getErosion(
+    const Vector<double>& inputWaveform,
+    const unsigned int fStructuringElement,
+    Vector<double>& dilationVec) const
+{
+    getErosion<double>(inputWaveform, fStructuringElement, dilationVec);
+    return;
+}
 
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const ConcurrentVector<short>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<short>& gradientVec) const
+  const Vector<short>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<short>& gradientVec) const
 {
-  getGradient<short>(inputVector, structuringElement, gradientVec);
+    getGradient<short>(inputVector, fStructuringElement, gradientVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getGradient(
+  const Vector<float>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<float>& gradientVec) const
+{
+  getGradient<float>(inputVector, fStructuringElement, gradientVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const ConcurrentVector<float>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<float>& gradientVec) const
+  const Vector<double>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<double>& gradientVec) const
 {
-  getGradient<float>(inputVector, structuringElement, gradientVec);
-  return;
-}
-
-void sigproc_multithreading::Morph1DFast::getGradient(
-  const ConcurrentVector<double>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<double>& gradientVec) const
-{
-  getGradient<double>(inputVector, structuringElement, gradientVec);
+  getGradient<double>(inputVector, fStructuringElement, gradientVec);
   return;
 }
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const ConcurrentVector<T>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<T>& gradientVec) const
+  const Vector<T>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<T>& gradientVec) const
 {
-  size_t N = inputVector.size();
-  assert(gradientVec.size() == N);
+    size_t N = inputVector.size();
+    assert(gradientVec.size() == N);
 
-  ConcurrentVector<T> erosionVec(N);
-  ConcurrentVector<T> dilationVec(N);
+    Vector<T> erosionVec(N);
+    Vector<T> dilationVec(N);
 
-  tbb::parallel_invoke(
-    [&]() {
-      getErosion<T>(inputVector, structuringElement, erosionVec);
-    },
-    [&]() {
-      getDilation<T>(inputVector, structuringElement, dilationVec);
+    tbb::parallel_invoke(
+        [this, &inputVector, &fStructuringElement, &erosionVec]() 
+        {
+            getErosion<T>(inputVector, fStructuringElement, erosionVec);
+        },
+        [this, &inputVector, &fStructuringElement, &dilationVec]() 
+        {
+            getDilation<T>(inputVector, fStructuringElement, dilationVec);
+        }
+    );
+    // Can be made faster by SIMD Vectorization with PSTL
+    for (size_t i=0; i<N; ++i) {
+        gradientVec[i] = dilationVec[i] - erosionVec[i];
     }
-  );
-
-
-  // Can be made faster by SIMD Vectorization with PSTL
-  for (size_t i=0; i<N; ++i) {
-    gradientVec[i] = dilationVec[i] - erosionVec[i];
-  }
-  return;
+    return;
 }
-
 
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const ConcurrentVector<bool>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<bool>& openingVec) const
+  const Vector<bool>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<bool>& openingVec) const
+{
+    size_t N = inputVector.size();
+    assert(openingVec.size() == N);
+    Vector<bool> tempVec(N);
+    getErosion(inputVector, fStructuringElement, tempVec);
+    getDilation(tempVec, fStructuringElement, openingVec);
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getOpening(
+  const Vector<short>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<short>& openingVec) const
+{
+  getOpening<short>(inputVector, fStructuringElement, openingVec);
+  return;
+}
+
+void sigproc_multithreading::Morph1DFast::getOpening(
+  const Vector<float>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<float>& openingVec) const
+{
+  getOpening<float>(inputVector, fStructuringElement, openingVec);
+  return;
+}
+
+void sigproc_multithreading::Morph1DFast::getOpening(
+  const Vector<double>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<double>& openingVec) const
+{
+  getOpening<double>(inputVector, fStructuringElement, openingVec);
+  return;
+}
+
+template <typename T>
+void sigproc_multithreading::Morph1DFast::getOpening(
+  const Vector<T>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<T>& openingVec) const
 {
   size_t N = inputVector.size();
   assert(openingVec.size() == N);
-  ConcurrentVector<bool> tempVec(N);
-  getErosion(inputVector, structuringElement, tempVec);
-  getDilation(tempVec, structuringElement, openingVec);
-  return;
-}
-
-void sigproc_multithreading::Morph1DFast::getOpening(
-  const ConcurrentVector<short>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<short>& openingVec) const
-{
-  getOpening<short>(inputVector, structuringElement, openingVec);
-  return;
-}
-
-void sigproc_multithreading::Morph1DFast::getOpening(
-  const ConcurrentVector<float>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<float>& openingVec) const
-{
-  getOpening<float>(inputVector, structuringElement, openingVec);
-  return;
-}
-
-void sigproc_multithreading::Morph1DFast::getOpening(
-  const ConcurrentVector<double>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<double>& openingVec) const
-{
-  getOpening<double>(inputVector, structuringElement, openingVec);
-  return;
-}
-
-template <typename T>
-void sigproc_multithreading::Morph1DFast::getOpening(
-  const ConcurrentVector<T>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<T>& openingVec) const
-{
-  size_t N = inputVector.size();
-  assert(openingVec.size() == N);
-  ConcurrentVector<T> tempVec(N);
-  getErosion<T>(inputVector, structuringElement, tempVec);
-  getDilation<T>(tempVec, structuringElement, openingVec);
+  Vector<T> tempVec(N);
+  getErosion<T>(inputVector, fStructuringElement, tempVec);
+  getDilation<T>(tempVec, fStructuringElement, openingVec);
   return;
 }
 
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const ConcurrentVector<bool>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<bool>& closingVec) const
+  const Vector<bool>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<bool>& closingVec) const
 {
   size_t N = inputVector.size();
   assert(closingVec.size() == N);
-  ConcurrentVector<bool> tempVec(N);
-  getDilation(inputVector, structuringElement, tempVec);
-  getErosion(tempVec, structuringElement, closingVec);
+  Vector<bool> tempVec(N);
+  getDilation(inputVector, fStructuringElement, tempVec);
+  getErosion(tempVec, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const ConcurrentVector<short>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<short>& closingVec) const
+  const Vector<short>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<short>& closingVec) const
 {
-  getClosing<short>(inputVector, structuringElement, closingVec);
+  getClosing<short>(inputVector, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const ConcurrentVector<float>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<float>& closingVec) const
+  const Vector<float>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<float>& closingVec) const
 {
-  getClosing<float>(inputVector, structuringElement, closingVec);
+  getClosing<float>(inputVector, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const ConcurrentVector<double>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<double>& closingVec) const
+  const Vector<double>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<double>& closingVec) const
 {
-  getClosing<double>(inputVector, structuringElement, closingVec);
+  getClosing<double>(inputVector, fStructuringElement, closingVec);
   return;
 }
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const ConcurrentVector<T>& inputVector,
-  const unsigned int structuringElement,
-  ConcurrentVector<T>& closingVec) const
+  const Vector<T>& inputVector,
+  const unsigned int fStructuringElement,
+  Vector<T>& closingVec) const
 {
   size_t N = inputVector.size();
   assert(closingVec.size() == N);
-  ConcurrentVector<T> tempVec(N);
-  getDilation<T>(inputVector, structuringElement, tempVec);
-  getErosion<T>(tempVec, structuringElement, closingVec);
+  Vector<T> tempVec(N);
+  getDilation<T>(inputVector, fStructuringElement, tempVec);
+  getErosion<T>(tempVec, fStructuringElement, closingVec);
   return;
 }
 
-
-// Column Major Operations
-// We implement column major versions of dilation and erosion, as 
-// N-dimensional morphological filters are all derivable from ND 
-// dilation and ND erosion filters.
+template<>
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentArray2D<short>& inputArray2D,
+  const Array2D<bool>& inputArray2D,
+  const unsigned int fStructuringElementx,
+  Array2D<bool>& dilation2D,
+  const int columnNum) const
+{
+    if ((dilation2D.size() != inputArray2D.size()) || 
+        (dilation2D.at(0).size() != inputArray2D.at(0).size()))
+    {
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
+    }
+
+    const size_t N = inputArray2D.size();
+
+    if (N <= fStructuringElementx) 
+    {
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElementx << std::endl;
+        return;
+    }
+
+    const size_t windowSize  = fStructuringElementx/2;
+    const size_t paddingSize = (fStructuringElementx - 
+                               (N % fStructuringElementx)) % fStructuringElementx;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+    Vector<bool> suffixArr(bufferSize);
+    Vector<bool> prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    // This could be done with parallel_for and parallel_invoke, yet as they run
+    // through not many entries anyway it may not be worth it. 
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = false;
+        prefixArr[i] = false;
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = false;
+        prefixArr[i] = false;
+    }
+
+    // Prefix computation is independent from suffix computation,
+    // so we use tbb::parallel_invoke. 
+    // However, each prefix/suffix computation loop must respect the order of
+    // element, so we cannot use tbb::parallel_for here. 
+
+    int kint = (int) fStructuringElementx;
+
+    tbb::parallel_invoke(
+        [&columnNum, &windowSize, &inputArray2D, &N, &suffixArr, &kint]() {
+
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else {
+                    suffixArr[i+windowSize] = suffixArr[i-1+windowSize] || 
+                                              inputArray2D[i][columnNum];
+                }
+            }
+        },
+        [&columnNum, &windowSize, &inputArray2D, &N, &prefixArr, &kint]() {
+
+            for (int i=N-1; i>-1; --i) {
+
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = prefixArr[i+1+windowSize] ||
+                                              inputArray2D[i][columnNum];
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+    );
+
+    // Compute Prefix and Suffix Buffers
+
+    size_t prefixIndex = 0;
+    size_t suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &dilation2D, 
+        &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            dilation2D[i][columnNum] = prefixArr[prefixIndex] || 
+                                       suffixArr[suffixIndex];
+        });
+
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getDilation(
+  const Array2D<short>& inputArray2D,
   const unsigned int structuringElementx,
-  ConcurrentArray2D<short>& dilation2D,
+  Array2D<short>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<short>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -711,9 +742,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentArray2D<float>& inputArray2D,
+  const Array2D<float>& inputArray2D,
   const unsigned int structuringElementx,
-  ConcurrentArray2D<float>& dilation2D,
+  Array2D<float>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<float>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -721,9 +752,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentArray2D<double>& inputArray2D,
+  const Array2D<double>& inputArray2D,
   const unsigned int structuringElementx,
-  ConcurrentArray2D<double>& dilation2D,
+  Array2D<double>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<double>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -732,202 +763,353 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const ConcurrentArray2D<T>& inputArray2D,
-  const unsigned int structuringElementx,
-  ConcurrentArray2D<T>& dilation2D,
-  const unsigned int columnNum) const
+  const Array2D<T>& inputArray2D,
+  const unsigned int fStructuringElementx,
+  Array2D<T>& dilation2D,
+  const int columnNum) const
 {
-  const size_t N = inputArray2D.size();
-  assert(dilation2D.size() == N);
-  assert(columnNum < inputArray2D.at(0).size());
-  const size_t k = (size_t) structuringElementx;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
+    if ((dilation2D.size() != inputArray2D.size()) || 
+        (dilation2D.at(0).size() != inputArray2D.at(0).size()))
+    {
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
+    }
+
+    const size_t N = inputArray2D.size();
+
+    if (N <= fStructuringElementx) 
+    {
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElementx << std::endl;
+        return;
+    }
+
+    const size_t windowSize  = fStructuringElementx/2;
+    const size_t paddingSize = (fStructuringElementx - 
+                               (N % fStructuringElementx)) % fStructuringElementx;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+    Vector<T> suffixArr(bufferSize);
+    Vector<T> prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    // This could be done with parallel_for and parallel_invoke, yet as they run
+    // through not many entries anyway it may not be worth it. 
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::min();
+        prefixArr[i] = std::numeric_limits<T>::min();
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::min();
+        prefixArr[i] = std::numeric_limits<T>::min();
+    }
+
+    // Prefix computation is independent from suffix computation,
+    // so we use tbb::parallel_invoke. 
+    // However, each prefix/suffix computation loop must respect the order of
+    // element, so we cannot use tbb::parallel_for here. 
+
+    int kint = (int) fStructuringElementx;
+
+    tbb::parallel_invoke(
+        [&columnNum, &windowSize, &inputArray2D, &N, &suffixArr, &kint]() {
+
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else {
+                    suffixArr[i+windowSize] = std::max(
+                        suffixArr[i-1+windowSize], inputArray2D[i][columnNum]);
+                }
+            }
+        },
+        [&columnNum, &windowSize, &inputArray2D, &N, &prefixArr, &kint]() {
+
+            for (int i=N-1; i>-1; --i) {
+
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = std::max(
+                        prefixArr[i+1+windowSize], inputArray2D[i][columnNum]);
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+    );
+
+    // Compute Prefix and Suffix Buffers
+
+    size_t prefixIndex = 0;
+    size_t suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &dilation2D, 
+        &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            dilation2D[i][columnNum] = std::max(prefixArr[prefixIndex], 
+                                                suffixArr[suffixIndex]);
+        });
+
     return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<T> suffixArr(bufferSize);
-  ConcurrentVector<T> prefixArr(bufferSize);
+}
 
-  // Padding Operations on Buffers
-  // This could be done with parallel_for and parallel_invoke, yet as they run
-  // through not many entries anyway it may not be worth it. 
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::min();
-    prefixArr[i] = std::numeric_limits<T>::min();
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::min();
-    prefixArr[i] = std::numeric_limits<T>::min();
-  }
-
-  // Prefix computation is independent from suffix computation,
-  // so we use tbb::parallel_invoke. 
-  // However, each prefix/suffix computation loop must respect the order of
-  // element, so we cannot use tbb::parallel_for here. 
-
-  for (size_t i=N+paddingSize; i!=0; --i) {
-    if (i > N) {
-      // Compensate for divisibility padding (must be -inf)
-      continue;
+template<>
+void sigproc_multithreading::Morph1DFast::getErosion(
+  const Array2D<bool>& inputArray2D,
+  const unsigned int fStructuringElementx,
+  Array2D<bool>& erosion2D,
+  const int columnNum) const
+{
+    if ((erosion2D.size() != inputArray2D.size()) || 
+        (erosion2D.at(0).size() != inputArray2D.at(0).size()))
+    {
+        std::cout << "Dilation1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
     }
-    else if (i % k == 0) {
-      suffixArr[i+windowSize-1] = inputArray2D[i-1][columnNum];
-    } 
-    else {
-      suffixArr[i+windowSize-1] = std::max(suffixArr[i+windowSize], 
-                                            inputArray2D[i-1][columnNum]);
-    }
-  }
 
-  for (size_t i=0; i<N+paddingSize; ++i) {
-    if (i % k == 0) {
-      prefixArr[i+windowSize] = inputArray2D[i][columnNum];
-    }
-    else if ((i % k == 0) && (i < N)) {
-      prefixArr[i+windowSize] = std::max(prefixArr[i+windowSize-1], 
-                                          inputArray2D[i][columnNum]);
-    }
-    else {
-      continue;
-    }
-  }
+    const size_t N = inputArray2D.size();
 
-  // Compute Prefix and Suffix Buffers
+    if (N <= fStructuringElementx) 
+    {
+        std::cout << "Dilation1D: Input array size " << N << 
+            " must be greater than structuring element size " << 
+            fStructuringElementx << std::endl;
+        return;
+    }
 
-  size_t prefixIndex = 0;
-  size_t suffixIndex = 0;
+    const size_t windowSize  = fStructuringElementx/2;
+    const size_t paddingSize = (fStructuringElementx - 
+                               (N % fStructuringElementx)) % fStructuringElementx;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+    Vector<bool> suffixArr(bufferSize);
+    Vector<bool> prefixArr(bufferSize);
 
-  for (size_t i=windowSize; i<N+windowSize; ++i) {
-    prefixIndex = i + windowSize;
-    suffixIndex = i - windowSize;
-    dilation2D[i-windowSize][columnNum] = std::max(prefixArr[prefixIndex],
-      suffixArr[suffixIndex]);
-  }
+    // Padding Operations on Buffers
+    // This could be done with parallel_for and parallel_invoke, yet as they run
+    // through not many entries anyway it may not be worth it. 
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = true;
+        prefixArr[i] = true;
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = true;
+        prefixArr[i] = true;
+    }
+
+    // Prefix computation is independent from suffix computation,
+    // so we use tbb::parallel_invoke. 
+    // However, each prefix/suffix computation loop must respect the order of
+    // element, so we cannot use tbb::parallel_for here. 
+
+    int kint = (int) fStructuringElementx;
+
+    tbb::parallel_invoke(
+        [&columnNum, &windowSize, &inputArray2D, &N, &suffixArr, &kint]() {
+
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else {
+                    suffixArr[i+windowSize] = suffixArr[i-1+windowSize] && 
+                                              inputArray2D[i][columnNum];
+                }
+            }
+        },
+        [&columnNum, &windowSize, &inputArray2D, &N, &prefixArr, &kint]() {
+
+            for (int i=N-1; i>-1; --i) {
+
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = prefixArr[i+1+windowSize] &&
+                                              inputArray2D[i][columnNum];
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+    );
+
+    // Compute Prefix and Suffix Buffers
+
+    size_t prefixIndex = 0;
+    size_t suffixIndex = 0;
+
+    tbb::parallel_for( (size_t) 0, N, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &erosion2D, 
+        &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i)
+        {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            erosion2D[i][columnNum] = prefixArr[prefixIndex] && 
+                                      suffixArr[suffixIndex];
+        });
+
+    return;
+}
+
+void sigproc_multithreading::Morph1DFast::getErosion(
+  const Array2D<short>& inputArray2D,
+  const unsigned int structuringElementx,
+  Array2D<short>& dilation2D,
+  const unsigned int columnNum) const
+{
+  getErosion<short>(inputArray2D, structuringElementx, dilation2D, columnNum);
   return;
 }
 
-
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentArray2D<short>& inputArray2D,
-  const unsigned int structuringElementy,
-  ConcurrentArray2D<short>& dilation2D,
+  const Array2D<float>& inputArray2D,
+  const unsigned int structuringElementx,
+  Array2D<float>& dilation2D,
   const unsigned int columnNum) const
 {
-  getErosion<short>(inputArray2D, structuringElementy, dilation2D, columnNum);
+  getErosion<float>(inputArray2D, structuringElementx, dilation2D, columnNum);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentArray2D<float>& inputArray2D,
-  const unsigned int structuringElementy,
-  ConcurrentArray2D<float>& dilation2D,
+  const Array2D<double>& inputArray2D,
+  const unsigned int structuringElementx,
+  Array2D<double>& dilation2D,
   const unsigned int columnNum) const
 {
-  getErosion<float>(inputArray2D, structuringElementy, dilation2D, columnNum);
-  return;
-}
-
-void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentArray2D<double>& inputArray2D,
-  const unsigned int structuringElementy,
-  ConcurrentArray2D<double>& dilation2D,
-  const unsigned int columnNum) const
-{
-  getErosion<double>(inputArray2D, structuringElementy, dilation2D, columnNum);
+  getErosion<double>(inputArray2D, structuringElementx, dilation2D, columnNum);
   return;
 }
 
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const ConcurrentArray2D<T>& inputArray2D,
-  const unsigned int structuringElementx,
-  ConcurrentArray2D<T>& erosion2D,
-  const unsigned int columnNum) const
+  const Array2D<T>& inputArray2D,
+  const unsigned int fStructuringElementx,
+  Array2D<T>& erosion2D,
+  const int columnNum) const
 {
-  const size_t N = inputArray2D.size();
-  assert(erosion2D.size() == N);
-  assert(columnNum < inputArray2D.at(0).size());
-  const size_t k = (size_t) structuringElementx;
-  if (N <= k) {
-    std::cout << "Input array size " << N << " must be greater than structuring element size " << k << std::endl;
-    return;
-  }
-  const size_t windowSize = k/2;
-  const size_t paddingSize = (k - (N % k)) % k;
-  const size_t bufferSize = N + 2 * windowSize + paddingSize;
-  ConcurrentVector<T> suffixArr(bufferSize);
-  ConcurrentVector<T> prefixArr(bufferSize);
-
-  // Padding Operations on Buffers
-  // This could be done with parallel_for and parallel_invoke, yet as they run
-  // through not many entries anyway it may not be worth it. 
-  for (size_t i=0; i<windowSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::max();
-    prefixArr[i] = std::numeric_limits<T>::max();
-  }
-
-  for (size_t i=N+windowSize; i<bufferSize; ++i) {
-    suffixArr[i] = std::numeric_limits<T>::max();
-    prefixArr[i] = std::numeric_limits<T>::max();
-  }
-
-  // Prefix computation is independent from suffix computation,
-  // so we use tbb::parallel_invoke. 
-  // However, each prefix/suffix computation loop must respect the order of
-  // element, so we cannot use tbb::parallel_for here. 
-
-  tbb::parallel_invoke(
-    [&suffixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=N+paddingSize; i!=0; --i) {
-        if (i > N) {
-          // Compensate for divisibility padding (must be -inf)
-          continue;
-        }
-        else if (i % k == 0) {
-          suffixArr[i+windowSize-1] = inputArray2D[i-1][columnNum];
-        } 
-        else {
-          suffixArr[i+windowSize-1] = std::min(suffixArr[i+windowSize], 
-                                               inputArray2D[i-1][columnNum]);
-        }
-      }
-    },
-    [&prefixArr, &inputArray2D, &windowSize, &paddingSize, &columnNum, &N, &k]() {
-      for (size_t i=0; i<N+paddingSize; ++i) {
-        if (i % k == 0) {
-          prefixArr[i+windowSize] = inputArray2D[i][columnNum];
-        }
-        else if ((i % k == 0) && (i < N)) {
-          prefixArr[i+windowSize] = std::min(prefixArr[i+windowSize-1], 
-                                             inputArray2D[i][columnNum]);
-        }
-        else {
-          continue;
-        }
-      }
+    if ( (erosion2D.size() != inputArray2D.size()) ||
+         (erosion2D.at(0).size() != inputArray2D.at(0).size()) )
+    {
+        std::cout << "Erosion1D: output dilation vector not same size as "
+            "input waveform array" << std::endl;
+        return;
     }
-  );
+
+    const size_t N = inputArray2D.size();
+
+    if (N <= fStructuringElementx) 
+    {
+        std::cout << "Erosion1D: Input array size " << N << " must be "
+            "greater than structuring element size " << 
+            fStructuringElementx << std::endl;
+        return;
+    }
+
+    const size_t windowSize  = fStructuringElementx/2;
+    const size_t paddingSize = (fStructuringElementx - 
+                               (N % fStructuringElementx)) % fStructuringElementx;
+    const size_t bufferSize  = N + 2 * windowSize + paddingSize;
+
+    Vector<T> suffixArr(bufferSize);
+    Vector<T> prefixArr(bufferSize);
+
+    // Padding Operations on Buffers
+    // This could be done with parallel_for and parallel_invoke, yet as they run
+    // through not many entries anyway it may not be worth it. 
+    for (size_t i=0; i<windowSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::max();
+        prefixArr[i] = std::numeric_limits<T>::max();
+    }
+
+    for (size_t i=N+windowSize; i<bufferSize; ++i) {
+        suffixArr[i] = std::numeric_limits<T>::max();
+        prefixArr[i] = std::numeric_limits<T>::max();
+    }
+
+    // Prefix computation is independent from suffix computation,
+    // so we use tbb::parallel_invoke. 
+    // However, each prefix/suffix computation loop must respect the order of
+    // element, so we cannot use tbb::parallel_for here. 
+
+    int kint = (int) fStructuringElementx;
+
+    tbb::parallel_invoke(
+        [&suffixArr, &inputArray2D, &windowSize, 
+         &paddingSize, &columnNum, &N, &kint]() {
+
+            for (size_t i=0; i<N; ++i) {
+
+                if (i > N) {
+                    // Compensate for divisibility padding (must be -inf)
+                    continue;
+                }
+                else if (i % kint == 0) {
+                    suffixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else {
+                    suffixArr[i+windowSize] = std::min(
+                        suffixArr[i-1+windowSize], inputArray2D[i][columnNum]);
+                }
+            }
+        },
+        [&prefixArr, &inputArray2D, &windowSize, 
+         &paddingSize, &columnNum, &N, &kint]() {
+
+            for (int i=N-1; i>-1; --i) {
+
+                if ((i+1) % kint == 0) {
+                    prefixArr[i+windowSize] = inputArray2D[i][columnNum];
+                } 
+                else if ((i+1) % kint != 0) {
+                    prefixArr[i+windowSize] = std::min(
+                        prefixArr[i+1+windowSize], inputArray2D[i][columnNum]);
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+    );
 
   // Compute Prefix and Suffix Buffers
 
-  size_t prefixIndex = 0;
-  size_t suffixIndex = 0;
+    size_t prefixIndex = 0;
+    size_t suffixIndex = 0;
 
-  tbb::parallel_for((size_t) windowSize, N+windowSize, (size_t) 1, 
-    [&prefixIndex, &suffixIndex, &erosion2D, 
-     &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i) {
-      prefixIndex = i + windowSize;
-      suffixIndex = i - windowSize;
-      erosion2D[i-windowSize][columnNum] = std::min(prefixArr[prefixIndex],
-        suffixArr[suffixIndex]);
-    }
-  );
-  return;
+    tbb::parallel_for((size_t) windowSize, N+windowSize, (size_t) 1, 
+        [&prefixIndex, &suffixIndex, &erosion2D, 
+         &prefixArr, &suffixArr, &windowSize, &columnNum](size_t i) {
+            suffixIndex = i + 2 * windowSize;
+            prefixIndex = i;
+            erosion2D[i][columnNum] = std::min(
+                prefixArr[prefixIndex], suffixArr[suffixIndex]);
+        }
+    );
+    return;
 }
 
 #endif

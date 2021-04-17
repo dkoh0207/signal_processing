@@ -3,277 +3,265 @@
 
 #include "CoherentNoiseCorrection.h"
 
+using namespace sigproc_multithreading;
+
+short sigproc_multithreading::CoherentNoiseCorrection::computeMedian(
+    const ConcurrentVector<short> &cVector) const
+{
+    short median = computeMedian<short>(cVector);
+    return median;
+}
 
 float sigproc_multithreading::CoherentNoiseCorrection::computeMedian(
-  const ConcurrentVector<float>& inputVector) const
+    const ConcurrentVector<float> &cVector) const
 {
-  float median = 0.0;
-  ConcurrentVector<float> localVec = inputVector;
-  if (localVec.size() % 2 == 0) {
-    const auto m1 = localVec.begin() + localVec.size() / 2 - 1;
-    const auto m2 = localVec.begin() + localVec.size() / 2;
-    std::nth_element(localVec.begin(), m1, localVec.end());
-    const auto e1 = *m1;
-    std::nth_element(localVec.begin(), m2, localVec.end());
-    const auto e2 = *m2;
-    median = (e1 + e2) / 2.0;
-  } else {
+    float median = computeMedian<float>(cVector);
+    return median;
+}
+
+double sigproc_multithreading::CoherentNoiseCorrection::computeMedian(
+    const ConcurrentVector<double> &cVector) const
+{
+    double median = computeMedian<double>(cVector);
+    return median;
+}
+
+template <typename T>
+T sigproc_multithreading::CoherentNoiseCorrection::computeMedian(
+    const ConcurrentVector<T> &cVector) const
+{
+    T median = (T) 0;
+
+    if (cVector.size() < 1) return median;
+
+    ConcurrentVector<T> localVec = cVector;
     const auto m = localVec.begin() + localVec.size() / 2;
     std::nth_element(localVec.begin(), m, localVec.end());
     median = *m;
-  }
-  return median;
+    return median;
 }
 
+void sigproc_multithreading::CoherentNoiseCorrection::getSelectVals(
+    const Array2D<short> &morphedWaveforms,
+    Array2D<bool> &selectVals,
+    const short threshold) const
+{
+    getSelectVals<short>(morphedWaveforms, selectVals, threshold);
+    return;
+}
 
 void sigproc_multithreading::CoherentNoiseCorrection::getSelectVals(
-  const ConcurrentArray2D<float>& morphedWaveforms,
-  ConcurrentArray2D<bool>& selectVals,
-  const unsigned int window,
-  const float thresholdFactor) const
+    const Array2D<float> &morphedWaveforms,
+    Array2D<bool> &selectVals,
+    const float threshold) const
+{
+    getSelectVals<float>(morphedWaveforms, selectVals, threshold);
+    return;
+}
+
+void sigproc_multithreading::CoherentNoiseCorrection::getSelectVals(
+    const Array2D<double> &morphedWaveforms,
+    Array2D<bool> &selectVals,
+    const double threshold) const
+{
+    getSelectVals<double>(morphedWaveforms, selectVals, threshold);
+    return;
+}
+
+template <typename T>
+void sigproc_multithreading::CoherentNoiseCorrection::getSelectVals(
+    const Array2D<T> &morphedWaveforms,
+    Array2D<bool> &selectVals,
+    const T threshold) const
 {
   size_t numChannels = morphedWaveforms.size();
   size_t nTicks = morphedWaveforms.at(0).size();
 
   for (size_t i=0; i<numChannels; ++i) {
-    float median = 0.0;
-    median = computeMedian(morphedWaveforms[i]);
-    ConcurrentVector<float> absoluteDeviation(nTicks);
-    for (size_t j=0; j<nTicks; ++j) {
-      absoluteDeviation[j] = std::abs(morphedWaveforms[i][j] - median);
-    }
-
-    float mad = computeMedian(absoluteDeviation);
-    float threshold = thresholdFactor * mad;
 
     for (size_t j=0; j<nTicks; ++j) {
-      if (std::abs(morphedWaveforms[i][j] - median) > threshold) {
-        selectVals[i][j] = true;
-      } else {
-        selectVals[i][j] = false;
-      }
+
+        if (std::abs(morphedWaveforms[i][j]) > threshold) {
+            selectVals[i][j] = true;
+        }
+        else selectVals[i][j] = false;
     }
   }
   return;
 }
 
-
-void sigproc_multithreading::CoherentNoiseCorrection::denoiseMorph2D(
-  ConcurrentArray2D<float>& waveLessCoherent,
-  ConcurrentArray2D<float>& morphedWaveforms,
-  const ConcurrentArray2D<float>& fullEvent,
-  ConcurrentArray2D<bool>& selectVals,
-  const char filterName,
-  const unsigned int grouping,
-  const unsigned int groupingOffset,
-  const unsigned int structuringElementx,
-  const unsigned int structuringElementy,
-  const unsigned int window,
-  const float thresholdFactor) const
+void sigproc_multithreading::CoherentNoiseCorrection::ParallelDenoiseMorph2D(
+    const Array2D<short> &inputArray2D,
+    Array2D<bool> &selectVals,
+    const char filterName,
+    Array2D<short> &waveLessCoherent,
+    const size_t fStructuringElementx,
+    const size_t fStructuringElementy,
+    const size_t grouping,
+    const size_t groupingOffset,
+    const short threshold) const
 {
-  size_t numChannels = fullEvent.size();
-  size_t nTicks = fullEvent.at(0).size();
-  assert(groupingOffset < numChannels);
-  size_t nGroups = ((int) numChannels - (int) groupingOffset) / grouping;
-
-  sigproc_multithreading::Morph2DFast filter;
-
-  switch (filterName) {
-    case 'd':
-      filter.getDilation(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms,
-        selectVals, window, thresholdFactor);
-      break;
-    case 'e':
-      filter.getErosion(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms,
-        selectVals, window, thresholdFactor);
-      break;
-    case 'g':
-      filter.getGradient(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms,
-        selectVals, window, thresholdFactor);
-      break;
-    default:
-      filter.getDilation(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms,
-        selectVals, window, thresholdFactor);
-      break;
-  }
-
-  for (size_t i=0; i<nTicks; ++i) {
-    for (size_t j=0; j<nGroups; ++j) {
-      size_t group_start = j * grouping + (size_t) groupingOffset;
-      size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
-      // Compute median.
-      ConcurrentVector<float> v;
-      for (size_t c=group_start; c<group_end; ++c) {
-        if (!selectVals[c][i]) {
-          v.push_back(fullEvent[c][i]);
-        }
-      }
-      float median = 0.0;
-      if (v.size() > 0) median = computeMedian(v);
-      for (size_t k=group_start; k<group_end; ++k) {
-        if (!selectVals[k][i]) {
-          waveLessCoherent[k][i] = fullEvent[k][i] - median;
-        } else {
-          waveLessCoherent[k][i] = fullEvent[k][i];
-        }
-      }
-    }
-  }
-
-  // Compensate for offset in channel groupings
-  if (groupingOffset > 0) {
-    for (size_t i=0; i<nTicks; ++i) {
-      ConcurrentVector<float> v;
-      for (size_t c=0; c<groupingOffset; ++c) {
-        if (!selectVals[c][i]) {
-          v.push_back(fullEvent[c][i]);
-        }
-      }
-      float median = 0.0;
-      if (v.size() > 0) {
-        median = computeMedian(v);
-      }
-      for (size_t k=0; k<groupingOffset; ++k) {
-        if (!selectVals[k][i]) {
-          waveLessCoherent[k][i] = fullEvent[k][i] - median;
-        } else {
-          waveLessCoherent[k][i] = fullEvent[k][i];
-        }
-      }
-    }
-  }
-  return;
+    ParallelDenoiseMorph2D<short>(
+        inputArray2D,
+        selectVals,
+        filterName,
+        waveLessCoherent,
+        fStructuringElementx,
+        fStructuringElementy, 
+        grouping,
+        groupingOffset,
+        threshold
+    );
+    return;
 }
 
-
-void sigproc_multithreading::CoherentNoiseCorrection::denoiseHough2D(
-  ConcurrentArray2D<float>& waveLessCoherent,
-  ConcurrentArray2D<float>& morphedWaveforms,
-  const ConcurrentArray2D<float>& fullEvent,
-  ConcurrentArray2D<bool>& selectVals,
-  ConcurrentArray2D<bool>& refinedSelectVals,
-  const char filterName,
-  const unsigned int grouping,
-  const unsigned int groupingOffset,
-  const unsigned int structuringElementx,
-  const unsigned int structuringElementy,
-  const unsigned int window,
-  const float thresholdFactor,
-  const size_t thetaSteps,
-  const unsigned int houghThreshold,
-  const unsigned int nmsWindowSize,
-  const unsigned int angleWindow, 
-  const unsigned int dilationX,
-  const unsigned int dilationY,
-  const unsigned int maxLines,
-  const float eps) const
+void sigproc_multithreading::CoherentNoiseCorrection::ParallelDenoiseMorph2D(
+    const Array2D<float> &inputArray2D,
+    Array2D<bool> &selectVals,
+    const char filterName,
+    Array2D<float> &waveLessCoherent,
+    const size_t fStructuringElementx,
+    const size_t fStructuringElementy,
+    const size_t grouping,
+    const size_t groupingOffset,
+    const float threshold) const
 {
-  size_t numChannels = fullEvent.size();
-  size_t nTicks = fullEvent.at(0).size();
-  assert(groupingOffset < numChannels);
-  size_t nGroups = ((int) numChannels - (int) groupingOffset) / grouping;
+    ParallelDenoiseMorph2D<float>(
+        inputArray2D,
+        selectVals,
+        filterName,
+        waveLessCoherent,
+        fStructuringElementx,
+        fStructuringElementy, 
+        grouping,
+        groupingOffset,
+        threshold
+    );
+    return;
+}
 
-  sigproc_multithreading::Morph2DFast filter;
-  // sigproc_multithreading::LineDetection lineModule;
+void sigproc_multithreading::CoherentNoiseCorrection::ParallelDenoiseMorph2D(
+    const Array2D<double> &inputArray2D,
+    Array2D<bool> &selectVals,
+    const char filterName,
+    Array2D<double> &waveLessCoherent,
+    const size_t fStructuringElementx,
+    const size_t fStructuringElementy,
+    const size_t grouping,
+    const size_t groupingOffset,
+    const double threshold) const
+{
+    ParallelDenoiseMorph2D<double>(
+        inputArray2D,
+        selectVals,
+        filterName,
+        waveLessCoherent,
+        fStructuringElementx,
+        fStructuringElementy, 
+        grouping,
+        groupingOffset,
+        threshold
+    );
+    return;
+}
 
-  switch (filterName) {
-    case 'd':
-      filter.getDilation(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms, selectVals, window, thresholdFactor);
-      break;
-    case 'e':
-      filter.getErosion(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms, selectVals, window, thresholdFactor);
-      break;
-    case 'g':
-      filter.getGradient(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms, selectVals, window, thresholdFactor);
-      break;
-    default:
-      filter.getDilation(fullEvent,
-        structuringElementx, structuringElementy, morphedWaveforms);
-      getSelectVals(morphedWaveforms, selectVals, window, thresholdFactor);
-      break;
-  }
+template <typename T>
+void sigproc_multithreading::CoherentNoiseCorrection::ParallelDenoiseMorph2D(
+    const Array2D<T> &inputArray2D,
+    Array2D<bool> &selectVals,
+    const char filterName,
+    Array2D<T> &waveLessCoherent,
+    const size_t fStructuringElementx,
+    const size_t fStructuringElementy,
+    const size_t grouping,
+    const size_t groupingOffset,
+    const T threshold) const
+{
+    // Compute Morphological Filter
+    const size_t numChannels = inputArray2D.size();
+    const size_t numTicks = inputArray2D.at(0).size();
+    const size_t nGroups = (size_t) ((int) numChannels - 
+                                     (int) groupingOffset) / grouping;
 
-  // lineModule.refineSelectVals(
-  //   selectVals,
-  //   refinedSelectVals,
-  //   thetaSteps,
-  //   houghThreshold,
-  //   angleWindow,
-  //   maxLines,
-  //   nmsWindowSize,
-  //   dilationX,
-  //   dilationY,
-  //   eps);
+    Array2D<T> buffer(numChannels, Vector<T>(numTicks));
 
-  for (size_t i=0; i<refinedSelectVals.size(); ++i) {
-    for (size_t j=0; j<refinedSelectVals.at(0).size(); ++j) {
-      refinedSelectVals[i][j] = refinedSelectVals[i][j] && selectVals[i][j];
+    sigproc_multithreading::Morph2DFast morph2D;
+
+    switch (filterName) {
+        case 'd':
+            morph2D.getDilation(inputArray2D,
+                fStructuringElementx, fStructuringElementy, buffer);
+            break;
+        case 'e':
+            morph2D.getErosion(inputArray2D,
+                fStructuringElementx, fStructuringElementy, buffer);
+            break;
+        case 'g':
+            morph2D.getGradient(inputArray2D,
+                fStructuringElementx, fStructuringElementy, buffer);
+            break;
+        default:
+            morph2D.getDilation(inputArray2D,
+                fStructuringElementx, fStructuringElementy, buffer);
+        break;
     }
-  }
 
-  for (size_t i=0; i<nTicks; ++i) {
-    for (size_t j=0; j<nGroups; ++j) {
-      size_t group_start = j * grouping + (size_t) groupingOffset;
-      size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
-      // Compute median.
-      ConcurrentVector<float> v;
-      for (size_t c=group_start; c<group_end; ++c) {
-        if (!refinedSelectVals[c][i]) {
-          v.push_back(fullEvent[c][i]);
+    getSelectVals(buffer, selectVals, threshold);
+
+    tbb::parallel_for( (size_t) 0, numTicks, (size_t) 1,
+        [this, &grouping, &groupingOffset, &nGroups, 
+         &selectVals, &inputArray2D, &waveLessCoherent](size_t i) 
+        {
+            for (size_t j=0; j<nGroups; ++j) {
+
+                size_t group_start = j * grouping + (size_t) groupingOffset;
+                size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
+
+                // Compute median. Need a concurrent vector due to push_back
+                ConcurrentVector<T> v;
+
+                for (size_t c=group_start; c<group_end; ++c) {
+
+                    if (!selectVals[c][i]) v.push_back(inputArray2D[c][i]);
+                }
+
+                float median = computeMedian(v);
+
+                for (size_t k=group_start; k<group_end; ++k) {
+
+                    if (!selectVals[k][i]) {
+                        waveLessCoherent[k][i] = inputArray2D[k][i] - median;
+                    } else {
+                        waveLessCoherent[k][i] = inputArray2D[k][i];
+                    }
+                }
+            }
         }
-      }
-      float median = 0.0;
-      if (v.size() > 0) {
-        median = computeMedian(v);
-      }
-      for (size_t k=group_start; k<group_end; ++k) {
-        if (!refinedSelectVals[k][i]) {
-          waveLessCoherent[k][i] = fullEvent[k][i] - median;
-        } else {
-          waveLessCoherent[k][i] = fullEvent[k][i];
+    );
+
+    if (groupingOffset > 0) {
+        for (size_t i=0; i<numTicks; ++i) {
+
+            ConcurrentVector<T> v;
+
+            for (size_t c=0; c<groupingOffset; ++c) {
+                if (!selectVals[c][i]) v.push_back(inputArray2D[c][i]);
+            }
+
+            float median = computeMedian(v);
+
+            for (size_t k=0; k<groupingOffset; ++k) {
+
+                if (!selectVals[k][i]) {
+                    waveLessCoherent[k][i] = inputArray2D[k][i] - median;
+                } else {
+                    waveLessCoherent[k][i] = inputArray2D[k][i];
+                }
+            }
         }
-      }
     }
-  }
 
-  // Compensate for offset in channel groupings
-  if (groupingOffset > 0) {
-    for (size_t i=0; i<nTicks; ++i) {
-      ConcurrentVector<float> v;
-      for (size_t c=0; c<groupingOffset; ++c) {
-        if (!refinedSelectVals[c][i]) {
-          v.push_back(fullEvent[c][i]);
-        }
-      }
-      float median = 0.0;
-      if (v.size() > 0) {
-        median = computeMedian(v);
-      }
-      for (size_t k=0; k<groupingOffset; ++k) {
-        if (!refinedSelectVals[k][i]) {
-          waveLessCoherent[k][i] = fullEvent[k][i] - median;
-        } else {
-          waveLessCoherent[k][i] = fullEvent[k][i];
-        }
-      }
-    }
-  }
-
-  return;
+    return;
 }
 
 

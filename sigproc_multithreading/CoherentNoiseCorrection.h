@@ -27,55 +27,100 @@ namespace sigproc_multithreading {
   class CoherentNoiseCorrection{
     
     public:
+
+      short computeMedian(const ConcurrentVector<short> &cVector) const;
+
+      float computeMedian(const ConcurrentVector<float> &cVector) const;
+
+      double computeMedian(const ConcurrentVector<double> &cVector) const;
+
+
+      void getSelectVals(const Array2D<short> &morphedWaveforms,
+                          Array2D<bool> &selectVals,
+                          const short threshold) const;
+
+      void getSelectVals(const Array2D<float> &morphedWaveforms,
+                          Array2D<bool> &selectVals,
+                          const float threshold) const;
+
+      void getSelectVals(const Array2D<double> &morphedWaveforms,
+                          Array2D<bool> &selectVals,
+                          const double threshold) const;
+
+      void ParallelDenoiseMorph2D(
+          const Array2D<short> &inputArray2D,
+          Array2D<bool> &selectVals,
+          const char filterName,
+          Array2D<short> &waveLessCoherent,
+          const size_t fStructuringElementx,
+          const size_t fStructuringElementy,
+          const size_t grouping,
+          const size_t groupingOffset,
+          const short threshold) const;
+
+      void ParallelDenoiseMorph2D(
+          const Array2D<float> &inputArray2D,
+          Array2D<bool> &selectVals,
+          const char filterName,
+          Array2D<float> &waveLessCoherent,
+          const size_t fStructuringElementx,
+          const size_t fStructuringElementy,
+          const size_t grouping,
+          const size_t groupingOffset,
+          const float threshold) const;
+
+      void ParallelDenoiseMorph2D(
+          const Array2D<double> &inputArray2D,
+          Array2D<bool> &selectVals,
+          const char filterName,
+          Array2D<double> &waveLessCoherent,
+          const size_t fStructuringElementx,
+          const size_t fStructuringElementy,
+          const size_t grouping,
+          const size_t groupingOffset,
+          const double threshold) const;
       
       /// Default constructor
       CoherentNoiseCorrection(){}
-
-        float computeMedian(const ConcurrentVector<float>&) const;
-
-        void getSelectVals(
-          const ConcurrentArray2D<float>&,
-          ConcurrentArray2D<bool>&,
-          const unsigned int,
-          const float) const;
-
-        void denoiseMorph2D(
-          ConcurrentArray2D<float>&,
-          ConcurrentArray2D<float>&,
-          const ConcurrentArray2D<float>&,
-          ConcurrentArray2D<bool>&,
-          const char,
-          const unsigned int,
-          const unsigned int,
-          const unsigned int,
-          const unsigned int,
-          const unsigned int,
-          const float) const;
-
-        void denoiseHough2D(
-          ConcurrentArray2D<float>& waveLessCoherent,
-          ConcurrentArray2D<float>& morphedWaveforms,
-          const ConcurrentArray2D<float>& fullEvent,
-          ConcurrentArray2D<bool>& selectVals,
-          ConcurrentArray2D<bool>& refinedSelectVals,
-          const char filterName = 'g',
-          const unsigned int grouping = 64,
-          const unsigned int groupingOffset = 0,
-          const unsigned int structuringElementx = 5,
-          const unsigned int structuringElementy = 20,
-          const unsigned int window = 0,
-          const float thresholdFactor = 2.5,
-          const size_t thetaSteps = 360,
-          const unsigned int houghThreshold = 300,
-          const unsigned int nmsWindowSize = 10,
-          const unsigned int angleWindow = 50, 
-          const unsigned int dilationX = 5,
-          const unsigned int dilationY = 20,
-          const unsigned int maxLines = 20,
-          const float eps = 0.00001) const;
       
       /// Default destructor
       ~CoherentNoiseCorrection(){}
+
+    private:
+
+      template <typename T>
+      T computeMedian(const ConcurrentVector<T> &cVector) const;
+
+      template <typename T>
+      void getSelectVals(
+          const Array2D<T> &morphedWaveforms,
+          Array2D<bool> &selectVals,
+          const T threshold) const;
+
+      template <typename T>
+      void ParallelDenoiseSimple(
+          const Array2D<T> &inputArray2D,
+          Array2D<T> &waveLessCoherent,
+          const size_t grouping,
+          const size_t groupingOffset) const;
+
+      template <typename T>
+      void ParallelDenoiseMorph2D(
+          const Array2D<T> &inputArray2D,
+          Array2D<bool> &selectVals,
+          const char filterName,
+          Array2D<T> &waveLessCoherent,
+          const size_t fStructuringElementx,
+          const size_t fStructuringElementy,
+          const size_t grouping,
+          const size_t groupingOffset,
+          const T threshold) const;
+
+      template <typename T>
+      void ParallelDenoiseHough2D(
+          const Array2D<T> &inputArray2D,
+          const char filterName,
+          Array2D<T> &waveLessCoherent) const;
     
   };
 }

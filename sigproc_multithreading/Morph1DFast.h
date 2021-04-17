@@ -39,129 +39,129 @@ namespace sigproc_multithreading {
       /// Default constructor
       Morph1DFast(){}
 
-      void getDilation(const ConcurrentVector<bool>&,
+      void getDilation(const VectorBool&,
                        const unsigned int,
-                       ConcurrentVector<bool>&) const;
+                       VectorBool&) const;
 
-      void getDilation(const ConcurrentVector<short>&,
+      void getDilation(const VectorShort&,
                        const unsigned int,
-                       ConcurrentVector<short>&) const;
+                       VectorShort&) const;
 
-      void getDilation(const ConcurrentVector<float>&,
+      void getDilation(const VectorFloat&,
                        const unsigned int,
-                       ConcurrentVector<float>&) const;
+                       VectorFloat&) const;
 
-      void getDilation(const ConcurrentVector<double>&,
+      void getDilation(const VectorDouble&,
                        const unsigned int,
-                       ConcurrentVector<double>&) const;
+                       VectorDouble&) const;
 
       // Column Major Operations
 
-      void getDilation(const ConcurrentArray2D<bool>&,
+      void getDilation(const Array2D<bool>&,
                        const unsigned int,
-                       ConcurrentArray2D<bool>&,
+                       Array2D<bool>&,
                        const unsigned int) const;
 
-      void getDilation(const ConcurrentArray2D<short>&,
+      void getDilation(const Array2D<short>&,
                        const unsigned int,
-                       ConcurrentArray2D<short>&,
+                       Array2D<short>&,
                        const unsigned int) const;
 
-      void getDilation(const ConcurrentArray2D<float>&,
+      void getDilation(const Array2D<float>&,
                        const unsigned int,
-                       ConcurrentArray2D<float>&,
+                       Array2D<float>&,
                        const unsigned int) const;
 
-      void getDilation(const ConcurrentArray2D<double>&,
+      void getDilation(const Array2D<double>&,
                        const unsigned int,
-                       ConcurrentArray2D<double>&,
+                       Array2D<double>&,
                        const unsigned int) const;
 
 
-      void getErosion(const ConcurrentVector<bool>&,
+      void getErosion(const VectorBool&,
                       const unsigned int,
-                      ConcurrentVector<bool>&) const;
+                      VectorBool&) const;
 
-      void getErosion(const ConcurrentVector<short>&,
+      void getErosion(const VectorShort&,
                       const unsigned int,
-                      ConcurrentVector<short>&) const;
+                      VectorShort&) const;
 
-      void getErosion(const ConcurrentVector<float>&,
+      void getErosion(const VectorFloat&,
                       const unsigned int,
-                      ConcurrentVector<float>&) const;
+                      VectorFloat&) const;
 
-      void getErosion(const ConcurrentVector<double>&,
+      void getErosion(const VectorDouble&,
                       const unsigned int,
-                      ConcurrentVector<double>&) const;
+                      VectorDouble&) const;
 
       // Column Major Operations
 
-      void getErosion(const ConcurrentArray2D<bool>&,
+      void getErosion(const Array2D<bool>&,
                       const unsigned int,
-                      ConcurrentArray2D<bool>&,
+                      Array2D<bool>&,
                       const unsigned int) const;
 
-      void getErosion(const ConcurrentArray2D<short>&,
+      void getErosion(const Array2D<short>&,
                       const unsigned int,
-                      ConcurrentArray2D<short>&,
+                      Array2D<short>&,
                       const unsigned int) const;
 
-      void getErosion(const ConcurrentArray2D<float>&,
+      void getErosion(const Array2D<float>&,
                       const unsigned int,
-                      ConcurrentArray2D<float>&,
+                      Array2D<float>&,
                       const unsigned int) const;
 
-      void getErosion(const ConcurrentArray2D<double>&,
+      void getErosion(const Array2D<double>&,
                       const unsigned int,
-                      ConcurrentArray2D<double>&,
+                      Array2D<double>&,
                       const unsigned int) const;
 
 
-      void getGradient(const ConcurrentVector<short>&,
+      void getGradient(const VectorShort&,
                       const unsigned int,
-                      ConcurrentVector<short>&) const;
+                      VectorShort&) const;
 
-      void getGradient(const ConcurrentVector<float>&,
+      void getGradient(const VectorFloat&,
                       const unsigned int,
-                      ConcurrentVector<float>&) const;
+                      VectorFloat&) const;
 
-      void getGradient(const ConcurrentVector<double>&,
+      void getGradient(const VectorDouble&,
                       const unsigned int,
-                      ConcurrentVector<double>&) const;
+                      VectorDouble&) const;
 
 
-      void getOpening(const ConcurrentVector<bool>&,
+      void getOpening(const VectorBool&,
                       const unsigned int,
-                      ConcurrentVector<bool>&) const;
+                      VectorBool&) const;
 
-      void getOpening(const ConcurrentVector<short>&,
+      void getOpening(const VectorShort&,
                       const unsigned int,
-                      ConcurrentVector<short>&) const;
+                      VectorShort&) const;
 
-      void getOpening(const ConcurrentVector<float>&,
+      void getOpening(const VectorFloat&,
                       const unsigned int,
-                      ConcurrentVector<float>&) const;
+                      VectorFloat&) const;
 
-      void getOpening(const ConcurrentVector<double>&,
+      void getOpening(const VectorDouble&,
                       const unsigned int,
-                      ConcurrentVector<double>&) const;
+                      VectorDouble&) const;
 
 
-      void getClosing(const ConcurrentVector<bool>&,
+      void getClosing(const VectorBool&,
                       const unsigned int,
-                      ConcurrentVector<bool>&) const;            
+                      VectorBool&) const;            
 
-      void getClosing(const ConcurrentVector<short>&,
+      void getClosing(const VectorShort&,
                       const unsigned int,
-                      ConcurrentVector<short>&) const;
+                      VectorShort&) const;
 
-      void getClosing(const ConcurrentVector<float>&,
+      void getClosing(const VectorFloat&,
                       const unsigned int,
-                      ConcurrentVector<float>&) const;
+                      VectorFloat&) const;
 
-      void getClosing(const ConcurrentVector<double>&,
+      void getClosing(const VectorDouble&,
                       const unsigned int,
-                      ConcurrentVector<double>&) const;
+                      VectorDouble&) const;
 
     
     /// Default destructor
@@ -173,50 +173,49 @@ namespace sigproc_multithreading {
 
       template <typename T> 
       void getDilation(
-        const ConcurrentVector<T>& inputVector,
-        const unsigned int structuringElement,
-        ConcurrentVector<T>& dilationVec) const;
+        const Vector<T>& inputVector,
+        const unsigned int fStructuringElement,
+        Vector<T>& dilationVec) const;
 
       template <typename T> 
       void getErosion(
-        const ConcurrentVector<T>& inputVector,
-        const unsigned int structuringElement,
-        ConcurrentVector<T>& erosionVec) const;
+        const Vector<T>& inputVector,
+        const unsigned int fStructuringElement,
+        Vector<T>& erosionVec) const;
 
       template <typename T>
       void getOpening(
-        const ConcurrentVector<T>& inputVector,
-        const unsigned int structuringElement,
-        ConcurrentVector<T>& openingVec) const;
+        const Vector<T>& inputVector,
+        const unsigned int fStructuringElement,
+        Vector<T>& openingVec) const;
 
       template <typename T>
       void getClosing(
-        const ConcurrentVector<T>& inputVector,
-        const unsigned int structuringElement,
-        ConcurrentVector<T>& closingVec) const;
+        const Vector<T>& inputVector,
+        const unsigned int fStructuringElement,
+        Vector<T>& closingVec) const;
 
       template <typename T> 
       void getGradient(
-        const ConcurrentVector<T>& inputVector,
-        const unsigned int structuringElement,
-        ConcurrentVector<T>& gradientVec) const;
+        const Vector<T>& inputVector,
+        const unsigned int fStructuringElement,
+        Vector<T>& gradientVec) const;
 
-
-      // Column Major Operations 
-
-      template <typename T> 
+      template <typename T>
       void getDilation(
-        const ConcurrentArray2D<T>& inputArray2D,
-        const unsigned int structuringElementy,
-        ConcurrentArray2D<T>& dilation2D,
-        const unsigned int columnNum) const;
+        const Array2D<T>& inputArray2D,
+        const unsigned int fStructuringElement,
+        Array2D<T>& dilation2D,
+        const int columnNum) const;
 
-      template <typename T> 
+      template <typename T>
       void getErosion(
-        const ConcurrentArray2D<T>& inputArray2D,
-        const unsigned int structuringElementy,
-        ConcurrentArray2D<T>& erosion2D,
-        const unsigned int columnNum) const;
+        const Array2D<T>& inputArray2D,
+        const unsigned int fStructuringElement,
+        Array2D<T>& erosion2D,
+        const int columnNum) const;
+
+      
     
   };
 }
