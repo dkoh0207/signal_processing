@@ -4,6 +4,13 @@
 #include "EdgeDetection.h"
 
 
+long sigproc_tools::EdgeDetection::CantorEnum(const int &x, const int &y) const
+{
+  int n = ((x + y) * (x + y + 1) / 2) + y;
+  return n;
+}
+
+
 void sigproc_tools::EdgeDetection::Convolve2D(
   const Array2D<float>& input2D,
   Array2D<float>& output2D,
@@ -550,13 +557,140 @@ void sigproc_tools::EdgeDetection::HysteresisThresholdingFast(
     int rep = forest.Find(flatIdx);
     int row = (flatIdx / numTicks);
     int col = (flatIdx % numTicks);
-    if ((rep != flatIdx) || (rep == forestSize)) {
-      // std::cout << "Edge: " << row << ", " << col << std::endl;
-      // std::cout << "Rep: " << (rep / numTicks) << ", " << (rep % numTicks) << std::endl;
-    }
     if (rep == forestSize) outputROI[row][col] = true;
     else outputROI[row][col] = false;
   }
+  return;
+}
+
+
+void sigproc_tools::EdgeDetection::HTFastLowMem(
+  const Array2D<float>& doneNMS2D,
+  float lowThreshold,
+  float highThreshold,
+  Array2D<bool>& outputROI) const
+{
+  const int numChannels = doneNMS2D.size();
+  const int numTicks = doneNMS2D.at(0).size();
+
+  // const int forestSize = numChannels * numTicks;
+
+  // DisjointSetForest forest(forestSize);
+
+  std::unordered_map<long, EdgeCandidate> edges;
+  // std::vector<long> keyValues;
+
+  // forest.MakeSet();
+  // std::cout << "size = " << forest.size << std::endl;
+  int count_id = 1;
+  // int numWeakEdges = 0;
+  // int numStrongEdges = 0;
+  // First Pass
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      if (doneNMS2D[i][j] >= highThreshold) {
+        // if edge is a strong edge, assign to root node 
+        // ID of 0 is reserved for root note reference
+        EdgeCandidate strongEdge(i, j, 0, true);
+        long key = CantorEnum(i, j);
+        // keyValues.push_back(key);
+        // count_id++;
+        edges.emplace(std::make_pair(key, strongEdge));
+        count_id++;
+        // numStrongEdges++;
+      }
+      else if ( (doneNMS2D[i][j] < highThreshold) && 
+                (doneNMS2D[i][j] >= lowThreshold)) {
+        EdgeCandidate weakEdge(i, j, count_id, false);
+        long key = CantorEnum(i, j);
+        // keyValues.push_back(key);
+        edges.emplace(std::make_pair(key, weakEdge));
+        count_id++;
+        // numWeakEdges++;
+      }
+      else continue;
+    }
+  }
+
+  // std::cout << "Final Num IDs = " << count_id << std::endl;
+
+  const int forestSize = edges.size();
+
+  // std::cout << "forestSize = " << edges.size() << std::endl;
+
+  // std::cout << "numStrongEdges = " << numStrongEdges << std::endl;
+
+  // std::cout << "numWeakEdges = " << numWeakEdges << std::endl;
+
+  // std::sort(keyValues.begin(), keyValues.end());
+  // int uniqueCount = std::unique(keyValues.begin(), keyValues.end()) - keyValues.begin();
+
+  // std::cout << "uniqueCount = " << uniqueCount << std::endl;
+
+  DisjointSetForest forest(forestSize);
+  forest.MakeSet();
+
+  // Assign all strong edge to root node.
+  for (auto& node : edges) {
+
+    EdgeCandidate &edge = node.second;
+    int i = edge.row;
+    int j = edge.col;
+
+    std::cout << "Edge Index: i = " << i << ", j = " << j << std::endl;
+
+    int lowerBoundx = std::max(i-1, 0);
+    int upperBoundx = std::min(i+2, (int) numChannels);
+    int lowerBoundy = std::max(j-1, 0);
+    int upperBoundy = std::min(j+2, (int) numTicks);
+
+    if (edge.edgeType) {
+      std::cout << "    Strong EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
+      if (forest.Find(edge.id) == edge.id) {
+        // Assign strong edge to root node "0"
+        forest.parent[edge.id] = 0;
+      }
+      // Handle neighbors
+      for (int k=lowerBoundx; k<upperBoundx; ++k) {
+        for (int l=lowerBoundy; l<upperBoundy; ++l) {
+          const float &grad = doneNMS2D[k][l];
+          if (grad >= lowThreshold) {
+            long key = CantorEnum(k, l);
+            // EdgeCandidate &neighborEdge = edges[key];
+            std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
+            forest.Union(edges[key].id, edge.id);
+          }
+        }
+      }
+    }
+    // Process Weak Edges
+    else {
+      std::cout << "    Weak EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
+      for (int k=lowerBoundx; k<upperBoundx; ++k) {
+        for (int l=lowerBoundy; l<upperBoundy; ++l) {
+          const float &grad = doneNMS2D[k][l];
+          if (grad >= lowThreshold) {
+            long key = CantorEnum(k, l);
+            std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
+            // EdgeCandidate &neighborEdge = edges[key];
+            forest.Union(edges[key].id, edge.id);
+          }
+        }
+      }
+    }
+  }
+
+  for (auto& node: edges) {
+    EdgeCandidate &edge = node.second;
+    int rep = forest.Find(edge.id);
+    const int &row = edge.row;
+    const int &col = edge.col;
+
+    std::cout << "row(" << edge.row << ") col(" << edge.col << ") Rep = " << rep << ", EdgeType = " << edge.edgeType << std::endl;
+
+    if (rep == 0) outputROI[row][col] = true;
+  }
+
   return;
 }
 

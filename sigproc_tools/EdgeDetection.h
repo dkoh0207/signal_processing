@@ -16,6 +16,7 @@
 #define _USE_MATH_DEFINES
 
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -39,12 +40,34 @@ namespace sigproc_tools {
 
   template <class T> using Array2D = std::vector<std::vector<T>>;
 
+  struct EdgeCandidate {
+    int row;
+    int col;
+    int id;
+    bool edgeType;
+
+    EdgeCandidate() = default;
+
+    EdgeCandidate(const int row, 
+                  const int col,
+                  const int id,
+                  const bool edgeType)
+    {
+      this->row = row;
+      this->col = col;
+      this->id = id;
+      this->edgeType = edgeType;
+    }
+  };
+
   class EdgeDetection{
     
     public:
       
       /// Default constructor
       EdgeDetection(){}
+
+      long CantorEnum(const int &x, const int &y) const;
 
       void Convolve2D(
         const Array2D<float>& input2D,
@@ -148,6 +171,12 @@ namespace sigproc_tools {
         float highThreshold,
         Array2D<bool>& outputROI
       ) const;
+
+      void HTFastLowMem(
+        const Array2D<float>& doneNMS2D,
+        float lowThreshold,
+        float highThreshold,
+        Array2D<bool>& outputROI) const;
 
       void Canny(
         const Array2D<float>& waveLessCoherent,
