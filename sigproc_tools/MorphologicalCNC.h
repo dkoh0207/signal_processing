@@ -45,6 +45,13 @@ namespace sigproc_tools {
       /// Default constructor
       MorphologicalCNC(){}
 
+      void simpleCNC(
+        const Array2D<float>& fullEvent,
+        Array2D<float>& waveLessCoherent,
+        const unsigned int grouping,
+        const unsigned int groupingOffset
+      ) const;
+
       void getSelectVals(
         const Array2D<short>&,
         Array2D<bool>&,

@@ -32,6 +32,7 @@
 #include "EdgeDetection.h"
 #include "Morph2DFast.h"
 #include "BilateralFilters.h"
+#include "Denoising.h"
 
 namespace sigproc_tools {
 
@@ -41,6 +42,7 @@ namespace sigproc_tools {
      doxygen documentation!
   */
   template <class T> using Array2D = std::vector<std::vector<T>>;
+  template <class T> using Waveform2D = std::vector<std::vector<T>>;
 
   class FindROI2D{
     
@@ -95,6 +97,7 @@ namespace sigproc_tools {
 
         char MORPHOLOGICAL_FILTER_NAME,
         const unsigned int CHANNEL_GROUPING,
+        const unsigned int CHANNEL_GROUPING_OFFSET,
         const unsigned int STRUCTURING_ELEMENT_X,
         const unsigned int STRUCTURING_ELEMENT_Y,
         const unsigned int ROI_EXPAND_WINDOW_SIZE,

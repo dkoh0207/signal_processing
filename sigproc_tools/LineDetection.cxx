@@ -5,6 +5,7 @@
 
 
 void sigproc_tools::LineDetection::HoughTransform(
+  const Array2D<float>& fullEvent,
   const Array2D<bool>& binary2D,
   Array2D<int>& accumulator2D,
   const unsigned int thetaSteps) const
@@ -53,10 +54,258 @@ void sigproc_tools::LineDetection::HoughTransform(
       if (std::abs( (int) ir ) > 2 * diagLength) {
         std::cout << ir << std::endl;
       }
-      accumulator2D[ir][itheta] += 1;
+      accumulator2D[ir][itheta] += std::sqrt(std::abs(fullEvent[pt.x][pt.y]) + 0.001);
     }
   }
 
+  return;
+}
+
+
+void sigproc_tools::LineDetection::CartesianHoughTransform(
+  const Array2D<float>& fullEvent,
+  const Array2D<bool>& binary2D,
+  Array2D<int>& accumulator2D,
+  const float maxAngleDev,
+  const int thetaSteps) const
+{
+  const double pi = 3.141592653589793238462643383279502884;
+
+  assert(maxAngleDev < 90);
+
+  const int numChannels = binary2D.size();
+  const int numTicks = binary2D.at(0).size();
+
+  const float maxAngle = ((float) maxAngleDev) / ((float) 180) * (float) pi;
+  const float dtheta = 2.0 * maxAngle / ((float) 2 * thetaSteps);
+
+  std::vector<float> slopeTab(thetaSteps * 2);
+  for (int i=0; i< thetaSteps; ++i) {
+    // 0 ~ maxAngle
+    slopeTab.at(i * 2) = (float) std::tan(i * dtheta);
+    // 0 ~ -maxAngle
+    slopeTab.at(i * 2+1) = (float) -std::tan(i * dtheta);
+  }
+
+  const int padding = ((int) numChannels * std::tan(maxAngle) + 1);
+
+  // Accumulator for slope and tick-intercept 
+  accumulator2D.resize(2 * thetaSteps);
+  for (auto& v : accumulator2D) {
+    v.resize(numTicks + 2 * padding);
+  }
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      if (binary2D[i][j]) {
+        // 0 ~ -maxAngle
+        for (int m=0; m<thetaSteps; ++m) {
+          const int intercept = (int) (slopeTab[2*(thetaSteps-m-1)+1] * ((float) i));
+          accumulator2D.at(m).at(
+            padding + j - intercept) += (int) std::abs(fullEvent[i][j]);;
+        }
+        for (int m=0; m<thetaSteps; ++m) {
+          // Process positive angles
+          const int intercept = (int) (slopeTab[2*m] * ((float) i));
+          accumulator2D.at(thetaSteps + m).at(
+            padding + j - intercept) += (int) std::abs(fullEvent[i][j]);
+        }
+      }
+    }
+  }
+
+  // Run NMS
+  return;
+}
+
+
+void sigproc_tools::LineDetection::spiralIndex(
+  std::vector<int> &spiralX, 
+  std::vector<int> &spiralY, int n) const
+{
+  int ix = 1;
+  int iy = -1;
+
+  int count = 0;
+
+  for (int i=2; i<n; ++i) {
+    if (i % 2 == 0) {
+      for (int j=0; j<i; ++j) {
+        spiralX.at(count) = ix;
+        spiralY.at(count) = iy;
+        ix--;
+        count++;
+      }
+      for (int j=0; j<i; ++j) {
+        spiralX.at(count) = ix;
+        spiralY.at(count) = iy;
+        iy++;
+        count++;
+      }
+    }
+    else {
+      for (int j=0; j<i; ++j) {
+        spiralX.at(count) = ix;
+        spiralY.at(count) = iy;
+        ix++;
+        count++;
+      }
+      for (int j=0; j<i; ++j) {
+        spiralX.at(count) = ix;
+        spiralY.at(count) = iy;
+        iy--;
+        count++;
+      }
+    }
+  }
+
+  for (int i=0; i<n; ++i) {
+    spiralX.at(count) = ix;
+    spiralY.at(count) = iy;
+    ix++;
+    count++;
+  }
+
+  assert(count == (int) spiralX.size());
+  assert(count == (int) spiralY.size());
+  return;
+}
+
+
+void sigproc_tools::LineDetection::FastNMS(
+  const Array2D<int>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int n) const
+{
+  /*
+  Pham, Tuan. (2010). Non-maximum Suppression Using
+  Fewer than Two Comparisons per Pixel. 438-451. 10.1007/978-3-642-17688-3_41. 
+
+  Implementation is largely taken from the MATLAB code in the paper. 
+  */
+  const int numTheta = accumulator2D.size();
+  const int numIntercept = accumulator2D.at(0).size();
+
+  const int neighborhoodSize = (2*n+1) * (2*n+1);
+
+  std::vector<short> resp(numIntercept);
+  std::vector<bool> skip(numIntercept);
+
+  // Precompute spiral index
+  std::vector<int> spiralX(neighborhoodSize);
+  std::vector<int> spiralY(neighborhoodSize);
+
+  spiralIndex(spiralX, spiralY, n);
+
+  for (int i=n+1; i<numTheta-n; ++i) {
+
+    std::vector<int> peaks;
+    ScanLine(accumulator2D.at(i), peaks, resp, n);
+
+    for (int j=0; j < (int) peaks.size(); ++j) {
+
+      int &peakIndex = peaks.at(i);
+
+      if (skip.at(peakIndex)) continue;
+
+      const std::vector<int> &scanLine = accumulator2D.at(i);
+
+      const int &pixVal = scanLine.at(peakIndex);
+      bool isLocalMax = true;
+      int breakIndex = peakIndex+n+1;
+
+      // Check n pixels to the right for local max
+      for (int ii=peakIndex+1; ii<peakIndex+n+1; ++ii) {
+        if (resp.at(ii) != 0) {
+          breakIndex = ii;
+          break;
+        }
+      }
+      for (int ii=breakIndex; ii<peakIndex+n+1; ++ii) {
+        if (pixVal <= scanLine.at(ii)) {
+          isLocalMax = false;
+          break;
+        }
+        else {
+          skip.at(ii) = true;
+        }
+      }
+
+      breakIndex = peakIndex-n-1;
+      // Check n pixels to the left for local max.
+      for (int ii=peakIndex-1; ii>peakIndex-n-1; --ii) {
+        if (resp.at(ii) != 0) {
+          breakIndex = ii;
+          break;
+        }
+      }
+
+      for (int ii=breakIndex; ii>peakIndex-n-1; --ii) {
+        
+        if (pixVal <= scanLine.at(ii)) {
+          isLocalMax = false;
+          break;
+        }
+        else {
+          skip.at(ii) = true;
+        }
+      }
+
+      if (!isLocalMax) continue;
+
+      // If one reaches here, candidate is a tick axis n neighborhood local max
+
+      int ix = peakIndex;
+      int iy = i;
+
+      for (int k=0; k< (int) spiralX.size(); ++k) {
+        ix = peakIndex + spiralX.at(k);
+        iy = i + spiralY.at(k);
+        if (accumulator2D[i][peakIndex] <= accumulator2D[ix][iy]) {
+          isLocalMax = false;
+          break;
+        }
+      }
+
+      if (isLocalMax && (pixVal >= threshold)) {
+        rhoIndex.push_back(ix);
+        thetaIndex.push_back(i);
+      }
+    }
+  }
+
+  return;
+}
+
+void sigproc_tools::LineDetection::ScanLine(
+  const std::vector<int>& row,
+  std::vector<int>& candidates,
+  std::vector<short>& resp,
+  const int n) const
+{
+  /*
+  Pham, Tuan. (2010). Non-maximum Suppression Using
+  Fewer than Two Comparisons per Pixel. 438-451. 10.1007/978-3-642-17688-3_41. 
+
+  Implementation is largely taken from the MATLAB code in the paper. 
+  */
+  int numTicks = row.size();
+
+  for (int i=1; i<numTicks-1; ++i)
+  {
+    resp.at(i) = (
+      (int) (row.at(i+1) > row.at(i)) - 
+      (int) (row.at(i) > row.at(i-1)));
+    
+    // Now buffer is resp
+    for (int i=n; i<numTicks-n; ++i) {
+      if (resp.at(i) == -2) {
+        candidates.push_back(i);
+      }
+    }
+  }
   return;
 }
 
@@ -364,48 +613,48 @@ void sigproc_tools::LineDetection::drawLine(
 }
 
 
-void sigproc_tools::LineDetection::refineSelectVals(
-  const Array2D<bool>& selectVals,
-  Array2D<bool>& refinedSelectVals,
-  const size_t thetaSteps,
-  const unsigned int threshold,
-  const unsigned int angleWindow,
-  const unsigned int maxLines,
-  const unsigned int windowSize,
-  const unsigned int dilationX,
-  const unsigned int dilationY,
-  const float eps) const
-{
-  int numChannels = selectVals.size();
-  int numTicks = selectVals.at(0).size();
-  const double pi = 3.141592653589793238462643383279502884;
+// void sigproc_tools::LineDetection::refineSelectVals(
+//   const Array2D<bool>& selectVals,
+//   Array2D<bool>& refinedSelectVals,
+//   const size_t thetaSteps,
+//   const unsigned int threshold,
+//   const unsigned int angleWindow,
+//   const unsigned int maxLines,
+//   const unsigned int windowSize,
+//   const unsigned int dilationX,
+//   const unsigned int dilationY,
+//   const float eps) const
+// {
+//   int numChannels = selectVals.size();
+//   int numTicks = selectVals.at(0).size();
+//   const double pi = 3.141592653589793238462643383279502884;
 
-  Array2D<int> accumulator2D;
-  HoughTransform(selectVals, accumulator2D, thetaSteps);
+//   Array2D<int> accumulator2D;
+//   HoughTransform(selectVals, accumulator2D, thetaSteps);
 
-  std::vector<int> rhoIndex;
-  std::vector<int> thetaIndex;
+//   std::vector<int> rhoIndex;
+//   std::vector<int> thetaIndex;
 
-  FindPeaksNMS(accumulator2D, rhoIndex, thetaIndex, 
-               threshold, angleWindow, maxLines, windowSize);
+//   FindPeaksNMS(accumulator2D, rhoIndex, thetaIndex, 
+//                threshold, angleWindow, maxLines, windowSize);
 
-  int diagLength = (int) std::round(
-    std::sqrt(numChannels * numChannels + numTicks * numTicks));
+//   int diagLength = (int) std::round(
+//     std::sqrt(numChannels * numChannels + numTicks * numTicks));
 
-  float rho = 0.0;
-  float angle = 0.0;
+//   float rho = 0.0;
+//   float angle = 0.0;
 
-  std::cout << rhoIndex.size() << std::endl;
-  std::cout << thetaIndex.size() << std::endl;
+//   std::cout << rhoIndex.size() << std::endl;
+//   std::cout << thetaIndex.size() << std::endl;
 
-  for (size_t i=0; i<rhoIndex.size(); ++i) {
-    rho = rhoIndex[i] - diagLength;
-    angle = thetaIndex[i] * pi / ( (float) thetaSteps );
-    Line l = getLine(selectVals, angle, rho, eps, angleWindow);
-    std::cout << "x0 = " << l.x0 << ", y0 = " << l.y0 << ", slope = " << l.slope << std::endl;
-    drawLine(refinedSelectVals, l, dilationX, dilationY);
-  }
-  return;
-}
+//   for (size_t i=0; i<rhoIndex.size(); ++i) {
+//     rho = rhoIndex[i] - diagLength;
+//     angle = thetaIndex[i] * pi / ( (float) thetaSteps );
+//     Line l = getLine(selectVals, angle, rho, eps, angleWindow);
+//     std::cout << "x0 = " << l.x0 << ", y0 = " << l.y0 << ", slope = " << l.slope << std::endl;
+//     drawLine(refinedSelectVals, l, dilationX, dilationY);
+//   }
+//   return;
+// }
 
 #endif

@@ -81,6 +81,58 @@ void sigproc_tools::MorphologicalCNC::getSelectVals(
 }
 
 
+void sigproc_tools::MorphologicalCNC::simpleCNC(
+  const Array2D<float>& fullEvent,
+  Array2D<float>& waveLessCoherent,
+  const unsigned int grouping,
+  const unsigned int groupingOffset) const
+{
+  
+  auto numChannels = fullEvent.size();
+  auto nTicks = fullEvent.at(0).size();
+  auto nGroups = ((int) numChannels - (int) groupingOffset) / grouping;
+  sigproc_tools::MiscUtils utils;
+
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<nGroups; ++j) {
+      size_t group_start = j * grouping + (size_t) groupingOffset;
+      size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
+      // Compute median.
+      std::vector<float> v;
+      v.reserve(grouping);
+      for (size_t c=group_start; c<group_end; ++c) {
+        v.push_back(fullEvent[c][i]);
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        median = utils.computeMedian(v);
+      }
+      for (size_t k=group_start; k<group_end; ++k) {
+        waveLessCoherent[k][i] = fullEvent[k][i] - median;
+      }
+    }
+  }
+
+  // Compensate for offset in channel groupings
+  if (groupingOffset > 0) {
+    for (size_t i=0; i<nTicks; ++i) {
+      std::vector<float> v;
+      v.reserve(groupingOffset);
+      for (size_t c=0; c<groupingOffset; ++c) {
+        v.push_back(fullEvent[c][i]);
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        median = utils.computeMedian(v);
+      }
+      for (size_t k=0; k<groupingOffset; ++k) {
+        waveLessCoherent[k][i] = fullEvent[k][i] - median;
+      }
+    }
+  }
+}
+
+
 void sigproc_tools::MorphologicalCNC::denoiseMorph1D(
   Array2D<short>& waveLessCoherent,
   Array2D<short>& morphedWaveforms,

@@ -109,8 +109,8 @@ void sigproc_tools::EdgeDetection::Sobel(
   int numChannels = input2D.size();
   int numTicks = input2D.at(0).size();
 
-  SobelX(input2D, sobelX);
-  SobelY(input2D, sobelY);
+  SobelXFast(input2D, sobelX);
+  SobelYFast(input2D, sobelY);
 
   for (int i=0; i<numChannels; ++i) {
     for (int j=0; j<numTicks; ++j) {
@@ -499,7 +499,7 @@ void sigproc_tools::EdgeDetection::HysteresisThresholdingFast(
 
   const int forestSize = numChannels * numTicks;
 
-  DisjointSetForest forest(forestSize);
+  DisjointSetForest forest(forestSize, forestSize);
 
   forest.MakeSet();
   // std::cout << "size = " << forest.size << std::endl;
@@ -637,7 +637,7 @@ void sigproc_tools::EdgeDetection::HTFastLowMem(
     int i = edge.row;
     int j = edge.col;
 
-    std::cout << "Edge Index: i = " << i << ", j = " << j << std::endl;
+    // std::cout << "Edge Index: i = " << i << ", j = " << j << std::endl;
 
     int lowerBoundx = std::max(i-1, 0);
     int upperBoundx = std::min(i+2, (int) numChannels);
@@ -645,7 +645,7 @@ void sigproc_tools::EdgeDetection::HTFastLowMem(
     int upperBoundy = std::min(j+2, (int) numTicks);
 
     if (edge.edgeType) {
-      std::cout << "    Strong EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
+      // std::cout << "    Strong EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
       if (forest.Find(edge.id) == edge.id) {
         // Assign strong edge to root node "0"
         forest.parent[edge.id] = 0;
@@ -657,7 +657,7 @@ void sigproc_tools::EdgeDetection::HTFastLowMem(
           if (grad >= lowThreshold) {
             long key = CantorEnum(k, l);
             // EdgeCandidate &neighborEdge = edges[key];
-            std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
+            // std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
             forest.Union(edges[key].id, edge.id);
           }
         }
@@ -665,13 +665,13 @@ void sigproc_tools::EdgeDetection::HTFastLowMem(
     }
     // Process Weak Edges
     else {
-      std::cout << "    Weak EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
+      // std::cout << "    Weak EdgeCandidate: row(" << edge.row << ") col(" << edge.col << ") type(" << edge.edgeType << ") id(" << edge.id << ")" << std::endl;
       for (int k=lowerBoundx; k<upperBoundx; ++k) {
         for (int l=lowerBoundy; l<upperBoundy; ++l) {
           const float &grad = doneNMS2D[k][l];
           if (grad >= lowThreshold) {
             long key = CantorEnum(k, l);
-            std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
+            // std::cout << "        Neighbor EdgeCandidate: row(" << edges[key].row << ") col(" << edges[key].col << ") type(" << edges[key].edgeType << ") id(" << edges[key].id << ")" << std::endl;
             // EdgeCandidate &neighborEdge = edges[key];
             forest.Union(edges[key].id, edge.id);
           }
@@ -686,7 +686,7 @@ void sigproc_tools::EdgeDetection::HTFastLowMem(
     const int &row = edge.row;
     const int &col = edge.col;
 
-    std::cout << "row(" << edge.row << ") col(" << edge.col << ") Rep = " << rep << ", EdgeType = " << edge.edgeType << std::endl;
+    // std::cout << "row(" << edge.row << ") col(" << edge.col << ") Rep = " << rep << ", EdgeType = " << edge.edgeType << std::endl;
 
     if (rep == 0) outputROI[row][col] = true;
   }

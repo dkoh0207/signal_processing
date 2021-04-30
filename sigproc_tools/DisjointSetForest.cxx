@@ -30,14 +30,13 @@ void sigproc_tools::DisjointSetForest::MakeSet(const std::vector<int>& strongEdg
         std::cout << msg << std::endl;
         return;
     }
-    int root = strongEdges[0];
 
     for (int i=0; i< (int) size; ++i) {
         parent[i] = i;
     }
 
     for (const int& x : strongEdges) {
-        parent[x] = root;
+        parent[x] = rootNode;
     }
     return;
 }
@@ -49,9 +48,9 @@ void sigproc_tools::DisjointSetForest::Union(const int x, const int y)
 
     if (repX == repY) return;
 
-    else if (repX == (int) (size-1)) parent[repY] = repX;
+    else if (repX == rootNode) parent[repY] = repX;
 
-    else if (repY == (int) (size-1)) parent[repX] = repY;
+    else if (repY == rootNode) parent[repX] = repY;
 
     else {
         int rankX = rank[repX];

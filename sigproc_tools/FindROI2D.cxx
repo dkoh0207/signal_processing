@@ -23,7 +23,7 @@ void sigproc_tools::FindROI2D::applyChainFilter(
   const float MORPHOLOGICAL_THRESHOLD_FACTOR = 2.5,
 
   const size_t THETASTEPS = 360,
-  const unsigned int HOUGH_THRESHOLD = 400,
+  const unsigned int HOUGH_THRESHOLD = 999999,
   const unsigned int NMS_WINDOW_SIZE = 20,
   const unsigned int ANGLE_WINDOW = 20,
 
@@ -31,8 +31,8 @@ void sigproc_tools::FindROI2D::applyChainFilter(
   const unsigned int ADFILTER_SX = 5,
   const unsigned int ADFILTER_SY = 20,
 
-  const unsigned int BINARY_CLOSING_SX = 5,
-  const unsigned int BINARY_CLOSING_SY = 20,
+  const unsigned int BINARY_CLOSING_SX = 31,
+  const unsigned int BINARY_CLOSING_SY = 31,
 
   const float GLOBAL_THRESHOLDING_FACTOR = 2.0) const
 {
@@ -197,161 +197,98 @@ void sigproc_tools::FindROI2D::applyChainFilter(
 }
 
 
-void sigproc_tools::FindROI2D::applyCannyFilter(
-  const Array2D<float>& waveform2D,
-  Array2D<float>& fullEvent,
-  Array2D<bool>& outputROI,
-  Array2D<float>& waveLessCoherent,
-  Array2D<float>& morphedWaveform2D,
-  // Default Parameters
-  size_t FREQUENCY_THRESHOLD = 30,
-  size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER = 2,
-  size_t FREQUENCY_FILTER_MODE = 0,
+// void sigproc_tools::FindROI2D::applyCannyFilter(
+//   const Array2D<float>& waveform2D,
+//   Array2D<float>& fullEvent,
+//   Array2D<bool>& outputROI,
+//   Array2D<float>& waveLessCoherent,
+//   Array2D<float>& morphedWaveform2D,
+//   // Default Parameters
+//   size_t FREQUENCY_THRESHOLD = 30,
+//   size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER = 2,
+//   size_t FREQUENCY_FILTER_MODE = 0,
 
-  // Coherent Noise Correction Parameters
-  char MORPHOLOGICAL_FILTER_NAME = 'e',
-  const unsigned int CHANNEL_GROUPING = 32,
-  const unsigned int STRUCTURING_ELEMENT_X = 7,
-  const unsigned int STRUCTURING_ELEMENT_Y = 28,
-  const unsigned int ROI_EXPAND_WINDOW_SIZE = 10,
-  const float MORPHOLOGICAL_THRESHOLD_FACTOR = 2.5,
+//   // Coherent Noise Correction Parameters
+//   char MORPHOLOGICAL_FILTER_NAME = 'e',
+//   const unsigned int CHANNEL_GROUPING = 32,
+//   const unsigned int CHANNEL_GROUPING_OFFSET = 0,
+//   const unsigned int STRUCTURING_ELEMENT_X = 7,
+//   const unsigned int STRUCTURING_ELEMENT_Y = 7,
+//   const unsigned int ROI_EXPAND_WINDOW_SIZE = 10,
+//   const float MORPHOLOGICAL_THRESHOLD_FACTOR = 2.5,
 
-  // Hough Transform Parameters
-  const size_t THETASTEPS = 360,
-  const unsigned int HOUGH_THRESHOLD = 400,
-  const unsigned int NMS_WINDOW_SIZE = 20,
-  const unsigned int ANGLE_WINDOW = 20,
+//   // Hough Transform Parameters
+//   const size_t THETASTEPS = 360,
+//   const unsigned int HOUGH_THRESHOLD = 400,
+//   const unsigned int NMS_WINDOW_SIZE = 20,
+//   const unsigned int ANGLE_WINDOW = 20,
 
-  // float NOISE_VARIANCE = 20.0;
-  const unsigned int ADFILTER_SX = 7,
-  const unsigned int ADFILTER_SY = 7,
-  const float sigma_x = 5.0, 
-  const float sigma_y = 5.0, 
-  const float sigma_r = 30.0, 
-  const float lowThreshold = 3.0,
-  const float highThreshold = 15.0,
+//   // float NOISE_VARIANCE = 20.0;
+//   const unsigned int ADFILTER_SX = 7,
+//   const unsigned int ADFILTER_SY = 7,
+//   const float sigma_x = 5.0, 
+//   const float sigma_y = 5.0, 
+//   const float sigma_r = 30.0, 
+//   const float lowThreshold = 3.0,
+//   const float highThreshold = 15.0,
 
-  const unsigned int BINARY_CLOSING_SX = 13,
-  const unsigned int BINARY_CLOSING_SY = 13) const
-{
-  // All input arrays must have the same dimensions as waveform2D
+//   const unsigned int BINARY_CLOSING_SX = 13,
+//   const unsigned int BINARY_CLOSING_SY = 13) const
+// {
+//   // All input arrays must have the same dimensions as waveform2D
 
-  int numChannels = waveform2D.size();
-  int numTicks = waveform2D.at(0).size();
+//   size_t numChannels = waveform2D.size();
+//   size_t numTicks = waveform2D.at(0).size();
 
-  fullEvent.resize(numChannels);
-  for (auto& v : fullEvent) {
-    v.resize(numTicks);
-  }
+//   Denoising basicDenoise;
+//   FrequencyFilters1D freqFilter;
+//   MorphologicalCNC CNC;
+//   Morph2DFast morph;
+//   EdgeDetection edges;
+//   BilateralFilters bilateral;
 
-  sigproc_tools::MiscUtils utils;
+//   Array2D<float> buffer(numChannels, std::vector<float>(numTicks));
 
-  // 1. Remove Pedestals
-  for (int i=0; i<numChannels; ++i) {
-    float median = utils.computeMedian(waveform2D[i]);
-    for (int j=0; j<numTicks; ++j) {
-      fullEvent[i][j] = waveform2D[i][j] - median;
-    }
-  }
+//   Array2D<bool> binaryBuffer(numChannels, std::vector<bool>(numTicks));
 
-  // 2. Buffer for intermediate computations
-  Array2D<float> buffer(numChannels);
-  Array2D<bool> selectVals(numChannels);
-  Array2D<bool> rois(numChannels);
-  Array2D<bool> refinedSelectVals(numChannels);
+//   Array2D<float> sobelX(numChannels, std::vector<float>(numTicks));
 
-  for (auto& v : buffer) {
-    v.resize(numTicks);
-  }
+//   Array2D<float> sobelY(numChannels, std::vector<float>(numTicks));
 
-  for (auto& v : selectVals) {
-    v.resize(numTicks);
-  }
+//   Array2D<float> gradient(numChannels, std::vector<float>(numTicks));
 
-  for (auto& v : rois) {
-    v.resize(numTicks);
-  }
+//   Array2D<float> direction(numChannels, std::vector<float>(numTicks));
 
-  for (auto& v : refinedSelectVals) {
-    v.resize(numTicks);
-  }
-  std::cout << "1" << std::endl;
-  // 3. Apply frequency high pass filters
-  sigproc_tools::FrequencyFilters1D freqFilt;
-  freqFilt.filterImage(
-    fullEvent,
-    FREQUENCY_THRESHOLD,
-    buffer,
-    FREQUENCY_FILTER_SMOOTHNESS_ORDER,
-    FREQUENCY_FILTER_MODE);
-  
-  // 4. Run Coherent Noise Correction
-  sigproc_tools::MorphologicalCNC denoiser;
-  std::cout << "2" << std::endl;
-  denoiser.denoiseHough2D(
-    waveLessCoherent,
-    morphedWaveform2D,
-    buffer,
-    selectVals,
-    refinedSelectVals,
-    rois,
-    MORPHOLOGICAL_FILTER_NAME,
-    CHANNEL_GROUPING,
-    STRUCTURING_ELEMENT_X,
-    STRUCTURING_ELEMENT_Y,
-    ROI_EXPAND_WINDOW_SIZE,
-    MORPHOLOGICAL_THRESHOLD_FACTOR,
-    THETASTEPS,
-    HOUGH_THRESHOLD,
-    NMS_WINDOW_SIZE,
-    ANGLE_WINDOW);
+//   for (size_t i=0; i<numChannels; ++i) {
+//     for (size_t j=0; j<numTicks; ++j) {
+//       buffer[i][j] = waveform2D[i][j];
+//     }
+//   }
 
-  // 5. Directional Smoothing
-  std::cout << "3" << std::endl;
-  sigproc_tools::BilateralFilters biFilter;
-  sigproc_tools::EdgeDetection edgeDetector;
+//   basicDenoise.subtractPedestals(buffer);
 
-  Array2D<float> sobelX(numChannels);
-  for (auto& v : sobelX) {
-    v.resize(numTicks);
-  }
+//   freqFilter.filterImage(buffer, FREQUENCY_THRESHOLD, waveLessCoherent,
+//                          FREQUENCY_FILTER_SMOOTHNESS_ORDER, 0);
 
-  Array2D<float> sobelY(numChannels);
-  for (auto& v : sobelY) {
-    v.resize(numTicks);
-  }
+//   CNC.simpleCNC(waveLessCoherent, buffer, CHANNEL_GROUPING, CHANNEL_GROUPING_OFFSET);
 
-  Array2D<float> gradient(numChannels);
-  for (auto& v : gradient) {
-    v.resize(numTicks);
-  }
+//   edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
 
-  Array2D<float> direction(numChannels);
-  for (auto& v : direction) {
-    v.resize(numTicks);
-  }
-  std::cout << "4" << std::endl;
-  edgeDetector.Sobel(waveLessCoherent, sobelX, sobelY, gradient, direction);
-  std::cout << "5" << std::endl;
-  sobelX.clear();
-  sobelY.clear();
-  std::cout << "6" << std::endl;
-  biFilter.directional(waveLessCoherent, direction, buffer, ADFILTER_SX, ADFILTER_SY, sigma_x, sigma_y, sigma_r, 360);
-  std::cout << "7" << std::endl;
-  rois.resize(numChannels);
-  for (auto& v : rois) {
-    v.resize(numTicks);
-  }
-  std::cout << "8" << std::endl;
-  // 5. Apply Canny Edge Detection
-  edgeDetector.Canny(buffer, rois, ADFILTER_SX, ADFILTER_SY, 
-    sigma_x, sigma_y, sigma_r, 
-    lowThreshold, highThreshold, MORPHOLOGICAL_FILTER_NAME);
-  std::cout << "9" << std::endl;
-  // 6. Expand predicted edge regions with binary closing
-  sigproc_tools::Morph2DFast morph2D;
-  morph2D.getClosing(rois, BINARY_CLOSING_SX, BINARY_CLOSING_SY, outputROI);
-  return;
-}
+//   bilateral.directional(buffer, direction, waveLessCoherent, 
+//     STRUCTURING_ELEMENT_X, STRUCTURING_ELEMENT_Y, 
+//     sigma_x, sigma_y, sigma_r, THETASTEPS);
+
+//   morph.getDilation(waveLessCoherent, ADFILTER_SX, ADFILTER_SY, buffer);
+
+//   edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
+
+//   edges.EdgeNMSInterpolation(gradient, sobelX, sobelY, direction, buffer);
+
+//   edges.HTFastLowMem(buffer, lowThreshold, highThreshold, binaryBuffer);
+
+//   morph.getDilation(binaryBuffer, BINARY_CLOSING_SX, BINARY_CLOSING_SY, outputROI);
+
+//   return;
+// }
 
 #endif

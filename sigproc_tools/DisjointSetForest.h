@@ -27,14 +27,17 @@ namespace sigproc_tools {
   */
 
   class DisjointSetForest{
+
+    int rootNode = 0;
     
     public:
       
       /// Default constructor
-      DisjointSetForest(const unsigned int size) {
+      DisjointSetForest(const unsigned int size, const int rootIndex=0) {
         parent.resize(size+1);
         rank.resize(size+1);
         this->size = size+1;
+        rootNode = rootIndex;
       }
       
       /// Default destructor

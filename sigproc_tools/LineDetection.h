@@ -18,6 +18,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include "assert.h"
 #include <functional>
 
 namespace sigproc_tools {
@@ -51,9 +52,32 @@ namespace sigproc_tools {
       /// Default destructor
       ~LineDetection(){}
       
-      void HoughTransform(const Array2D<bool>& binary2D,
+      void HoughTransform(const Array2D<float>& fullEvent,
+                          const Array2D<bool>& binary2D,
                           Array2D<int>& accumulator2D,
                           const unsigned int thetaSteps = 360) const;
+
+      void CartesianHoughTransform(
+        const Array2D<float>& fullEvent,
+        const Array2D<bool>& binary2D,
+        Array2D<int>& accumulator2D,
+        const float maxAngleDev = 20.0,
+        const int thetaSteps=100) const;
+        
+      void ScanLine(const std::vector<int>& row,
+                    std::vector<int>& candidates,
+                    std::vector<short>& resp,
+                    const int n) const;
+
+      void FastNMS(
+        const Array2D<int>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int n) const;
+
+      void spiralIndex(std::vector<int> &spiralX, 
+                       std::vector<int> &spiralY, int n) const;
 
       
       void FindPeaksNMS(const Array2D<int>& accumulator2D,

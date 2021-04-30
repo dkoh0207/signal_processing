@@ -158,8 +158,7 @@ namespace sigproc_tools {
         const float);
 
       void subtractPedestals(
-        std::vector<std::vector<float>>& wf2d,
-        const std::vector<std::vector<bool>>& selectVals);
+        std::vector<std::vector<float>>& wf2d);
 
 
     /// Default destructor
