@@ -90,6 +90,24 @@ void sigproc_tools::Morph1DFast::getDilation(
 }
 
 void sigproc_tools::Morph1DFast::getDilation(
+  const Waveform<int>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<int>& dilationVec) const
+{
+  getDilation<int>(inputWaveform, structuringElement, dilationVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getDilation(
+  const Waveform<long>& inputWaveform,
+  const unsigned int structuringElement,
+  Waveform<long>& dilationVec) const
+{
+  getDilation<long>(inputWaveform, structuringElement, dilationVec);
+  return;
+}
+
+void sigproc_tools::Morph1DFast::getDilation(
   const Waveform<float>& inputWaveform,
   const unsigned int structuringElement,
   Waveform<float>& dilationVec) const

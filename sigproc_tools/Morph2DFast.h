@@ -48,6 +48,16 @@ namespace sigproc_tools {
                         const unsigned int,
                         std::vector<std::vector<short> >&) const;
 
+        void getDilation(const std::vector<std::vector<int> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<int> >&) const;
+
+        void getDilation(const std::vector<std::vector<long> >&,
+                        const unsigned int,
+                        const unsigned int,
+                        std::vector<std::vector<long> >&) const;
+
         void getDilation(const std::vector<std::vector<float> >&,
                         const unsigned int,
                         const unsigned int,

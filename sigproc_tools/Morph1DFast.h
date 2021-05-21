@@ -50,6 +50,14 @@ namespace sigproc_tools {
                        const unsigned int,
                        Waveform<short>&) const;
 
+      void getDilation(const Waveform<int>&,
+                       const unsigned int,
+                       Waveform<int>&) const;
+
+      void getDilation(const Waveform<long>&,
+                       const unsigned int,
+                       Waveform<long>&) const;
+
       void getDilation(const Waveform<float>&,
                        const unsigned int,
                        Waveform<float>&) const;

@@ -50,6 +50,24 @@ namespace sproc {
     }
 
 
+    PyObject* as_ndarray(const std::vector<int>& data) {
+      SetPyUtil();
+      npy_intp dims_[1];
+      dims_[0] = data.size();
+      PyObject* res = PyArray_ZEROS(1,dims_,NPY_INT,0);
+      PyArrayObject *ptr = (PyArrayObject*)(res);
+      npy_intp loc_[1];
+      loc_[0] = 0;
+      auto fptr = (int*)(PyArray_GetPtr(ptr, loc_));
+      for (size_t i = 0; i < data.size(); ++i)
+	fptr[i] = data[i];
+      
+      //PyArray_INCREF(ptr);
+      //PyArray_Free(ptr, (void*)fptr);
+      return res;
+    }
+
+
     PyObject* as_ndarray(const std::vector<std::vector<float> >& data) {
       SetPyUtil();
       npy_intp dim_data[2];
@@ -194,6 +212,30 @@ namespace sproc {
       }
       
       std::vector<std::vector<float > > data(dims[0],std::vector<float>(dims[1]));
+
+      for(int i=0; i<dims[0]; ++i) {
+	for(int j=0; j<dims[1]; ++j) {
+	  data[i][j] = carray[i][j];
+	}
+      }
+      
+      PyArray_Free(pyarray,  (void *)carray);
+      
+      return data;
+    }
+
+    std::vector<std::vector<int> > as_int_vector_2d(PyObject* pyarray) {
+      ::sproc::pyutil::SetPyUtil();
+      int **carray;
+      const int dtype = NPY_INT;
+      PyArray_Descr *descr = PyArray_DescrFromType(dtype);
+      npy_intp dims[2];
+      if (PyArray_AsCArray(&pyarray, (void *)&carray, dims, 2, descr) < 0) {
+	std::cerr<<"ERROR: cannot convert pyarray to 2D C-array"<<std::endl;
+	throw std::exception();
+      }
+      
+      std::vector<std::vector<int > > data(dims[0],std::vector<int>(dims[1]));
 
       for(int i=0; i<dims[0]; ++i) {
 	for(int j=0; j<dims[1]; ++j) {

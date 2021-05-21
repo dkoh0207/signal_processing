@@ -27,6 +27,28 @@ void sigproc_tools::Morph2DFast::getDilation(
 }
 
 void sigproc_tools::Morph2DFast::getDilation(
+  const std::vector<std::vector<int> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<int> >& dilation2D) const
+{
+  getDilation<int>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::getDilation(
+  const std::vector<std::vector<long> >& waveform2D,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  std::vector<std::vector<long> >& dilation2D) const
+{
+  getDilation<long>(waveform2D, structuringElementx,
+    structuringElementy, dilation2D);
+  return;
+}
+
+void sigproc_tools::Morph2DFast::getDilation(
   const std::vector<std::vector<float> >& waveform2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,

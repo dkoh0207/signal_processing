@@ -13,9 +13,11 @@
 #pragma link C++ class sproc::pyutil::load_pyutil+;
 #ifndef __CINT__
 #pragma link C++ function sproc::pyutil::as_ndarray(const std::vector<float>&)+;
+#pragma link C++ function sproc::pyutil::as_ndarray(const std::vector<int>&)+;
 #pragma link C++ function sproc::pyutil::as_ndarray(const std::vector<std::vector<float> >&)+;
 #pragma link C++ function sproc::pyutil::as_float32_vector(PyObject*)+;
 #pragma link C++ function sproc::pyutil::as_float32_vector_2d(PyObject*)+;
+#pragma link C++ function sproc::pyutil::as_int_vector_2d(PyObject*)+;
 #pragma link C++ function sproc::pyutil::as_ndarray(const std::vector<bool>&)+;
 #pragma link C++ function sproc::pyutil::as_ndarray(const std::vector<std::vector<bool> >&)+;
 #pragma link C++ function sproc::pyutil::as_bool_vector(PyObject*)+;

@@ -18,8 +18,14 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include "assert.h"
+#include <stdexcept>
 #include <functional>
+
+#include "Morph2DFast.h"
+#include "DisjointSetForest.h"
 
 namespace sigproc_tools {
 
@@ -57,8 +63,7 @@ namespace sigproc_tools {
                           Array2D<int>& accumulator2D,
                           const unsigned int thetaSteps = 360) const;
 
-      void CartesianHoughTransform(
-        const Array2D<float>& fullEvent,
+      int CartesianHoughTransform(
         const Array2D<bool>& binary2D,
         Array2D<int>& accumulator2D,
         const float maxAngleDev = 20.0,
@@ -69,12 +74,56 @@ namespace sigproc_tools {
                     std::vector<short>& resp,
                     const int n) const;
 
+      void ScanLine(const std::vector<float>& row,
+                    std::vector<int>& candidates,
+                    std::vector<short>& resp,
+                    const int n) const;
+
+      // FastNMS Needs Debugging and optimization
+
       void FastNMS(
         const Array2D<int>& accumulator2D,
         std::vector<int>& rhoIndex,
         std::vector<int>& thetaIndex,
         const int threshold,
         const int n) const;
+
+      void FastNMS(
+        const Array2D<float>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int n) const;
+
+      void simpleFastNMS(
+        const Array2D<float>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int sx,
+        const int sy) const;
+
+      void simpleFastNMS(
+        const Array2D<int>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int sx,
+        const int sy) const;
+
+      void simpleFastNMS(
+        const Array2D<long>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int sx,
+        const int sy) const;
+
+      void drawLine2(
+        Array2D<bool>& newSelectVals,
+        const int &interceptIndex,
+        const float &theta,
+        const int &padding) const;
 
       void spiralIndex(std::vector<int> &spiralX, 
                        std::vector<int> &spiralY, int n) const;
@@ -131,7 +180,33 @@ namespace sigproc_tools {
       //                          const size_t centery,
       //                          unsigned int& r,
       //                          float& theta,
-      //                          const size_t windowSize = 3) const;
+      //                          const size_t windowSize = 3) const
+
+    private:
+
+      template <typename T>
+      void FastNMS(
+        const Array2D<T>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int n) const;
+
+      template <typename T>
+      void simpleFastNMS(
+        const Array2D<T>& accumulator2D,
+        std::vector<int>& rhoIndex,
+        std::vector<int>& thetaIndex,
+        const int threshold,
+        const int sx,
+        const int sy) const;
+
+      template <typename T>
+      void ScanLine(
+        const std::vector<T>& row,
+        std::vector<int>& candidates,
+        std::vector<short>& resp,
+        const int n) const;
     
   };
 }

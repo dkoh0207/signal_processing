@@ -21,6 +21,7 @@ namespace sproc {
     void SetPyUtil();
     /// A function to convert 1D std::vector<float> to numpy array
     PyObject* as_ndarray(const std::vector<float>& data);
+    PyObject* as_ndarray(const std::vector<int>& data);
     /// A function to convert 2D std::vector<std::vector<float>> to numpy array
     PyObject* as_ndarray(const std::vector<std::vector<float> >& data);
     /// A function to convert 1D std::vector<bool> to numpy array
@@ -31,6 +32,7 @@ namespace sproc {
     std::vector<float> as_float32_vector(PyObject* pyarray);
     /// A function to convert 2D float pyarray to std::vector
     std::vector<std::vector<float> > as_float32_vector_2d(PyObject* pyarray);
+    std::vector<std::vector<int> > as_int_vector_2d(PyObject* pyarray);
     /// A function to convert 1D bool pyarray to std::vector
     std::vector<bool> as_bool_vector(PyObject* pyarray);
     /// A function to convert 2D bool pyarray to std::vector

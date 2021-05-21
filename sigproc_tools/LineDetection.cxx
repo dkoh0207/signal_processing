@@ -62,8 +62,7 @@ void sigproc_tools::LineDetection::HoughTransform(
 }
 
 
-void sigproc_tools::LineDetection::CartesianHoughTransform(
-  const Array2D<float>& fullEvent,
+int sigproc_tools::LineDetection::CartesianHoughTransform(
   const Array2D<bool>& binary2D,
   Array2D<int>& accumulator2D,
   const float maxAngleDev,
@@ -87,7 +86,7 @@ void sigproc_tools::LineDetection::CartesianHoughTransform(
     slopeTab.at(i * 2+1) = (float) -std::tan(i * dtheta);
   }
 
-  const int padding = ((int) numChannels * std::tan(maxAngle) + 1);
+  int padding = ((int) numChannels * std::tan(maxAngle) + 1);
 
   // Accumulator for slope and tick-intercept 
   accumulator2D.resize(2 * thetaSteps);
@@ -102,20 +101,20 @@ void sigproc_tools::LineDetection::CartesianHoughTransform(
         for (int m=0; m<thetaSteps; ++m) {
           const int intercept = (int) (slopeTab[2*(thetaSteps-m-1)+1] * ((float) i));
           accumulator2D.at(m).at(
-            padding + j - intercept) += (int) std::abs(fullEvent[i][j]);;
+            padding + j - intercept) += 1;
         }
         for (int m=0; m<thetaSteps; ++m) {
           // Process positive angles
           const int intercept = (int) (slopeTab[2*m] * ((float) i));
           accumulator2D.at(thetaSteps + m).at(
-            padding + j - intercept) += (int) std::abs(fullEvent[i][j]);
+            padding + j - intercept) += 1;
         }
       }
     }
   }
 
   // Run NMS
-  return;
+  return padding;
 }
 
 
@@ -123,12 +122,16 @@ void sigproc_tools::LineDetection::spiralIndex(
   std::vector<int> &spiralX, 
   std::vector<int> &spiralY, int n) const
 {
+
+  int count = 0;
+  spiralX.at(0) = 1;
+  spiralY.at(0) = 0;
+  count++;
+
   int ix = 1;
   int iy = -1;
 
-  int count = 0;
-
-  for (int i=2; i<n; ++i) {
+  for (int i=2; i<2*n+1; ++i) {
     if (i % 2 == 0) {
       for (int j=0; j<i; ++j) {
         spiralX.at(count) = ix;
@@ -159,21 +162,47 @@ void sigproc_tools::LineDetection::spiralIndex(
     }
   }
 
-  for (int i=0; i<n; ++i) {
+  for (int i=0; i<2*n+1; ++i) {
     spiralX.at(count) = ix;
     spiralY.at(count) = iy;
     ix++;
     count++;
   }
-
+  // std::cout << "Count = " << count << ", Xsize = " << spiralX.size() << std::endl;
+  // std::cout << "Count = " << count << ", Xsize = " << spiralX.size() << std::endl;
   assert(count == (int) spiralX.size());
   assert(count == (int) spiralY.size());
   return;
 }
 
-
 void sigproc_tools::LineDetection::FastNMS(
   const Array2D<int>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int n) const
+{
+  FastNMS<int>(accumulator2D, rhoIndex, thetaIndex, threshold, n);
+  return;
+}
+
+
+void sigproc_tools::LineDetection::FastNMS(
+  const Array2D<float>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int n) const
+{
+  FastNMS<float>(accumulator2D, rhoIndex, thetaIndex, threshold, n);
+  return;
+}
+
+
+
+template <typename T>
+void sigproc_tools::LineDetection::FastNMS(
+  const Array2D<T>& accumulator2D,
   std::vector<int>& rhoIndex,
   std::vector<int>& thetaIndex,
   const int threshold,
@@ -191,13 +220,15 @@ void sigproc_tools::LineDetection::FastNMS(
   const int neighborhoodSize = (2*n+1) * (2*n+1);
 
   std::vector<short> resp(numIntercept);
-  std::vector<bool> skip(numIntercept);
+  // std::vector<bool> skip(numIntercept);
 
   // Precompute spiral index
-  std::vector<int> spiralX(neighborhoodSize);
-  std::vector<int> spiralY(neighborhoodSize);
+  std::vector<int> spiralX(neighborhoodSize-1);
+  std::vector<int> spiralY(neighborhoodSize-1);
 
   spiralIndex(spiralX, spiralY, n);
+
+  Array2D<bool> skip(numTheta, std::vector<bool>(numIntercept));
 
   for (int i=n+1; i<numTheta-n; ++i) {
 
@@ -206,13 +237,16 @@ void sigproc_tools::LineDetection::FastNMS(
 
     for (int j=0; j < (int) peaks.size(); ++j) {
 
-      int &peakIndex = peaks.at(i);
+      int &peakIndex = peaks.at(j);
 
-      if (skip.at(peakIndex)) continue;
+      if (skip.at(i).at(peakIndex)) continue;
 
-      const std::vector<int> &scanLine = accumulator2D.at(i);
+      const std::vector<T> &scanLine = accumulator2D.at(i);
 
-      const int &pixVal = scanLine.at(peakIndex);
+      const float &pixVal = scanLine.at(peakIndex);
+
+      if (pixVal <= threshold) continue;
+
       bool isLocalMax = true;
       int breakIndex = peakIndex+n+1;
 
@@ -229,7 +263,7 @@ void sigproc_tools::LineDetection::FastNMS(
           break;
         }
         else {
-          skip.at(ii) = true;
+          skip.at(i).at(ii) = true;
         }
       }
 
@@ -249,28 +283,31 @@ void sigproc_tools::LineDetection::FastNMS(
           break;
         }
         else {
-          skip.at(ii) = true;
+          skip.at(i).at(ii) = true;
         }
       }
 
       if (!isLocalMax) continue;
 
-      // If one reaches here, candidate is a tick axis n neighborhood local max
-
       int ix = peakIndex;
       int iy = i;
-
       for (int k=0; k< (int) spiralX.size(); ++k) {
         ix = peakIndex + spiralX.at(k);
         iy = i + spiralY.at(k);
-        if (accumulator2D[i][peakIndex] <= accumulator2D[ix][iy]) {
+
+        if (iy == peakIndex) continue;
+        // std::cout << "ix = " << ix << std::endl;
+        // std::cout << "iy = " << iy << std::endl;  
+        // if (skip.at(ix).at(iy)) continue;
+        // std::cout << "    col = " << ix << ", row = " << iy << std::endl;
+        if (accumulator2D.at(i).at(peakIndex) <= accumulator2D.at(iy).at(ix)) {
           isLocalMax = false;
           break;
         }
       }
 
-      if (isLocalMax && (pixVal >= threshold)) {
-        rhoIndex.push_back(ix);
+      if (isLocalMax) {
+        rhoIndex.push_back(peakIndex);
         thetaIndex.push_back(i);
       }
     }
@@ -279,8 +316,87 @@ void sigproc_tools::LineDetection::FastNMS(
   return;
 }
 
+
+void sigproc_tools::LineDetection::simpleFastNMS(
+  const Array2D<int>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int sx,
+  const int sy) const
+{
+  simpleFastNMS<int>(accumulator2D, rhoIndex, thetaIndex, threshold, sx, sy);
+}
+
+void sigproc_tools::LineDetection::simpleFastNMS(
+  const Array2D<long>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int sx,
+  const int sy) const
+{
+  simpleFastNMS<long>(accumulator2D, rhoIndex, thetaIndex, threshold, sx, sy);
+}
+
+template <typename T>
+void sigproc_tools::LineDetection::simpleFastNMS(
+  const Array2D<T>& accumulator2D,
+  std::vector<int>& rhoIndex,
+  std::vector<int>& thetaIndex,
+  const int threshold,
+  const int sx,
+  const int sy) const
+{
+  const int numTheta = accumulator2D.size();
+  const int numIntercept = accumulator2D.at(0).size();
+
+  sigproc_tools::Morph2DFast morph2d;
+
+  Array2D<T> tempBuffer(numTheta);
+  for (auto& v : tempBuffer) {
+    v.resize(numIntercept);
+  }
+
+  morph2d.getDilation(accumulator2D, sx, sy, tempBuffer);
+
+  for (int i=0; i<numTheta; ++i) {
+    for (int j=0; j<numIntercept; ++j) {
+      if ((accumulator2D[i][j] == tempBuffer[i][j]) && 
+           accumulator2D[i][j] > (T) threshold) {
+        rhoIndex.push_back(j);
+        thetaIndex.push_back(i);
+      }
+    }
+  }
+
+  return;
+}
+
+
 void sigproc_tools::LineDetection::ScanLine(
   const std::vector<int>& row,
+  std::vector<int>& candidates,
+  std::vector<short>& resp,
+  const int n) const
+{
+  ScanLine<int>(row, candidates, resp, n);
+  return;
+}
+
+void sigproc_tools::LineDetection::ScanLine(
+  const std::vector<float>& row,
+  std::vector<int>& candidates,
+  std::vector<short>& resp,
+  const int n) const
+{
+  ScanLine<float>(row, candidates, resp, n);
+  return;
+}
+
+template <typename T>
+void sigproc_tools::LineDetection::ScanLine(
+  const std::vector<T>& row,
   std::vector<int>& candidates,
   std::vector<short>& resp,
   const int n) const
@@ -296,14 +412,13 @@ void sigproc_tools::LineDetection::ScanLine(
   for (int i=1; i<numTicks-1; ++i)
   {
     resp.at(i) = (
-      (int) (row.at(i+1) > row.at(i)) - 
-      (int) (row.at(i) > row.at(i-1)));
-    
-    // Now buffer is resp
-    for (int i=n; i<numTicks-n; ++i) {
-      if (resp.at(i) == -2) {
-        candidates.push_back(i);
-      }
+      (short) (2 * (row.at(i+1) > row.at(i)) - 1) - 
+      (short) (2 * (row.at(i) > row.at(i-1)) - 1));
+  }
+  // Now buffer is resp
+  for (int i=n; i<numTicks-n; ++i) {
+    if (resp.at(i) == -2) {
+      candidates.push_back(i);
     }
   }
   return;
@@ -543,6 +658,64 @@ sigproc_tools::Line sigproc_tools::LineDetection::getLine(
 }
 
 
+void sigproc_tools::LineDetection::drawLine2(
+  Array2D<bool>& newSelectVals,
+  const int &interceptIndex,
+  const float &theta, //radians
+  const int &padding) const
+{
+  const int numChannels = newSelectVals.size();
+  const int numTicks = newSelectVals.at(0).size();
+
+  int channelOffset = 0;
+  int tickAxisIntercept = 0;
+
+  float eps = 0.001;
+  std::cout << "Theta = " << theta << std::endl;
+  float slope = std::tan(theta);
+  int sign =  ( (int) (slope > 0) - (int) (slope < 0) );
+
+  // Compute tick axis intercept
+  if ( (padding < interceptIndex) && (interceptIndex <= (numTicks + padding) ))
+  {  
+    tickAxisIntercept = interceptIndex - padding;
+  } 
+  else if (padding > interceptIndex) 
+  {
+    channelOffset = ( (float) (padding - interceptIndex) ) / (slope + eps);
+    tickAxisIntercept = 0;
+  }
+  else {
+    tickAxisIntercept = numTicks;
+    channelOffset = ( (float) (interceptIndex - numTicks - padding)) / (slope + eps);
+  }
+
+
+  // Bresenham's Line Drawing Algorithm
+  // Since we are only interested in isochronous tracks, safe to assume
+  // change in channelnumber is greater than change in ticks. 
+
+  int ix = channelOffset;
+  int iy = tickAxisIntercept;
+  float error = 0.0;
+  float slopeAbs = std::abs(slope);
+
+  while ( (ix < numChannels) && (iy < numTicks) && (iy >= 0) ) {
+    newSelectVals.at(ix).at(iy) = true;
+    error += slopeAbs;
+    ix++; 
+    if (error > 0.5) {
+      iy += sign;
+      error = error - 1.0;
+    }
+  }
+
+  return;
+
+
+}
+
+
 void sigproc_tools::LineDetection::drawLine(
   Array2D<bool>& newSelectVals,
   const Line line,
@@ -612,49 +785,5 @@ void sigproc_tools::LineDetection::drawLine(
   return;
 }
 
-
-// void sigproc_tools::LineDetection::refineSelectVals(
-//   const Array2D<bool>& selectVals,
-//   Array2D<bool>& refinedSelectVals,
-//   const size_t thetaSteps,
-//   const unsigned int threshold,
-//   const unsigned int angleWindow,
-//   const unsigned int maxLines,
-//   const unsigned int windowSize,
-//   const unsigned int dilationX,
-//   const unsigned int dilationY,
-//   const float eps) const
-// {
-//   int numChannels = selectVals.size();
-//   int numTicks = selectVals.at(0).size();
-//   const double pi = 3.141592653589793238462643383279502884;
-
-//   Array2D<int> accumulator2D;
-//   HoughTransform(selectVals, accumulator2D, thetaSteps);
-
-//   std::vector<int> rhoIndex;
-//   std::vector<int> thetaIndex;
-
-//   FindPeaksNMS(accumulator2D, rhoIndex, thetaIndex, 
-//                threshold, angleWindow, maxLines, windowSize);
-
-//   int diagLength = (int) std::round(
-//     std::sqrt(numChannels * numChannels + numTicks * numTicks));
-
-//   float rho = 0.0;
-//   float angle = 0.0;
-
-//   std::cout << rhoIndex.size() << std::endl;
-//   std::cout << thetaIndex.size() << std::endl;
-
-//   for (size_t i=0; i<rhoIndex.size(); ++i) {
-//     rho = rhoIndex[i] - diagLength;
-//     angle = thetaIndex[i] * pi / ( (float) thetaSteps );
-//     Line l = getLine(selectVals, angle, rho, eps, angleWindow);
-//     std::cout << "x0 = " << l.x0 << ", y0 = " << l.y0 << ", slope = " << l.slope << std::endl;
-//     drawLine(refinedSelectVals, l, dilationX, dilationY);
-//   }
-//   return;
-// }
 
 #endif
