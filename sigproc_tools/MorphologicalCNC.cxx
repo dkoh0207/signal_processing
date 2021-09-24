@@ -81,6 +81,28 @@ void sigproc_tools::MorphologicalCNC::getSelectVals(
 }
 
 
+void sigproc_tools::MorphologicalCNC::getMask(
+  const std::vector<std::vector<float>>& morphedWaveforms,
+  std::vector<std::vector<bool>>& selectVals,
+  const float threshold) const
+{
+  auto numChannels = morphedWaveforms.size();
+  auto nTicks = morphedWaveforms.at(0).size();
+
+  for (size_t i=0; i<numChannels; ++i) {
+    for (size_t j=0; j<nTicks; ++j) {
+      if (std::abs(morphedWaveforms[i][j]) > threshold) {
+        // Check Bounds
+        selectVals[i][j] = true;
+      } else {
+        selectVals[i][j] = false;
+      }
+    }
+  }
+  return;
+}
+
+
 void sigproc_tools::MorphologicalCNC::simpleCNC(
   const Array2D<float>& fullEvent,
   Array2D<float>& waveLessCoherent,
@@ -683,4 +705,140 @@ void sigproc_tools::MorphologicalCNC::denoiseHough2D(
 
   return;
 }
+
+void sigproc_tools::MorphologicalCNC::denoiseRestrictedHough2D(
+  Array2D<float>& waveLessCoherent,
+  const Array2D<float>& fullEvent,
+  Array2D<bool>& selectVals,
+  Array2D<bool>& refinedSelectVals,
+  const char filterName,
+  const unsigned int grouping,
+  const unsigned int groupingOffset,
+  const unsigned int structuringElementx,
+  const unsigned int structuringElementy,
+  const float threshold,
+  const size_t thetaSteps,
+  const unsigned int houghThreshold,
+  const unsigned int nms_sx,
+  const unsigned int nms_sy,
+  const unsigned int dilation_sx,
+  const unsigned int dilation_sy,
+  const float maxAngleDev) const
+{
+  auto numChannels = fullEvent.size();
+  auto nTicks = fullEvent.at(0).size();
+  auto nGroups = ((int) numChannels - (int) groupingOffset) / grouping;
+
+  sigproc_tools::Morph2DFast filter;
+  sigproc_tools::MiscUtils utils;
+  sigproc_tools::LineDetection lineModule;
+
+  Array2D<float> morphedWaveforms;
+
+  morphedWaveforms.resize(numChannels);
+  for (auto& v : morphedWaveforms) {
+    v.resize(nTicks);
+  }
+
+  switch (filterName) {
+    case 'd':
+      filter.getDilation(fullEvent,
+        structuringElementx, structuringElementy, morphedWaveforms);
+      getMask(morphedWaveforms, selectVals, threshold);
+      break;
+    case 'e':
+      filter.getErosion(fullEvent,
+        structuringElementx, structuringElementy, morphedWaveforms);
+      getMask(morphedWaveforms, selectVals, threshold);
+      break;
+    case 'g':
+      filter.getGradient(fullEvent,
+        structuringElementx, structuringElementy, morphedWaveforms);
+      getMask(morphedWaveforms, selectVals, threshold);
+      break;
+    default:
+      filter.getDilation(fullEvent,
+        structuringElementx, structuringElementy, morphedWaveforms);
+      getMask(morphedWaveforms, selectVals, threshold);
+      break;
+  }
+
+  refinedSelectVals.resize(selectVals.size());
+  for (auto& v : refinedSelectVals) {
+    v.resize(selectVals.at(0).size());
+  }
+
+  Array2D<int> accumulator2D;
+
+  std::vector<int> interceptIndex;
+  std::vector<int> thetaIndex;
+
+  int padding = lineModule.CartesianHoughTransform(selectVals, accumulator2D, maxAngleDev, thetaSteps);
+  lineModule.simpleFastNMS(accumulator2D, interceptIndex, thetaIndex, houghThreshold, nms_sx, nms_sy);
+
+  float maxAngle = (maxAngleDev / 180.0) * M_PI;
+  float dtheta = 2.0 * maxAngle / (2.0 * (float) thetaSteps);
+
+  std::cout << "maxAngle = " << maxAngle << std::endl;
+  std::cout << "dtheta = " << dtheta << std::endl;
+
+  for (size_t i=0; i<interceptIndex.size(); ++i) {
+    float angle = ((float) thetaIndex[i] - (float) thetaSteps) * dtheta;
+    lineModule.drawLine2(refinedSelectVals, interceptIndex[i], angle, padding);
+  }
+
+  filter.getDilation(refinedSelectVals, dilation_sx, dilation_sy, selectVals);
+
+  for (size_t i=0; i<nTicks; ++i) {
+    for (size_t j=0; j<nGroups; ++j) {
+      size_t group_start = j * grouping + (size_t) groupingOffset;
+      size_t group_end = (j+1) * grouping + (size_t) groupingOffset;
+      // Compute median.
+      std::vector<float> v;
+      for (size_t c=group_start; c<group_end; ++c) {
+        if (!selectVals[c][i]) {
+          v.push_back(fullEvent[c][i]);
+        }
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        median = utils.computeMedian(v);
+      }
+      for (size_t k=group_start; k<group_end; ++k) {
+        if (!selectVals[k][i]) {
+          waveLessCoherent[k][i] = fullEvent[k][i] - median;
+        } else {
+          waveLessCoherent[k][i] = fullEvent[k][i];
+        }
+      }
+    }
+  }
+
+  // Compensate for offset in channel groupings
+  if (groupingOffset > 0) {
+    for (size_t i=0; i<nTicks; ++i) {
+      std::vector<float> v;
+      for (size_t c=0; c<groupingOffset; ++c) {
+        if (!selectVals[c][i]) {
+          v.push_back(fullEvent[c][i]);
+        }
+      }
+      float median = 0.0;
+      if (v.size() > 0) {
+        median = utils.computeMedian(v);
+      }
+      for (size_t k=0; k<groupingOffset; ++k) {
+        if (!selectVals[k][i]) {
+          waveLessCoherent[k][i] = fullEvent[k][i] - median;
+        } else {
+          waveLessCoherent[k][i] = fullEvent[k][i];
+        }
+      }
+    }
+  }
+
+  return;
+}
+
+
 #endif

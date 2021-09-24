@@ -15,9 +15,6 @@ void sigproc_tools::LineDetection::HoughTransform(
   int width = binary2D.size();
   int height = binary2D.at(0).size();
 
-  std::cout << "width (i) = " << width << std::endl;
-  std::cout << "height (j) = " << height << std::endl;
-
   float dtheta = ((float) pi) / ((float) thetaSteps);
   int diagLength = (int) std::round(std::sqrt(width*width + height*height));
 
@@ -48,12 +45,8 @@ void sigproc_tools::LineDetection::HoughTransform(
   // Update accumulator
   for (Point& pt : edgeList) {
     for (size_t itheta=0; itheta<thetaSteps; ++itheta) {
-      // std::cout << pt.x << " " << pt.y << std::endl;
       r = (float) (pt.x * trigtab[itheta*2] + pt.y * trigtab[itheta*2 + 1]);
       ir = diagLength + (int) std::round(r);
-      if (std::abs( (int) ir ) > 2 * diagLength) {
-        std::cout << ir << std::endl;
-      }
       accumulator2D[ir][itheta] += std::sqrt(std::abs(fullEvent[pt.x][pt.y]) + 0.001);
     }
   }
@@ -98,8 +91,8 @@ int sigproc_tools::LineDetection::CartesianHoughTransform(
     for (int j=0; j<numTicks; ++j) {
       if (binary2D[i][j]) {
         // 0 ~ -maxAngle
-        for (int m=0; m<thetaSteps; ++m) {
-          const int intercept = (int) (slopeTab[2*(thetaSteps-m-1)+1] * ((float) i));
+        for (int m=1; m<thetaSteps; ++m) {
+          const int intercept = (int) (slopeTab[2*(thetaSteps-m)+1] * ((float) i));
           accumulator2D.at(m).at(
             padding + j - intercept) += 1;
         }
@@ -168,8 +161,6 @@ void sigproc_tools::LineDetection::spiralIndex(
     ix++;
     count++;
   }
-  // std::cout << "Count = " << count << ", Xsize = " << spiralX.size() << std::endl;
-  // std::cout << "Count = " << count << ", Xsize = " << spiralX.size() << std::endl;
   assert(count == (int) spiralX.size());
   assert(count == (int) spiralY.size());
   return;
@@ -296,10 +287,7 @@ void sigproc_tools::LineDetection::FastNMS(
         iy = i + spiralY.at(k);
 
         if (iy == peakIndex) continue;
-        // std::cout << "ix = " << ix << std::endl;
-        // std::cout << "iy = " << iy << std::endl;  
-        // if (skip.at(ix).at(iy)) continue;
-        // std::cout << "    col = " << ix << ", row = " << iy << std::endl;
+        
         if (accumulator2D.at(i).at(peakIndex) <= accumulator2D.at(iy).at(ix)) {
           isLocalMax = false;
           break;
@@ -344,7 +332,7 @@ void sigproc_tools::LineDetection::simpleFastNMS(
   const Array2D<T>& accumulator2D,
   std::vector<int>& rhoIndex,
   std::vector<int>& thetaIndex,
-  const int threshold,
+  const T threshold,
   const int sx,
   const int sy) const
 {
@@ -360,15 +348,79 @@ void sigproc_tools::LineDetection::simpleFastNMS(
 
   morph2d.getDilation(accumulator2D, sx, sy, tempBuffer);
 
+  std::unordered_map<long, LabeledPoint> edges;
+
+  int count_id = 1;
+
   for (int i=0; i<numTheta; ++i) {
     for (int j=0; j<numIntercept; ++j) {
-      if ((accumulator2D[i][j] == tempBuffer[i][j]) && 
-           accumulator2D[i][j] > (T) threshold) {
+      if ((std::abs(accumulator2D[i][j] - tempBuffer[i][j]) < 0.0001) && 
+            (accumulator2D[i][j] > (T) threshold)) {
+        long cantorEnum = ((i + j) * (i + j + 1) / 2) + j;
+        LabeledPoint p = {i, j, count_id};
         rhoIndex.push_back(j);
         thetaIndex.push_back(i);
+        edges.emplace(std::make_pair(cantorEnum, p));
+        count_id++;
       }
     }
   }
+
+  // const int forestSize = edges.size();
+  // DisjointSetForest forest(forestSize);
+  // forest.MakeSet();
+
+  // // Merge adjacent maximas
+  // for (auto& node : edges) {
+  //   LabeledPoint &p = node.second;
+  //   int i = p.x;
+  //   int j = p.y;
+
+  //   int lowerBoundx = std::max(i-1, 0);
+  //   int upperBoundx = std::min(i+2, (int) numTheta);
+  //   int lowerBoundy = std::max(j-1, 0);
+  //   int upperBoundy = std::min(j+2, (int) numIntercept);
+
+  //   for (int k=lowerBoundx; k<upperBoundx; ++k) {
+  //     for (int l=lowerBoundy; l<upperBoundy; ++l) {
+  //       long key = ((k + l) * (k + l + 1) / 2) + l;
+  //       forest.Union(edges[key].id, p.id);
+  //     }
+  //   }
+  // }
+
+  // // Make list of islands
+  // std::unordered_map<int, std::vector<LabeledPoint>> islands;
+
+  // for (auto& node : edges) {
+  //   LabeledPoint p = node.second;
+  //   int rep = forest.Find(p.id);
+  //   if (islands.find(rep) == islands.end()) {
+  //     std::vector<LabeledPoint> v;
+  //     islands.emplace(std::make_pair(rep, v));
+  //   }
+  //   islands[rep].emplace_back(p);
+  // }
+
+  // // Average out for handling overlapping proposals
+  // for (auto& components : islands) {
+  //   std::vector<LabeledPoint> &vec = components.second;
+  //   float ix = 0.0;
+  //   float iy = 0.0;
+  //   float n = 0.0;
+  //   assert(vec.size() > 0);
+  //   for (auto& p : vec) {
+  //     ix += (float) p.x;
+  //     iy += (float) p.y;
+  //     n += 1.0;
+  //   }
+  //   ix = ix / n;
+  //   iy = iy / n;
+  //   int peakIx = (int) std::round(ix);
+  //   int peakIy = (int) std::round(iy);
+  //   thetaIndex.push_back(peakIx);
+  //   rhoIndex.push_back(peakIy);
+  // }
 
   return;
 }
@@ -435,7 +487,6 @@ void sigproc_tools::LineDetection::FindPeaksNMS(
   const unsigned int windowSize) const
 {
 
-  // std::cout << maxLines << std::endl;
 
   rhoIndex.reserve(maxLines);
   thetaIndex.reserve(maxLines);
@@ -490,9 +541,7 @@ void sigproc_tools::LineDetection::FindVerticalSegments(
   const size_t thetaSteps,
   const std::vector<int>& rhoIndex,
   const std::vector<int>& thetaIndex,
-  const unsigned int maxGap,
-  const unsigned int minLineLength,
-  const unsigned int margin) const
+  const unsigned int maxGap) const
 {
   // Not yet completed, use ProbabilisticHT for now
   const double pi = 3.141592653589793238462643383279502884;
@@ -518,16 +567,11 @@ void sigproc_tools::LineDetection::FindVerticalSegments(
     int y = 0;
     float error = 0.0;
 
-    std::cout << "theta = " << theta << std::endl;
-
     float slope = -1.0 * std::tan(theta);
     int sign = (slope > 0) - (slope < 0);
     // Since we are only interested in near vertical segments, we move along
     // the y-axis.
     float delta = std::abs(slope);
-
-    std::cout << "Slope = " << slope << std::endl;
-    std::cout << "Sign = " << sign << std::endl;
 
     std::vector<int> tempVecx;
     std::vector<int> tempVecy;
@@ -539,7 +583,6 @@ void sigproc_tools::LineDetection::FindVerticalSegments(
     bool vecEmpty = true;
 
     while (x < numChannels && y < numTicks) {
-      // std::cout << "x = " << x << " | " << "y = " << y << std::endl;
       bool pixel = selectVals[x][y];
       if (pixel && vecEmpty) {
         // Currently at beginning of candidate line segment.
@@ -587,8 +630,6 @@ void sigproc_tools::LineDetection::FindVerticalSegments(
       }
     }
   }
-  std::cout << margin << std::endl;
-  std::cout << minLineLength << std::endl;
   return;
 }
 
@@ -671,7 +712,6 @@ void sigproc_tools::LineDetection::drawLine2(
   int tickAxisIntercept = 0;
 
   float eps = 0.001;
-  std::cout << "Theta = " << theta << std::endl;
   float slope = std::tan(theta);
   int sign =  ( (int) (slope > 0) - (int) (slope < 0) );
 
@@ -682,12 +722,12 @@ void sigproc_tools::LineDetection::drawLine2(
   } 
   else if (padding > interceptIndex) 
   {
-    channelOffset = ( (float) (padding - interceptIndex) ) / (slope + eps);
+    channelOffset = ( (float) (padding - interceptIndex) ) / (std::abs(slope) + eps);
     tickAxisIntercept = 0;
   }
   else {
     tickAxisIntercept = numTicks;
-    channelOffset = ( (float) (interceptIndex - numTicks - padding)) / (slope + eps);
+    channelOffset = ( (float) (interceptIndex - numTicks - padding)) / (std::abs(slope) + eps);
   }
 
 
@@ -697,6 +737,7 @@ void sigproc_tools::LineDetection::drawLine2(
 
   int ix = channelOffset;
   int iy = tickAxisIntercept;
+
   float error = 0.0;
   float slopeAbs = std::abs(slope);
 

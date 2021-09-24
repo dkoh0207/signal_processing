@@ -23,6 +23,7 @@
 #include "assert.h"
 #include <stdexcept>
 #include <functional>
+#include <unordered_map>
 
 #include "Morph2DFast.h"
 #include "DisjointSetForest.h"
@@ -40,6 +41,12 @@ namespace sigproc_tools {
   struct Point {
     int x;
     int y;
+  };
+
+  struct LabeledPoint {
+    int x;
+    int y;
+    int id;
   };
 
   struct Line {
@@ -150,7 +157,7 @@ namespace sigproc_tools {
 
       void refineSelectVals(const Array2D<bool>& selectVals,
                             Array2D<bool>& refinedSelectVals,
-                            const size_t thetaSteps = 360,
+                            const size_t thetaSteps = 100,
                             const unsigned int threshold = 100,
                             const unsigned int angleWindow = 10,
                             const unsigned int maxLines = 20,
@@ -164,9 +171,7 @@ namespace sigproc_tools {
                                 const size_t thetaSteps,
                                 const std::vector<int>& rhoIndex,
                                 const std::vector<int>& thetaIndex,
-                                const unsigned int maxGap = 10,
-                                const unsigned int minLineLength = 100,
-                                const unsigned int margin = 3) const;
+                                const unsigned int maxGap = 10) const;
 
       
       // void WindowedHoughTransform(const Array2D<bool>& binary2D,
@@ -197,7 +202,7 @@ namespace sigproc_tools {
         const Array2D<T>& accumulator2D,
         std::vector<int>& rhoIndex,
         std::vector<int>& thetaIndex,
-        const int threshold,
+        const T threshold,
         const int sx,
         const int sy) const;
 

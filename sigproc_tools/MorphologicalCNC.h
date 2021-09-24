@@ -218,6 +218,32 @@ namespace sigproc_tools {
         const unsigned int dilationY = 20,
         const unsigned int maxLines = 20,
         const float eps = 0.00001) const;
+
+      void getMask(
+        const std::vector<std::vector<float>>& morphedWaveforms,
+        std::vector<std::vector<bool>>& selectVals,
+        const float threshold) const;
+
+      void denoiseRestrictedHough2D(
+        Array2D<float>& waveLessCoherent,
+        const Array2D<float>& fullEvent,
+        Array2D<bool>& selectVals,
+        Array2D<bool>& refinedSelectVals,
+        const char filterName = 'g',
+        const unsigned int grouping = 32,
+        const unsigned int groupingOffset = 0,
+        const unsigned int structuringElementx = 7,
+        const unsigned int structuringElementy = 7,
+        const float threshold = 20.0,
+        const size_t thetaSteps = 100,
+        const unsigned int houghThreshold = 700,
+        const unsigned int nms_sx = 7,
+        const unsigned int nms_sy = 7,
+        const unsigned int dilation_sx = 13,
+        const unsigned int dilation_sy = 13,
+        const float maxAngleDev = 20.0) const;
+
+
       /// Default destructor
       ~MorphologicalCNC(){}
 
