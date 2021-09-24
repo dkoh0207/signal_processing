@@ -9,15 +9,8 @@ FMWK_HEADERS = LinkDef.h
 HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
 
 # include options for this package
-INCFLAGS  = -I. \
-            -I/sdf/group/neutrino/koh0207/DSP/TBB/tbb/include \
-			-I/sdf/group/neutrino/koh0207/DSP/TBB/pstl/stdlib \
-			-I/sdf/group/neutrino/koh0207/DSP/TBB/pstl/include \
-			-I/sdf/group/neutrino/koh0207/DSP/eigen \
-			-I/sdf/group/neutrino/koh0207/DSP/fftw3/include
-LDFLAGS   = -L/sdf/group/neutrino/koh0207/DSP/TBB/tbb/lib \
-		    -L/sdf/group/neutrino/koh0207/DSP/TBB/pstl/stdlib \
-			-L/sdf/group/neutrino/koh0207/DSP/fftw3/lib -lfftw3f
+INCFLAGS  = -I. -I/sdf/group/neutrino/koh0207/DSP/TBB/tbb/include -I/sdf/group/neutrino/koh0207/DSP/TBB/pstl/stdlib -I/sdf/group/neutrino/koh0207/DSP/TBB/pstl/include -I/sdf/group/neutrino/koh0207/DSP/eigen -I/sdf/group/neutrino/koh0207/DSP/fftw3/include
+LDFLAGS   = -L/sdf/group/neutrino/koh0207/DSP/TBB/tbb/lib -L/sdf/group/neutrino/koh0207/DSP/TBB/pstl/stdlib -L/sdf/group/neutrino/koh0207/DSP/fftw3/lib -lfftw3f
 
 # platform-specific options
 OSNAME          = $(shell uname -s)

@@ -21,7 +21,6 @@
 #include <limits>
 #include <assert.h>
 
-#include "SigprocParallelDefs.h"
 #include "tbb/parallel_for.h"
 #include "tbb/parallel_invoke.h"
 #include "tbb/concurrent_vector.h"
@@ -172,7 +171,7 @@ namespace sigproc_multithreading {
 
     
     /// Default destructor
-      ~Morph1DFast(){}
+      ~Morph1DFast(){};
 
     private:
 

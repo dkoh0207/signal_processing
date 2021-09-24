@@ -14,13 +14,11 @@
 #ifndef __SIGPROC_MULTITHREADING_MORPH2DFAST_H__
 #define __SIGPROC_MULTITHREADING_MORPH2DFAST_H__
 
-#include "SigprocParallelDefs.h"
 #include "Morph1DFast.h"
 #include "tbb/parallel_for.h"
 #include "tbb/parallel_invoke.h"
 #include "tbb/concurrent_vector.h"
 
-#include <chrono>
 
 namespace sigproc_multithreading {
 
@@ -132,7 +130,7 @@ namespace sigproc_multithreading {
           ConcurrentArray2D<T>& opening2D) const;
 
       /// Default destructor
-      ~Morph2DFast(){}
+      ~Morph2DFast(){};
     
   };
 }

@@ -14,8 +14,8 @@
 #ifndef __SIGPROC_MULTITHREADING_MISCUTILS_H__
 #define __SIGPROC_MULTITHREADING_MISCUTILS_H__
 
-#include "SigprocParallelDefs.h"
 #include "tbb/concurrent_vector.h"
+#include <vector>
 
 namespace sigproc_multithreading {
 
@@ -29,6 +29,9 @@ namespace sigproc_multithreading {
 
     template <class T>
     using ConcurrentArray2D = ConcurrentVector<ConcurrentVector<T>>;
+
+    template <class T>
+    using Array2D = std::vector<std::vector<T>>;
   class MiscUtils{
     
     public:

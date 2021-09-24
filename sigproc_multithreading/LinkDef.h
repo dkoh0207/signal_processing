@@ -9,7 +9,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class sigproc_multithreading::SigprocParallelDefs+;
 #pragma link C++ class sigproc_multithreading::Morph1DFast+;
 #pragma link C++ class sigproc_multithreading::Morph2DFast+;
 #pragma link C++ class sigproc_multithreading::MiscUtils+;
