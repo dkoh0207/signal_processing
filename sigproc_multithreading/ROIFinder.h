@@ -34,6 +34,9 @@
 #include "Morph2DFast.h"
 #include "SigprocParallelDefs.h"
 
+#include "tbb/flow_graph.h"
+#include "tbb/tbb.h"
+
 namespace sigproc_multithreading {
 
   /**
@@ -41,14 +44,43 @@ namespace sigproc_multithreading {
      User defined class ROIFinder ... these comments are used to generate
      doxygen documentation!
   */
-  class ROIFinder1{
+  class ROIFinder{
     
   public:
 
-    ROIFinder1(){};
+    ROIFinder(){};
     
     /// Default constructor
     void applyChain(const Array2D<float>& input2D,
+                    Array2D<float>& denoisedWf,
+                    Array2D<bool>& output2D,
+                    size_t FREQUENCY_THRESHOLD,
+                    size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,
+                    char MORPHOLOGICAL_FILTER_NAME,
+                    const unsigned int CHANNEL_GROUPING,
+                    const unsigned int CHANNEL_GROUPING_OFFSET,
+                    const unsigned int STRUCTURING_ELEMENT_X,
+                    const unsigned int STRUCTURING_ELEMENT_Y,
+                    const float MORPHOLOGICAL_THRESHOLD_FACTOR,
+                    
+                    const size_t THETASTEPS,
+                    const unsigned int HOUGH_THRESHOLD,
+                    const unsigned int NMS_WINDOW_SIZE,
+                    const unsigned int ANGLE_WINDOW,
+                    
+                    const unsigned int ADFILTER_SX,
+                    const unsigned int ADFILTER_SY,
+                    const float sigma_x,
+                    const float sigma_y,
+                    const float sigma_r,
+                    const float lowThreshold,
+                    const float highThreshold,
+                    
+                    const unsigned int BINARY_CLOSING_SX,
+                    const unsigned int BINARY_CLOSING_SY) const;
+
+    void applyChain2(const Array2D<float>& input2D,
+                    Array2D<float>& denoisedWf,
                     Array2D<bool>& output2D,
                     size_t FREQUENCY_THRESHOLD,
                     size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,
@@ -76,7 +108,7 @@ namespace sigproc_multithreading {
                     const unsigned int BINARY_CLOSING_SY) const;
     
     /// Default destructor
-    ~ROIFinder1(){}
+    ~ROIFinder(){}
     
   };
 }

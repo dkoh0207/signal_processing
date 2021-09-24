@@ -4,8 +4,9 @@
 #include "ROIFinder.h"
 
 
-void sigproc_multithreading::ROIFinder1::applyChain(
+void sigproc_multithreading::ROIFinder::applyChain(
     const Array2D<float>& input2D,
+    Array2D<float>& denoisedWf,
     Array2D<bool>& output2D,
     size_t FREQUENCY_THRESHOLD,
     size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,
@@ -78,6 +79,12 @@ void sigproc_multithreading::ROIFinder1::applyChain(
 
     // 4. Sobel Filtering
 
+    for (int i=0; i<numChannels; ++i) {
+        for (int j=0; j<numTicks; ++j) {
+            denoisedWf[i][j] = buffer[i][j];
+        }
+    }
+
     sigproc_tools::EdgeDetection edgeUtils;
     edgeUtils.SobelRads(buffer, gradX, gradY, waveLessCoherent, direction);
 
@@ -112,6 +119,56 @@ void sigproc_multithreading::ROIFinder1::applyChain(
     morph2D.getDilation(selectVals, BINARY_CLOSING_SX, BINARY_CLOSING_SY, output2D);
 
     return;
+}
+
+
+void sigproc_multithreading::ROIFinder::applyChain2(
+    const Array2D<float>& input2D,
+    Array2D<float>& denoisedWf,
+    Array2D<bool>& output2D,
+    size_t FREQUENCY_THRESHOLD,
+    size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER,
+    char MORPHOLOGICAL_FILTER_NAME,
+    const unsigned int CHANNEL_GROUPING,
+    const unsigned int CHANNEL_GROUPING_OFFSET,
+    const unsigned int STRUCTURING_ELEMENT_X,
+    const unsigned int STRUCTURING_ELEMENT_Y,
+    const float MORPHOLOGICAL_THRESHOLD_FACTOR,
+
+    const size_t THETASTEPS,
+    const unsigned int HOUGH_THRESHOLD,
+    const unsigned int NMS_WINDOW_SIZE,
+    const unsigned int ANGLE_WINDOW,
+
+    const unsigned int ADFILTER_SX,
+    const unsigned int ADFILTER_SY,
+    const float sigma_x,
+    const float sigma_y,
+    const float sigma_r,
+    const float lowThreshold,
+    const float highThreshold,
+
+    const unsigned int BINARY_CLOSING_SX,
+    const unsigned int BINARY_CLOSING_SY) const
+{
+    int numChannels = input2D.size();
+    int numTicks = input2D.at(0).size();
+
+    Array2D<float> buffer(numChannels, VectorFloat(numTicks));
+    Array2D<float> smoothedWf(numChannels, VectorFloat(numTicks));
+
+    Array2D<bool> selectVals(numChannels, VectorBool(numTicks));
+    Array2D<bool> refinedSelectVals(numChannels, VectorBool(numTicks));
+    Array2D<float> waveLessCoherent(numChannels, VectorFloat(numTicks));
+
+    Array2D<float> gradX(numChannels, VectorFloat(numTicks));
+    Array2D<float> gradY(numChannels, VectorFloat(numTicks));
+    Array2D<float> direction(numChannels, VectorFloat(numTicks));
+
+    sigproc_tools::MiscUtils utils;
+
+    tbb::flow::graph G;
+
 }
 
 #endif

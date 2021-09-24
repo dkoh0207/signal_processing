@@ -36,13 +36,8 @@ void sigproc_multithreading::Morph2DFast::getDilation(
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
-  
-  std::chrono::high_resolution_clock::time_point funcStartTime = std::chrono::high_resolution_clock::now();
-  std::chrono::high_resolution_clock::time_point allocateStart = funcStartTime;
 
   Array2D<T> buffer(numChannels, Vector<T>(numTicks));
-
-  std::chrono::high_resolution_clock::time_point allocateStop = std::chrono::high_resolution_clock::now();
 
   assert(dilation2D.size() == numChannels);
   assert(dilation2D.at(0).size() == numTicks);
@@ -51,30 +46,16 @@ void sigproc_multithreading::Morph2DFast::getDilation(
 
   sigproc_multithreading::Morph1DFast fast1D;
 
-  std::chrono::high_resolution_clock::time_point rowStart = allocateStop;
-
   tbb::parallel_for( (size_t) 0, numChannels, (size_t) 1,
     [&fast1D, &inputArray2D, &structuringElementy, &buffer](size_t i) {
       fast1D.getDilation(inputArray2D[i], structuringElementy, buffer[i]);
     });
-
-  std::chrono::high_resolution_clock::time_point rowStop = std::chrono::high_resolution_clock::now();
-  std::chrono::high_resolution_clock::time_point colStart = rowStop;
 
 
   tbb::parallel_for ( (size_t) 0, numTicks, (size_t) 1,
     [&fast1D, &buffer, &structuringElementx, &dilation2D](size_t j) {
       fast1D.getDilation(buffer, structuringElementx, dilation2D, j);
     });
-
-  std::chrono::high_resolution_clock::time_point colStop = std::chrono::high_resolution_clock::now();
-
-  std::chrono::duration<double> allocateTime = std::chrono::duration_cast<std::chrono::duration<double>>(allocateStop - allocateStart);
-  std::chrono::duration<double> rowTime = std::chrono::duration_cast<std::chrono::duration<double>>(rowStop - rowStart);
-  std::chrono::duration<double> colTime = std::chrono::duration_cast<std::chrono::duration<double>>(colStop - colStart);
-
-  std::cout << "*** Dilation ***  " << std::endl;
-  std::cout << "Allocate: " << allocateTime.count() << ", Row: " << rowTime.count() << ", Col: " << colTime.count() << std::endl;
 
   return;
 }
