@@ -197,98 +197,98 @@ void sigproc_tools::FindROI2D::applyChainFilter(
 }
 
 
-void sigproc_tools::FindROI2D::applyCannyFilter(
-  const Array2D<float>& waveform2D,
-  Array2D<float>& fullEvent,
-  Array2D<bool>& outputROI,
-  Array2D<float>& waveLessCoherent,
-  Array2D<float>& morphedWaveform2D,
-  // Default Parameters
-  size_t FREQUENCY_THRESHOLD = 30,
-  size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER = 2,
-  size_t FREQUENCY_FILTER_MODE = 0,
+// void sigproc_tools::FindROI2D::applyCannyFilter(
+//   const Array2D<float>& waveform2D,
+//   Array2D<float>& fullEvent,
+//   Array2D<bool>& outputROI,
+//   Array2D<float>& waveLessCoherent,
+//   Array2D<float>& morphedWaveform2D,
+//   // Default Parameters
+//   size_t FREQUENCY_THRESHOLD = 30,
+//   size_t FREQUENCY_FILTER_SMOOTHNESS_ORDER = 2,
+//   size_t FREQUENCY_FILTER_MODE = 0,
 
-  // Coherent Noise Correction Parameters
-  char MORPHOLOGICAL_FILTER_NAME = 'e',
-  const unsigned int CHANNEL_GROUPING = 32,
-  const unsigned int CHANNEL_GROUPING_OFFSET = 0,
-  const unsigned int STRUCTURING_ELEMENT_X = 7,
-  const unsigned int STRUCTURING_ELEMENT_Y = 7,
-  const unsigned int ROI_EXPAND_WINDOW_SIZE = 10,
-  const float MORPHOLOGICAL_THRESHOLD_FACTOR = 2.5,
+//   // Coherent Noise Correction Parameters
+//   char MORPHOLOGICAL_FILTER_NAME = 'e',
+//   const unsigned int CHANNEL_GROUPING = 32,
+//   const unsigned int CHANNEL_GROUPING_OFFSET = 0,
+//   const unsigned int STRUCTURING_ELEMENT_X = 7,
+//   const unsigned int STRUCTURING_ELEMENT_Y = 7,
+//   const float MORPHOLOGICAL_THRESHOLD_FACTOR = 2.5,
 
-  // Hough Transform Parameters
-  const size_t THETASTEPS = 360,
-  const unsigned int HOUGH_THRESHOLD = 400,
-  const unsigned int NMS_WINDOW_SIZE = 20,
-  const unsigned int ANGLE_WINDOW = 20,
+//   // Hough Transform Parameters
+//   const size_t THETASTEPS = 360,
+//   const unsigned int HOUGH_THRESHOLD = 400,
+//   const unsigned int NMS_WINDOW_SIZE = 20,
+//   const unsigned int ANGLE_WINDOW = 20,
 
-  // float NOISE_VARIANCE = 20.0;
-  const unsigned int ADFILTER_SX = 7,
-  const unsigned int ADFILTER_SY = 7,
-  const float sigma_x = 5.0, 
-  const float sigma_y = 5.0, 
-  const float sigma_r = 30.0, 
-  const float lowThreshold = 3.0,
-  const float highThreshold = 15.0,
+//   // float NOISE_VARIANCE = 20.0;
+//   const unsigned int ADFILTER_SX = 7,
+//   const unsigned int ADFILTER_SY = 7,
+//   const float sigma_x = 5.0,
+//   const float sigma_y = 5.0, 
+//   const float sigma_r = 30.0, 
+//   const float lowThreshold = 3.0,
+//   const float highThreshold = 15.0,
 
-  const unsigned int BINARY_CLOSING_SX = 13,
-  const unsigned int BINARY_CLOSING_SY = 13) const
-{
-  // All input arrays must have the same dimensions as waveform2D
+//   const unsigned int BINARY_CLOSING_SX = 13,
+//   const unsigned int BINARY_CLOSING_SY = 13) const
+// {
+//   // All input arrays must have the same dimensions as waveform2D
 
-  size_t numChannels = waveform2D.size();
-  size_t numTicks = waveform2D.at(0).size();
+//   size_t numChannels = waveform2D.size();
+//   size_t numTicks = waveform2D.at(0).size();
 
-  Denoising basicDenoise;
-  FrequencyFilters1D freqFilter;
-  MorphologicalCNC CNC;
-  Morph2DFast morph;
-  EdgeDetection edges;
-  BilateralFilters bilateral;
+//   Denoising basicDenoise;
+//   FrequencyFilters1D freqFilter;
+//   MorphologicalCNC CNC;
+//   Morph2DFast morph;
+//   EdgeDetection edges;
+//   BilateralFilters bilateral;
 
-  Array2D<float> buffer(numChannels, std::vector<float>(numTicks));
+//   Array2D<float> buffer(numChannels, std::vector<float>(numTicks));
 
-  Array2D<bool> binaryBuffer(numChannels, std::vector<bool>(numTicks));
+//   Array2D<bool> binaryBuffer(numChannels, std::vector<bool>(numTicks));
 
-  Array2D<float> sobelX(numChannels, std::vector<float>(numTicks));
+//   Array2D<float> sobelX(numChannels, std::vector<float>(numTicks));
 
-  Array2D<float> sobelY(numChannels, std::vector<float>(numTicks));
+//   Array2D<float> sobelY(numChannels, std::vector<float>(numTicks));
 
-  Array2D<float> gradient(numChannels, std::vector<float>(numTicks));
+//   Array2D<float> gradient(numChannels, std::vector<float>(numTicks));
 
-  Array2D<float> direction(numChannels, std::vector<float>(numTicks));
+//   Array2D<float> direction(numChannels, std::vector<float>(numTicks));
 
-  for (size_t i=0; i<numChannels; ++i) {
-    for (size_t j=0; j<numTicks; ++j) {
-      buffer[i][j] = waveform2D[i][j];
-    }
-  }
+//   for (size_t i=0; i<numChannels; ++i) {
+//     for (size_t j=0; j<numTicks; ++j) {
+//       buffer[i][j] = waveform2D[i][j];
+//       fullEvent[i][j] = waveform2D[i][j];
+//     }
+//   }
 
-  basicDenoise.subtractPedestals(buffer);
+//   basicDenoise.subtractPedestals(buffer);
 
-  freqFilter.filterImage(buffer, FREQUENCY_THRESHOLD, waveLessCoherent,
-                         FREQUENCY_FILTER_SMOOTHNESS_ORDER, 0);
+//   freqFilter.filterImage(buffer, FREQUENCY_THRESHOLD, waveLessCoherent,
+//                          FREQUENCY_FILTER_SMOOTHNESS_ORDER, FREQUENCY_FILTER_MODE);
 
-  CNC.simpleCNC(waveLessCoherent, buffer, CHANNEL_GROUPING, CHANNEL_GROUPING_OFFSET);
+//   CNC.simpleCNC(waveLessCoherent, buffer, CHANNEL_GROUPING, CHANNEL_GROUPING_OFFSET);
 
-  edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
+//   edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
 
-  bilateral.directional(buffer, direction, waveLessCoherent, 
-    STRUCTURING_ELEMENT_X, STRUCTURING_ELEMENT_Y, 
-    sigma_x, sigma_y, sigma_r, THETASTEPS);
+//   bilateral.directional(buffer, direction, waveLessCoherent, 
+//     STRUCTURING_ELEMENT_X, STRUCTURING_ELEMENT_Y, 
+//     sigma_x, sigma_y, sigma_r, THETASTEPS);
 
-  morph.getDilation(waveLessCoherent, ADFILTER_SX, ADFILTER_SY, buffer);
+//   morph.getDilation(waveLessCoherent, ADFILTER_SX, ADFILTER_SY, buffer);
 
-  edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
+//   edges.Sobel(buffer, sobelX, sobelY, gradient, direction);
 
-  edges.EdgeNMSInterpolation(gradient, sobelX, sobelY, direction, buffer);
+//   edges.EdgeNMSInterpolation(gradient, sobelX, sobelY, direction, buffer);
 
-  edges.HTFastLowMem(buffer, lowThreshold, highThreshold, binaryBuffer);
+//   edges.HTFastLowMem(buffer, lowThreshold, highThreshold, binaryBuffer);
 
-  morph.getDilation(binaryBuffer, BINARY_CLOSING_SX, BINARY_CLOSING_SY, outputROI);
+//   morph.getDilation(binaryBuffer, BINARY_CLOSING_SX, BINARY_CLOSING_SY, outputROI);
 
-  return;
-}
+//   return;
+// }
 
 #endif

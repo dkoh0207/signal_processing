@@ -89,6 +89,13 @@ namespace sigproc_tools {
         Array2D<float>& gradient,
         Array2D<float>& direction) const;
 
+      void SobelRads(
+        const Array2D<float>& input2D,
+        Array2D<float>& sobelX,
+        Array2D<float>& sobelY,
+        Array2D<float>& gradient,
+        Array2D<float>& direction) const;
+
       void SobelXFast(const Array2D<float>& input2D,
                       Array2D<float>& gradient) const;
 

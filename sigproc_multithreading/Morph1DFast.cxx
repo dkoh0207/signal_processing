@@ -625,7 +625,7 @@ void sigproc_multithreading::Morph1DFast::getClosing(
   return;
 }
 
-template<>
+
 void sigproc_multithreading::Morph1DFast::getDilation(
   const Array2D<bool>& inputArray2D,
   const unsigned int fStructuringElementx,
@@ -867,7 +867,7 @@ void sigproc_multithreading::Morph1DFast::getDilation(
     return;
 }
 
-template<>
+
 void sigproc_multithreading::Morph1DFast::getErosion(
   const Array2D<bool>& inputArray2D,
   const unsigned int fStructuringElementx,

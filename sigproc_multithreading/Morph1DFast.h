@@ -60,7 +60,7 @@ namespace sigproc_multithreading {
       void getDilation(const Array2D<bool>&,
                        const unsigned int,
                        Array2D<bool>&,
-                       const unsigned int) const;
+                       const int) const;
 
       void getDilation(const Array2D<short>&,
                        const unsigned int,
@@ -99,7 +99,7 @@ namespace sigproc_multithreading {
       void getErosion(const Array2D<bool>&,
                       const unsigned int,
                       Array2D<bool>&,
-                      const unsigned int) const;
+                      const int) const;
 
       void getErosion(const Array2D<short>&,
                       const unsigned int,

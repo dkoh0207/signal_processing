@@ -9,7 +9,7 @@ FMWK_HEADERS = LinkDef.h
 HEADERS = $(filter-out $(FMWK_HEADERS), $(wildcard *.h))
 
 # include options for this package
-INCFLAGS  = -I. -I/sdf/group/neutrino/koh0207/DSP/eigen -I/sdf/group/neutrino/koh0207/DSP/fftw3/include
+INCFLAGS  = -I. -I/sdf/group/neutrino/koh0207/DSP/signal_processing/sigproc_tools/ -I/sdf/group/neutrino/koh0207/DSP/eigen -I/sdf/group/neutrino/koh0207/DSP/fftw3/include
 LDFLAGS   = -L/sdf/group/neutrino/koh0207/DSP/fftw3/lib -lfftw3f
 #Include itself
 CXXFLAGS=-Werror -fPIC

@@ -124,6 +124,31 @@ void sigproc_tools::EdgeDetection::Sobel(
 }
 
 
+void sigproc_tools::EdgeDetection::SobelRads(
+  const Array2D<float>& input2D,
+  Array2D<float>& sobelX,
+  Array2D<float>& sobelY,
+  Array2D<float>& gradient,
+  Array2D<float>& direction) const
+{
+  int numChannels = input2D.size();
+  int numTicks = input2D.at(0).size();
+
+  SobelXFast(input2D, sobelX);
+  SobelYFast(input2D, sobelY);
+
+  for (int i=0; i<numChannels; ++i) {
+    for (int j=0; j<numTicks; ++j) {
+      float g = sqrt(sobelX[i][j]*sobelX[i][j] + sobelY[i][j]*sobelY[i][j]);
+      gradient[i][j] = g;
+      float gradDir = atan2(sobelY[i][j], sobelX[i][j]);
+      direction[i][j] = gradDir;
+    }
+  }
+  return;
+}
+
+
 void sigproc_tools::EdgeDetection::SobelXFast(
   const Array2D<float> &input2D,
   Array2D<float> &gradient) const
