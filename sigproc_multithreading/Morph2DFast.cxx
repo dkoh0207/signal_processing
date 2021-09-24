@@ -6,10 +6,10 @@
 using namespace sigproc_multithreading;
 
 void sigproc_multithreading::Morph2DFast::getDilation(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<bool>& dilation2D) const
+  ConcurrentArray2D<bool>& dilation2D) const
 {
   getDilation<bool>(inputArray2D, structuringElementx,
     structuringElementy, dilation2D);
@@ -17,10 +17,10 @@ void sigproc_multithreading::Morph2DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph2DFast::getDilation(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<float>& dilation2D) const
+  ConcurrentArray2D<float>& dilation2D) const
 {
   getDilation<float>(inputArray2D, structuringElementx,
     structuringElementy, dilation2D);
@@ -29,10 +29,10 @@ void sigproc_multithreading::Morph2DFast::getDilation(
 
 template <typename T>
 void sigproc_multithreading::Morph2DFast::getDilation(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<T>& dilation2D) const
+  ConcurrentArray2D<T>& dilation2D) const
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
@@ -40,7 +40,7 @@ void sigproc_multithreading::Morph2DFast::getDilation(
   std::chrono::high_resolution_clock::time_point funcStartTime = std::chrono::high_resolution_clock::now();
   std::chrono::high_resolution_clock::time_point allocateStart = funcStartTime;
 
-  Array2D<T> buffer(numChannels, Vector<T>(numTicks));
+  ConcurrentArray2D<T> buffer(numChannels, ConcurrentVector<T>(numTicks));
 
   std::chrono::high_resolution_clock::time_point allocateStop = std::chrono::high_resolution_clock::now();
 
@@ -81,10 +81,10 @@ void sigproc_multithreading::Morph2DFast::getDilation(
 
 
 void sigproc_multithreading::Morph2DFast::getErosion(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<bool>& erosion2D) const
+  ConcurrentArray2D<bool>& erosion2D) const
 {
   getErosion<bool>(inputArray2D, structuringElementx,
     structuringElementy, erosion2D);
@@ -92,10 +92,10 @@ void sigproc_multithreading::Morph2DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph2DFast::getErosion(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<float>& erosion2D) const
+  ConcurrentArray2D<float>& erosion2D) const
 {
   getErosion<float>(inputArray2D, structuringElementx,
     structuringElementy, erosion2D);
@@ -104,15 +104,15 @@ void sigproc_multithreading::Morph2DFast::getErosion(
 
 template <typename T>
 void sigproc_multithreading::Morph2DFast::getErosion(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<T>& erosion2D) const
+  ConcurrentArray2D<T>& erosion2D) const
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
 
-  Array2D<T> buffer(numChannels, Vector<T>(numTicks));
+  ConcurrentArray2D<T> buffer(numChannels, ConcurrentVector<T>(numTicks));
 
   assert(erosion2D.size() == numChannels);
   assert(erosion2D.at(0).size() == numTicks);
@@ -136,30 +136,30 @@ void sigproc_multithreading::Morph2DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph2DFast::getGradient(
-  const Array2D<short>& inputArray2D,
+  const ConcurrentArray2D<short>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<short>& gradient2D) const
+  ConcurrentArray2D<short>& gradient2D) const
 {
   getGradient<short>(inputArray2D, structuringElementx, 
                      structuringElementy, gradient2D);
 }
 
 void sigproc_multithreading::Morph2DFast::getGradient(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<float>& gradient2D) const
+  ConcurrentArray2D<float>& gradient2D) const
 {
   getGradient<float>(inputArray2D, structuringElementx, 
                      structuringElementy, gradient2D);
 }
 
 void sigproc_multithreading::Morph2DFast::getGradient(
-  const Array2D<double>& inputArray2D,
+  const ConcurrentArray2D<double>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<double>& gradient2D) const
+  ConcurrentArray2D<double>& gradient2D) const
 {
   getGradient<double>(inputArray2D, structuringElementx, 
                       structuringElementy, gradient2D);
@@ -167,10 +167,10 @@ void sigproc_multithreading::Morph2DFast::getGradient(
 
 template <typename T>
 void sigproc_multithreading::Morph2DFast::getGradient(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<T>& gradient2D) const
+  ConcurrentArray2D<T>& gradient2D) const
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
@@ -178,8 +178,8 @@ void sigproc_multithreading::Morph2DFast::getGradient(
   assert(gradient2D.size() == numChannels);
   assert(gradient2D.at(0).size() == numTicks);
 
-  Array2D<T> dilation2D(numChannels, Vector<T>(numTicks));
-  Array2D<T> erosion2D(numChannels, Vector<T>(numTicks));
+  ConcurrentArray2D<T> dilation2D(numChannels, ConcurrentVector<T>(numTicks));
+  ConcurrentArray2D<T> erosion2D(numChannels, ConcurrentVector<T>(numTicks));
 
   tbb::parallel_invoke(
     [&]() {
@@ -201,10 +201,10 @@ void sigproc_multithreading::Morph2DFast::getGradient(
 
 
 void sigproc_multithreading::Morph2DFast::getClosing(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<bool>& closing2D) const
+  ConcurrentArray2D<bool>& closing2D) const
 {
   getClosing<bool>(inputArray2D, structuringElementx,
     structuringElementy, closing2D);
@@ -212,10 +212,10 @@ void sigproc_multithreading::Morph2DFast::getClosing(
 }
 
 void sigproc_multithreading::Morph2DFast::getClosing(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<float>& closing2D) const
+  ConcurrentArray2D<float>& closing2D) const
 {
   getClosing<float>(inputArray2D, structuringElementx,
     structuringElementy, closing2D);
@@ -224,10 +224,10 @@ void sigproc_multithreading::Morph2DFast::getClosing(
 
 template <typename T>
 void sigproc_multithreading::Morph2DFast::getClosing(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<T>& closing2D) const
+  ConcurrentArray2D<T>& closing2D) const
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
@@ -235,7 +235,7 @@ void sigproc_multithreading::Morph2DFast::getClosing(
   assert(closing2D.size() == numChannels);
   assert(closing2D.at(0).size() == numTicks);
 
-  Array2D<T> buffer(numChannels, Vector<T>(numTicks));
+  ConcurrentArray2D<T> buffer(numChannels, ConcurrentVector<T>(numTicks));
 
   getDilation<T>(inputArray2D, structuringElementx, structuringElementy, buffer);
   getErosion<T>(buffer, structuringElementx, structuringElementy, closing2D);
@@ -244,10 +244,10 @@ void sigproc_multithreading::Morph2DFast::getClosing(
 
 
 void sigproc_multithreading::Morph2DFast::getOpening(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<bool>& opening2D) const
+  ConcurrentArray2D<bool>& opening2D) const
 {
   getOpening<bool>(inputArray2D, structuringElementx,
     structuringElementy, opening2D);
@@ -256,10 +256,10 @@ void sigproc_multithreading::Morph2DFast::getOpening(
 
 
 void sigproc_multithreading::Morph2DFast::getOpening(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<float>& opening2D) const
+  ConcurrentArray2D<float>& opening2D) const
 {
   getOpening<float>(inputArray2D, structuringElementx,
     structuringElementy, opening2D);
@@ -268,10 +268,10 @@ void sigproc_multithreading::Morph2DFast::getOpening(
 
 template <typename T>
 void sigproc_multithreading::Morph2DFast::getOpening(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int structuringElementx,
   const unsigned int structuringElementy,
-  Array2D<T>& opening2D) const
+  ConcurrentArray2D<T>& opening2D) const
 {
   size_t numChannels = inputArray2D.size();
   size_t numTicks = inputArray2D.at(0).size();
@@ -279,7 +279,7 @@ void sigproc_multithreading::Morph2DFast::getOpening(
   assert(opening2D.size() == numChannels);
   assert(opening2D.at(0).size() == numTicks);
 
-  Array2D<T> buffer(numChannels, Vector<T>(numTicks));
+  ConcurrentArray2D<T> buffer(numChannels, ConcurrentVector<T>(numTicks));
 
   getErosion<T>(inputArray2D, structuringElementx, structuringElementy, buffer);
   getDilation<T>(buffer, structuringElementx, structuringElementy, opening2D);

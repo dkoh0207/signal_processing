@@ -18,6 +18,7 @@
 #include "Morph1DFast.h"
 #include "tbb/parallel_for.h"
 #include "tbb/parallel_invoke.h"
+#include "tbb/concurrent_vector.h"
 
 #include <chrono>
 
@@ -28,102 +29,107 @@ namespace sigproc_multithreading {
      User defined class Morph2DFast ... these comments are used to generate
      doxygen documentation!
   */
+    template <class T>
+    using ConcurrentVector = tbb::concurrent_vector<T>;
+
+    template <class T>
+    using ConcurrentArray2D = ConcurrentVector<ConcurrentVector<T>>;
   class Morph2DFast{
     
     public:
 
       /// Default constructor
-      Morph2DFast(){}
+        Morph2DFast(){};
 
-        void getDilation(const Array2D<bool>&,
+        void getDilation(const ConcurrentArray2D<bool>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<bool>&) const;
+                        ConcurrentArray2D<bool>&) const;
 
-        void getDilation(const Array2D<float>&,
+        void getDilation(const ConcurrentArray2D<float>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<float>&) const;
+                        ConcurrentArray2D<float>&) const;
 
-        void getErosion(const Array2D<bool>&,
+        void getErosion(const ConcurrentArray2D<bool>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<bool>&) const;
+                        ConcurrentArray2D<bool>&) const;
 
-        void getErosion(const Array2D<float>&,
+        void getErosion(const ConcurrentArray2D<float>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<float>&) const;
+                        ConcurrentArray2D<float>&) const;
 
-        void getGradient(const Array2D<short>&,
+        void getGradient(const ConcurrentArray2D<short>&,
                          const unsigned int,
                          const unsigned int,
-                         Array2D<short>&) const;
+                         ConcurrentArray2D<short>&) const;
                       
-        void getGradient(const Array2D<float>&,
+        void getGradient(const ConcurrentArray2D<float>&,
                          const unsigned int,
                          const unsigned int,
-                         Array2D<float>&) const;
+                         ConcurrentArray2D<float>&) const;
 
-        void getGradient(const Array2D<double>&,
+        void getGradient(const ConcurrentArray2D<double>&,
                          const unsigned int,
                          const unsigned int,
-                         Array2D<double>&) const;
+                         ConcurrentArray2D<double>&) const;
 
-        void getOpening(const Array2D<bool>&,
+        void getOpening(const ConcurrentArray2D<bool>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<bool>&) const;
+                        ConcurrentArray2D<bool>&) const;
 
-        void getOpening(const Array2D<float>&,
+        void getOpening(const ConcurrentArray2D<float>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<float>&) const;
+                        ConcurrentArray2D<float>&) const;
 
 
-        void getClosing(const Array2D<bool>&,
+        void getClosing(const ConcurrentArray2D<bool>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<bool>&) const;
+                        ConcurrentArray2D<bool>&) const;
 
-        void getClosing(const Array2D<float>&,
+        void getClosing(const ConcurrentArray2D<float>&,
                         const unsigned int,
                         const unsigned int,
-                        Array2D<float>&) const;
+                        ConcurrentArray2D<float>&) const;
 
         template <typename T>
         void getDilation(
-          const Array2D<T>& waveform2D,
+          const ConcurrentArray2D<T>& waveform2D,
           const unsigned int structuringElementx,
           const unsigned int structuringElementy,
-          Array2D<T>& dilation2D) const;
+          ConcurrentArray2D<T>& dilation2D) const;
 
         template <typename T>
         void getErosion(
-          const Array2D<T>& waveform2D,
+          const ConcurrentArray2D<T>& waveform2D,
           const unsigned int structuringElementx,
           const unsigned int structuringElementy,
-          Array2D<T>& erosion2D) const;
+          ConcurrentArray2D<T>& erosion2D) const;
 
         template <typename T>
-        void getGradient(const Array2D<T>&,
+        void getGradient(const ConcurrentArray2D<T>&,
                          const unsigned int,
                          const unsigned int,
-                         Array2D<T>&) const;
+                         ConcurrentArray2D<T>&) const;
 
         template <typename T>
         void getClosing(
-          const Array2D<T>& waveform2D,
+          const ConcurrentArray2D<T>& waveform2D,
           const unsigned int structuringElementx,
           const unsigned int structuringElementy,
-          Array2D<T>& closing2D) const;
+          ConcurrentArray2D<T>& closing2D) const;
 
         template <typename T>
         void getOpening(
-          const Array2D<T>& waveform2D,
+          const ConcurrentArray2D<T>& waveform2D,
           const unsigned int structuringElementx,
           const unsigned int structuringElementy,
-          Array2D<T>& opening2D) const;
+          ConcurrentArray2D<T>& opening2D) const;
 
       /// Default destructor
       ~Morph2DFast(){}

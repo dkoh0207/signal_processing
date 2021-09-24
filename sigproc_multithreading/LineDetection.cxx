@@ -1,6 +1,0 @@
-#ifndef __SIGPROC_MULTITHREADING_LINEDETECTION_CXX__
-#define __SIGPROC_MULTITHREADING_LINEDETECTION_CXX__
-
-#include "LineDetection.h"
-
-#endif

@@ -15,6 +15,7 @@
 #define __SIGPROC_MULTITHREADING_MISCUTILS_H__
 
 #include "SigprocParallelDefs.h"
+#include "tbb/concurrent_vector.h"
 
 namespace sigproc_multithreading {
 
@@ -23,6 +24,11 @@ namespace sigproc_multithreading {
      User defined class MiscUtils ... these comments are used to generate
      doxygen documentation!
   */
+    template <class T>
+    using ConcurrentVector = tbb::concurrent_vector<T>;
+
+    template <class T>
+    using ConcurrentArray2D = ConcurrentVector<ConcurrentVector<T>>;
   class MiscUtils{
     
     public:

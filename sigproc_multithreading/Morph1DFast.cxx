@@ -5,9 +5,9 @@
 
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-    const VectorBool& inputWaveform,
+    const ConcurrentVector<bool>& inputWaveform,
     const unsigned int fStructuringElement,
-    VectorBool& dilationVec) const
+    ConcurrentVector<bool>& dilationVec) const
 {
      /*
       Module for 1D Dilation Filter - special handling for bool arrays
@@ -17,7 +17,7 @@ void sigproc_multithreading::Morph1DFast::getDilation(
       - fStructuringElement: Size of moving window
   
       MODIFIES:
-      - dilationVec: Returned Dilation Vector.
+      - dilationVec: Returned Dilation ConcurrentVector.
     */
     if (dilationVec.size() != inputWaveform.size())
     {
@@ -40,8 +40,8 @@ void sigproc_multithreading::Morph1DFast::getDilation(
                                (N % fStructuringElement)) % fStructuringElement;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-    VectorBool suffixArr(bufferSize);
-    VectorBool prefixArr(bufferSize);
+    ConcurrentVector<bool> suffixArr(bufferSize);
+    ConcurrentVector<bool> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     for (size_t i=0; i<windowSize; ++i) {
@@ -108,9 +108,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getDilation(
-    const Vector<T>& inputWaveform,
+    const ConcurrentVector<T>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<T>& dilationVec) const
+    ConcurrentVector<T>& dilationVec) const
 {
      /*
       Module for 1D Dilation Filter - special handling for bool arrays
@@ -120,7 +120,7 @@ void sigproc_multithreading::Morph1DFast::getDilation(
       - fStructuringElement: Size of moving window
   
       MODIFIES:
-      - dilationVec: Returned Dilation Vector.
+      - dilationVec: Returned Dilation ConcurrentVector.
     */
     if (dilationVec.size() != inputWaveform.size())
     {
@@ -143,8 +143,8 @@ void sigproc_multithreading::Morph1DFast::getDilation(
                                (N % fStructuringElement)) % fStructuringElement;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-    Vector<T> suffixArr(bufferSize);
-    Vector<T> prefixArr(bufferSize);
+    ConcurrentVector<T> suffixArr(bufferSize);
+    ConcurrentVector<T> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     for (size_t i=0; i<windowSize; ++i) {
@@ -212,36 +212,36 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-    const Vector<short>& inputWaveform,
+    const ConcurrentVector<short>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<short>& dilationVec) const
+    ConcurrentVector<short>& dilationVec) const
 {
     getDilation<short>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-    const Vector<float>& inputWaveform,
+    const ConcurrentVector<float>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<float>& dilationVec) const
+    ConcurrentVector<float>& dilationVec) const
 {
     getDilation<float>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-    const Vector<double>& inputWaveform,
+    const ConcurrentVector<double>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<double>& dilationVec) const
+    ConcurrentVector<double>& dilationVec) const
 {
     getDilation<double>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-    const VectorBool& inputWaveform,
+    const ConcurrentVector<bool>& inputWaveform,
     const unsigned int fStructuringElement,
-    VectorBool& erosionVec) const
+    ConcurrentVector<bool>& erosionVec) const
 {
      /*
       Module for 1D Erosion Filter - special handling for bool arrays
@@ -251,7 +251,7 @@ void sigproc_multithreading::Morph1DFast::getErosion(
       - fStructuringElement: Size of moving window
   
       MODIFIES:
-      - erosionVec: Returned Erosion Vector.
+      - erosionVec: Returned Erosion ConcurrentVector.
     */
     if (erosionVec.size() != inputWaveform.size())
     {
@@ -274,8 +274,8 @@ void sigproc_multithreading::Morph1DFast::getErosion(
                                (N % fStructuringElement)) % fStructuringElement;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-    VectorBool suffixArr(bufferSize);
-    VectorBool prefixArr(bufferSize);
+    ConcurrentVector<bool> suffixArr(bufferSize);
+    ConcurrentVector<bool> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     for (size_t i=0; i<windowSize; ++i) {
@@ -342,9 +342,9 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getErosion(
-    const Vector<T>& inputWaveform,
+    const ConcurrentVector<T>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<T>& erosionVec) const
+    ConcurrentVector<T>& erosionVec) const
 {
     if (erosionVec.size() != inputWaveform.size())
     {
@@ -368,8 +368,8 @@ void sigproc_multithreading::Morph1DFast::getErosion(
                                (N % fStructuringElement)) % fStructuringElement;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-    Vector<T> suffixArr(bufferSize);
-    Vector<T> prefixArr(bufferSize);
+    ConcurrentVector<T> suffixArr(bufferSize);
+    ConcurrentVector<T> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     for (size_t i=0; i<windowSize; ++i) {
@@ -434,54 +434,54 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-    const Vector<short>& inputWaveform,
+    const ConcurrentVector<short>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<short>& dilationVec) const
+    ConcurrentVector<short>& dilationVec) const
 {
     getErosion<short>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-    const Vector<float>& inputWaveform,
+    const ConcurrentVector<float>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<float>& dilationVec) const
+    ConcurrentVector<float>& dilationVec) const
 {
     getErosion<float>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-    const Vector<double>& inputWaveform,
+    const ConcurrentVector<double>& inputWaveform,
     const unsigned int fStructuringElement,
-    Vector<double>& dilationVec) const
+    ConcurrentVector<double>& dilationVec) const
 {
     getErosion<double>(inputWaveform, fStructuringElement, dilationVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const Vector<short>& inputVector,
+  const ConcurrentVector<short>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<short>& gradientVec) const
+  ConcurrentVector<short>& gradientVec) const
 {
     getGradient<short>(inputVector, fStructuringElement, gradientVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const Vector<float>& inputVector,
+  const ConcurrentVector<float>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<float>& gradientVec) const
+  ConcurrentVector<float>& gradientVec) const
 {
   getGradient<float>(inputVector, fStructuringElement, gradientVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const Vector<double>& inputVector,
+  const ConcurrentVector<double>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<double>& gradientVec) const
+  ConcurrentVector<double>& gradientVec) const
 {
   getGradient<double>(inputVector, fStructuringElement, gradientVec);
   return;
@@ -489,15 +489,15 @@ void sigproc_multithreading::Morph1DFast::getGradient(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getGradient(
-  const Vector<T>& inputVector,
+  const ConcurrentVector<T>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<T>& gradientVec) const
+  ConcurrentVector<T>& gradientVec) const
 {
     size_t N = inputVector.size();
     assert(gradientVec.size() == N);
 
-    Vector<T> erosionVec(N);
-    Vector<T> dilationVec(N);
+    ConcurrentVector<T> erosionVec(N);
+    ConcurrentVector<T> dilationVec(N);
 
     tbb::parallel_invoke(
         [this, &inputVector, &fStructuringElement, &erosionVec]() 
@@ -517,40 +517,40 @@ void sigproc_multithreading::Morph1DFast::getGradient(
 }
 
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const Vector<bool>& inputVector,
+  const ConcurrentVector<bool>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<bool>& openingVec) const
+  ConcurrentVector<bool>& openingVec) const
 {
     size_t N = inputVector.size();
     assert(openingVec.size() == N);
-    Vector<bool> tempVec(N);
+    ConcurrentVector<bool> tempVec(N);
     getErosion(inputVector, fStructuringElement, tempVec);
     getDilation(tempVec, fStructuringElement, openingVec);
     return;
 }
 
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const Vector<short>& inputVector,
+  const ConcurrentVector<short>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<short>& openingVec) const
+  ConcurrentVector<short>& openingVec) const
 {
   getOpening<short>(inputVector, fStructuringElement, openingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const Vector<float>& inputVector,
+  const ConcurrentVector<float>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<float>& openingVec) const
+  ConcurrentVector<float>& openingVec) const
 {
   getOpening<float>(inputVector, fStructuringElement, openingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const Vector<double>& inputVector,
+  const ConcurrentVector<double>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<double>& openingVec) const
+  ConcurrentVector<double>& openingVec) const
 {
   getOpening<double>(inputVector, fStructuringElement, openingVec);
   return;
@@ -558,13 +558,13 @@ void sigproc_multithreading::Morph1DFast::getOpening(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getOpening(
-  const Vector<T>& inputVector,
+  const ConcurrentVector<T>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<T>& openingVec) const
+  ConcurrentVector<T>& openingVec) const
 {
   size_t N = inputVector.size();
   assert(openingVec.size() == N);
-  Vector<T> tempVec(N);
+  ConcurrentVector<T> tempVec(N);
   getErosion<T>(inputVector, fStructuringElement, tempVec);
   getDilation<T>(tempVec, fStructuringElement, openingVec);
   return;
@@ -572,40 +572,40 @@ void sigproc_multithreading::Morph1DFast::getOpening(
 
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const Vector<bool>& inputVector,
+  const ConcurrentVector<bool>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<bool>& closingVec) const
+  ConcurrentVector<bool>& closingVec) const
 {
   size_t N = inputVector.size();
   assert(closingVec.size() == N);
-  Vector<bool> tempVec(N);
+  ConcurrentVector<bool> tempVec(N);
   getDilation(inputVector, fStructuringElement, tempVec);
   getErosion(tempVec, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const Vector<short>& inputVector,
+  const ConcurrentVector<short>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<short>& closingVec) const
+  ConcurrentVector<short>& closingVec) const
 {
   getClosing<short>(inputVector, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const Vector<float>& inputVector,
+  const ConcurrentVector<float>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<float>& closingVec) const
+  ConcurrentVector<float>& closingVec) const
 {
   getClosing<float>(inputVector, fStructuringElement, closingVec);
   return;
 }
 
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const Vector<double>& inputVector,
+  const ConcurrentVector<double>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<double>& closingVec) const
+  ConcurrentVector<double>& closingVec) const
 {
   getClosing<double>(inputVector, fStructuringElement, closingVec);
   return;
@@ -613,23 +613,23 @@ void sigproc_multithreading::Morph1DFast::getClosing(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getClosing(
-  const Vector<T>& inputVector,
+  const ConcurrentVector<T>& inputVector,
   const unsigned int fStructuringElement,
-  Vector<T>& closingVec) const
+  ConcurrentVector<T>& closingVec) const
 {
   size_t N = inputVector.size();
   assert(closingVec.size() == N);
-  Vector<T> tempVec(N);
+  ConcurrentVector<T> tempVec(N);
   getDilation<T>(inputVector, fStructuringElement, tempVec);
   getErosion<T>(tempVec, fStructuringElement, closingVec);
   return;
 }
 
-template<>
+
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int fStructuringElementx,
-  Array2D<bool>& dilation2D,
+  ConcurrentArray2D<bool>& dilation2D,
   const int columnNum) const
 {
     if ((dilation2D.size() != inputArray2D.size()) || 
@@ -654,8 +654,8 @@ void sigproc_multithreading::Morph1DFast::getDilation(
     const size_t paddingSize = (fStructuringElementx - 
                                (N % fStructuringElementx)) % fStructuringElementx;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
-    Vector<bool> suffixArr(bufferSize);
-    Vector<bool> prefixArr(bufferSize);
+    ConcurrentVector<bool> suffixArr(bufferSize);
+    ConcurrentVector<bool> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     // This could be done with parallel_for and parallel_invoke, yet as they run
@@ -732,9 +732,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const Array2D<short>& inputArray2D,
+  const ConcurrentArray2D<short>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<short>& dilation2D,
+  ConcurrentArray2D<short>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<short>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -742,9 +742,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<float>& dilation2D,
+  ConcurrentArray2D<float>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<float>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -752,9 +752,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 }
 
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const Array2D<double>& inputArray2D,
+  const ConcurrentArray2D<double>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<double>& dilation2D,
+  ConcurrentArray2D<double>& dilation2D,
   const unsigned int columnNum) const
 {
   getDilation<double>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -763,9 +763,9 @@ void sigproc_multithreading::Morph1DFast::getDilation(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getDilation(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int fStructuringElementx,
-  Array2D<T>& dilation2D,
+  ConcurrentArray2D<T>& dilation2D,
   const int columnNum) const
 {
     if ((dilation2D.size() != inputArray2D.size()) || 
@@ -790,8 +790,8 @@ void sigproc_multithreading::Morph1DFast::getDilation(
     const size_t paddingSize = (fStructuringElementx - 
                                (N % fStructuringElementx)) % fStructuringElementx;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
-    Vector<T> suffixArr(bufferSize);
-    Vector<T> prefixArr(bufferSize);
+    ConcurrentVector<T> suffixArr(bufferSize);
+    ConcurrentVector<T> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     // This could be done with parallel_for and parallel_invoke, yet as they run
@@ -867,11 +867,11 @@ void sigproc_multithreading::Morph1DFast::getDilation(
     return;
 }
 
-template<>
+
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const Array2D<bool>& inputArray2D,
+  const ConcurrentArray2D<bool>& inputArray2D,
   const unsigned int fStructuringElementx,
-  Array2D<bool>& erosion2D,
+  ConcurrentArray2D<bool>& erosion2D,
   const int columnNum) const
 {
     if ((erosion2D.size() != inputArray2D.size()) || 
@@ -896,8 +896,8 @@ void sigproc_multithreading::Morph1DFast::getErosion(
     const size_t paddingSize = (fStructuringElementx - 
                                (N % fStructuringElementx)) % fStructuringElementx;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
-    Vector<bool> suffixArr(bufferSize);
-    Vector<bool> prefixArr(bufferSize);
+    ConcurrentVector<bool> suffixArr(bufferSize);
+    ConcurrentVector<bool> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     // This could be done with parallel_for and parallel_invoke, yet as they run
@@ -974,9 +974,9 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const Array2D<short>& inputArray2D,
+  const ConcurrentArray2D<short>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<short>& dilation2D,
+  ConcurrentArray2D<short>& dilation2D,
   const unsigned int columnNum) const
 {
   getErosion<short>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -984,9 +984,9 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const Array2D<float>& inputArray2D,
+  const ConcurrentArray2D<float>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<float>& dilation2D,
+  ConcurrentArray2D<float>& dilation2D,
   const unsigned int columnNum) const
 {
   getErosion<float>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -994,9 +994,9 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 }
 
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const Array2D<double>& inputArray2D,
+  const ConcurrentArray2D<double>& inputArray2D,
   const unsigned int structuringElementx,
-  Array2D<double>& dilation2D,
+  ConcurrentArray2D<double>& dilation2D,
   const unsigned int columnNum) const
 {
   getErosion<double>(inputArray2D, structuringElementx, dilation2D, columnNum);
@@ -1006,9 +1006,9 @@ void sigproc_multithreading::Morph1DFast::getErosion(
 
 template <typename T>
 void sigproc_multithreading::Morph1DFast::getErosion(
-  const Array2D<T>& inputArray2D,
+  const ConcurrentArray2D<T>& inputArray2D,
   const unsigned int fStructuringElementx,
-  Array2D<T>& erosion2D,
+  ConcurrentArray2D<T>& erosion2D,
   const int columnNum) const
 {
     if ( (erosion2D.size() != inputArray2D.size()) ||
@@ -1034,8 +1034,8 @@ void sigproc_multithreading::Morph1DFast::getErosion(
                                (N % fStructuringElementx)) % fStructuringElementx;
     const size_t bufferSize  = N + 2 * windowSize + paddingSize;
 
-    Vector<T> suffixArr(bufferSize);
-    Vector<T> prefixArr(bufferSize);
+    ConcurrentVector<T> suffixArr(bufferSize);
+    ConcurrentVector<T> prefixArr(bufferSize);
 
     // Padding Operations on Buffers
     // This could be done with parallel_for and parallel_invoke, yet as they run

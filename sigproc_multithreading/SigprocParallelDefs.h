@@ -20,29 +20,28 @@
 
 namespace sigproc_multithreading {
 
-      template <class T> 
-      using Vector        = std::vector<T>;
+    template <class T> 
+    using Vector        = std::vector<T>;
+    using VectorShort   = Vector<short>;
+    using VectorInt     = Vector<int>;
+    using VectorFloat   = Vector<float>;
+    using VectorDouble  = Vector<double>;
+    using VectorBool    = Vector<bool>;
 
-      using VectorShort   = Vector<short>;
-      using VectorInt     = Vector<int>;
-      using VectorFloat   = Vector<float>;
-      using VectorDouble  = Vector<double>;
-      using VectorBool    = Vector<bool>;
+    template <class T> 
+    using Array2D        = std::vector<Vector<T>>;
 
-      template <class T> 
-      using Array2D        = std::vector<Vector<T>>;
+    using ArrayShort    = Vector<VectorShort>;
+    using ArrayInt      = Vector<VectorInt>;
+    using ArrayFloat    = Vector<VectorFloat>;
+    using ArrayDouble   = Vector<VectorDouble>;
+    using ArrayBool     = Vector<VectorBool>;
 
-      using ArrayShort    = Vector<VectorShort>;
-      using ArrayInt      = Vector<VectorInt>;
-      using ArrayFloat    = Vector<VectorFloat>;
-      using ArrayDouble   = Vector<VectorDouble>;
-      using ArrayBool     = Vector<VectorBool>;
+    template <class T>
+    using ConcurrentVector = tbb::concurrent_vector<T>;
 
-      template <class T>
-      using ConcurrentVector = tbb::concurrent_vector<T>;
-
-      template <class T>
-      using ConcurrentArray2D = ConcurrentVector<ConcurrentVector<T>>;
+    template <class T>
+    using ConcurrentArray2D = ConcurrentVector<ConcurrentVector<T>>;
 }
 
 #endif
